@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FaUser, FaChartBar, FaDownload, FaSave, FaCheckCircle, FaLock } from "react-icons/fa";
 import { settingsApi } from "@/lib/api";
+import { exportToExcel } from "@/lib/excelExport";
 import { AdminProfile, AnalyticsSettings } from "./types";
 
 interface SettingsManagerProps {
@@ -86,6 +87,17 @@ export const SettingsManager: React.FC<SettingsManagerProps> = ({
   };
 
   const handleExportAnalytics = (format: string) => {
+    if (format === "xlsx") {
+      const exportData = [
+        { Metric: "Total Memberships", Value: membersCount },
+        { Metric: "Published News", Value: newsCount },
+        { Metric: "Total Events", Value: eventsCount },
+        { Metric: "Gallery Media Items", Value: galleryCount },
+        { Metric: "Generated Date", Value: new Date().toLocaleDateString() },
+      ];
+      exportToExcel(exportData, "GCCF_Community_Metrics", "Metrics");
+      return;
+    }
     const csvContent = `Metric,Value\nMembers,${membersCount}\nNews,${newsCount}\nEvents,${eventsCount}\nGallery,${galleryCount}`;
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);

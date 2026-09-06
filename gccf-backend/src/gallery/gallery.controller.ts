@@ -7,7 +7,9 @@ import {
   Param,
   Delete,
   Put,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { GalleryService } from './gallery.service';
 import { CreateGalleryDto } from './dto/create-gallery.dto';
 import { UpdateGalleryDto } from './dto/update-gallery.dto';
@@ -21,16 +23,22 @@ export class GalleryController {
     return this.galleryService.create(createGalleryDto);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get()
   findAll() {
     return this.galleryService.findAll();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get('visible')
   findVisible() {
     return this.galleryService.findVisible();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get('category/:category')
   findByCategory(@Param('category') category: string) {
     return this.galleryService.findByCategory(category);

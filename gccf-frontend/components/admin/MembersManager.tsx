@@ -11,6 +11,12 @@ import {
   FaPhone,
   FaBuilding,
   FaRedo,
+  FaEye,
+  FaTimes,
+  FaMapMarkerAlt,
+  FaBriefcase,
+  FaCommentAlt,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { Membership } from "@/types/membership";
 import { DeleteTarget } from "./types";
@@ -30,6 +36,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
 }) => {
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedMember, setSelectedMember] = useState<Membership | null>(null);
 
   const pendingCount = membershipsList.filter((m) => m.status === "pending").length;
   const approvedCount = membershipsList.filter((m) => m.status === "approved").length;
@@ -73,6 +80,12 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
       badgeClasses: "bg-rose-50 text-rose-800 border-rose-200/60",
     },
   ];
+
+  const handleModalStatusChange = async (status: "approved" | "declined" | "pending") => {
+    if (!selectedMember) return;
+    await onStatusChange(selectedMember.id, status);
+    setSelectedMember((prev) => (prev ? { ...prev, status } : null));
+  };
 
   return (
     <div className="w-full max-w-[1400px]">
@@ -228,6 +241,15 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                   </td>
                   <td className="py-4 px-6 text-right whitespace-nowrap">
                     <div className="inline-flex items-center gap-1.5">
+                      {/* View Details Button */}
+                      <button
+                        title="View Full Application"
+                        onClick={() => setSelectedMember(member)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-[#3d73bd] hover:bg-blue-50 transition-colors cursor-pointer"
+                      >
+                        <FaEye className="text-xs" />
+                      </button>
+
                       {member.status === "pending" && (
                         <>
                           <button
@@ -299,6 +321,200 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Application Detail Inspection Modal */}
+      {selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] flex items-center justify-center text-white shadow-sm">
+                  <FaUsers className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Application Review
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Detailed registration profile & statement
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              {/* Profile Card */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-lg font-extrabold text-slate-900">
+                    {selectedMember.firstName} {selectedMember.lastName}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {selectedMember.occupation || "Community Applicant"}
+                  </p>
+                </div>
+                <span
+                  className={`self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                    selectedMember.status === "approved"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : selectedMember.status === "pending"
+                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      selectedMember.status === "approved"
+                        ? "bg-emerald-500"
+                        : selectedMember.status === "pending"
+                        ? "bg-amber-500"
+                        : "bg-rose-500"
+                    }`}
+                  />
+                  {selectedMember.status}
+                </span>
+              </div>
+
+              {/* Information Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaEnvelope className="text-[#3d73bd]" /> Email Address
+                  </div>
+                  <a
+                    href={`mailto:${selectedMember.email}`}
+                    className="text-sm font-medium text-slate-800 hover:text-[#3d73bd] break-all"
+                  >
+                    {selectedMember.email}
+                  </a>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaPhone className="text-[#3d73bd]" /> Phone Number
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {selectedMember.phone || "Not provided"}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaBuilding className="text-[#3d73bd]" /> Organization / Affiliation
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {selectedMember.organization || "Independent"}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaBriefcase className="text-[#3d73bd]" /> Profession / Occupation
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {selectedMember.occupation || "Not specified"}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white sm:col-span-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaMapMarkerAlt className="text-[#3d73bd]" /> Address & Location
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {[
+                      selectedMember.address,
+                      selectedMember.city,
+                      selectedMember.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "No address provided"}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white sm:col-span-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaCalendarAlt className="text-[#3d73bd]" /> Submission Date
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {new Date(selectedMember.createdAt).toLocaleString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Motivation Message */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <FaCommentAlt className="text-[#3d73bd]" /> Motivation / Message
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/70 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedMember.message || (
+                    <span className="italic text-slate-400">
+                      No motivation message was provided with this application.
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer / Actions */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {selectedMember.status === "pending" ? (
+                  <>
+                    <button
+                      onClick={() => handleModalStatusChange("approved")}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <FaCheck />
+                      <span>Approve Member</span>
+                    </button>
+                    <button
+                      onClick={() => handleModalStatusChange("declined")}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <FaBan />
+                      <span>Decline</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => handleModalStatusChange("pending")}
+                    disabled={loading}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <FaRedo />
+                    <span>Reset to Pending</span>
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

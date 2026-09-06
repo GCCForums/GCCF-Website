@@ -29,7 +29,9 @@ async function bootstrap() {
     console.log(`✅ Created: ${event.title}`);
   }
 
-  console.log(`\n🎉 Successfully seeded ${completedEventsData.length} completed events!\n`);
+  console.log(
+    `\n🎉 Successfully seeded ${completedEventsData.length} completed events!\n`,
+  );
 
   console.log('='.repeat(50));
 
@@ -41,7 +43,9 @@ async function bootstrap() {
     console.log(`✅ Created: ${event.title}`);
   }
 
-  console.log(`\n🎉 Successfully seeded ${upcomingEventsData.length} upcoming events!\n`);
+  console.log(
+    `\n🎉 Successfully seeded ${upcomingEventsData.length} upcoming events!\n`,
+  );
 
   console.log('='.repeat(50));
   console.log('\n✨ All seeding completed successfully!\n');

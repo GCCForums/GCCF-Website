@@ -13,9 +13,11 @@ export class AdminSeeder implements OnModuleInit {
 
   private async seedAdmin() {
     const adminRepository = this.dataSource.getRepository(Admin);
-    
-    const existingAdmin = await adminRepository.findOne({ where: { username: 'admin' } });
-    
+
+    const existingAdmin = await adminRepository.findOne({
+      where: { username: 'admin' },
+    });
+
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash('gccf123', 10);
       const admin = adminRepository.create({

@@ -12,7 +12,8 @@ Key highlights included:
 - Exhibition of latest security technologies
 
 The event covered critical topics including zero-trust architecture, cloud security, ransomware defense, and the future of cybersecurity in the age of quantum computing.`,
-    shortDescription: 'A premier gathering of 500+ cybersecurity professionals discussing emerging threats, AI security, and the future of digital defense.',
+    shortDescription:
+      'A premier gathering of 500+ cybersecurity professionals discussing emerging threats, AI security, and the future of digital defense.',
     eventDate: new Date('2024-09-15'),
     location: 'New Delhi, India',
     status: 'completed' as const,
@@ -39,7 +40,8 @@ Workshop covered:
 - Report writing and remediation recommendations
 
 Participants received hands-on training in a controlled lab environment with real-world scenarios and challenges. Each attendee received a certificate of completion and access to exclusive learning materials.`,
-    shortDescription: 'Intensive two-day hands-on training in ethical hacking, penetration testing, and web application security for security professionals.',
+    shortDescription:
+      'Intensive two-day hands-on training in ethical hacking, penetration testing, and web application security for security professionals.',
     eventDate: new Date('2024-10-20'),
     location: 'Mumbai, India',
     status: 'completed' as const,
@@ -69,7 +71,9 @@ async function seedCompletedEvents() {
     console.log(`✅ Created: ${event.title}`);
   }
 
-  console.log(`\n🎉 Successfully seeded ${completedEventsData.length} completed events!\n`);
+  console.log(
+    `\n🎉 Successfully seeded ${completedEventsData.length} completed events!\n`,
+  );
   await app.close();
 }
 

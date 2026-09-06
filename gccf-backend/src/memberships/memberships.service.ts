@@ -40,34 +40,50 @@ export class MembershipsService {
   }
 
   async findOne(id: string): Promise<Membership> {
-    const membership = await this.membershipsRepository.findOne({ where: { id } });
+    const membership = await this.membershipsRepository.findOne({
+      where: { id },
+    });
     if (!membership) {
       throw new NotFoundException(`Membership with ID ${id} not found`);
     }
     return membership;
   }
 
-  async update(id: string, updateMembershipDto: UpdateMembershipDto): Promise<Membership> {
+  async update(
+    id: string,
+    updateMembershipDto: UpdateMembershipDto,
+  ): Promise<Membership> {
     const membership = await this.findOne(id);
-    
-    if (updateMembershipDto.status && updateMembershipDto.status !== membership.status) {
-      if (updateMembershipDto.status === 'approved') {
-        await this.mailService.sendMembershipApprovalEmail(
-          membership.email,
-          membership.firstName,
-          membership.lastName,
-        );
-      } else if (updateMembershipDto.status === 'declined') {
-        await this.mailService.sendMembershipDeclineEmail(
-          membership.email,
-          membership.firstName,
-          membership.lastName,
-        );
+
+    // 1. Update the database first so the transaction is always persisted
+    await this.membershipsRepository.update(id, updateMembershipDto);
+    const updatedMembership = await this.findOne(id);
+
+    // 2. Safely trigger notification email if status changed to approved or declined
+    if (
+      updateMembershipDto.status &&
+      updateMembershipDto.status !== membership.status
+    ) {
+      try {
+        if (updateMembershipDto.status === 'approved') {
+          await this.mailService.sendMembershipApprovalEmail(
+            membership.email,
+            membership.firstName,
+            membership.lastName,
+          );
+        } else if (updateMembershipDto.status === 'declined') {
+          await this.mailService.sendMembershipDeclineEmail(
+            membership.email,
+            membership.firstName,
+            membership.lastName,
+          );
+        }
+      } catch {
+        // Mail failure handled inside MailService; ensure endpoint response is not blocked
       }
     }
-    
-    await this.membershipsRepository.update(id, updateMembershipDto);
-    return this.findOne(id);
+
+    return updatedMembership;
   }
 
   async remove(id: string): Promise<void> {

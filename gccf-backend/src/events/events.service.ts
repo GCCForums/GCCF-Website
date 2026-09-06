@@ -22,11 +22,11 @@ export class EventsService {
   async create(createEventDto: CreateEventDto): Promise<Event> {
     const event = this.eventsRepository.create(createEventDto);
     const savedEvent = await this.eventsRepository.save(event);
-    
+
     if (savedEvent.status === 'upcoming') {
       await this.sendNewsletterToApprovedMembers(savedEvent);
     }
-    
+
     return savedEvent;
   }
 
@@ -70,11 +70,14 @@ export class EventsService {
     const existingEvent = await this.findOne(id);
     await this.eventsRepository.update(id, updateEventDto);
     const updatedEvent = await this.findOne(id);
-    
-    if (updateEventDto.status === 'upcoming' && existingEvent.status !== 'upcoming') {
+
+    if (
+      updateEventDto.status === 'upcoming' &&
+      existingEvent.status !== 'upcoming'
+    ) {
       await this.sendNewsletterToApprovedMembers(updatedEvent);
     }
-    
+
     return updatedEvent;
   }
 
@@ -96,7 +99,9 @@ export class EventsService {
         return;
       }
 
-      this.logger.log(`Sending newsletter for event "${event.title}" to ${approvedMembers.length} approved members`);
+      this.logger.log(
+        `Sending newsletter for event "${event.title}" to ${approvedMembers.length} approved members`,
+      );
 
       await Promise.all(
         approvedMembers.map((member) =>
@@ -111,7 +116,9 @@ export class EventsService {
         ),
       );
 
-      this.logger.log(`Newsletter sent successfully to ${approvedMembers.length} members`);
+      this.logger.log(
+        `Newsletter sent successfully to ${approvedMembers.length} members`,
+      );
     } catch (error) {
       this.logger.error('Failed to send newsletter to members', error);
     }

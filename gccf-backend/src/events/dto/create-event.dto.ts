@@ -1,4 +1,11 @@
-import { IsString, IsDate, IsEnum, IsOptional, IsArray, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsDate,
+  IsEnum,
+  IsOptional,
+  IsArray,
+  IsNumber,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateEventDto {

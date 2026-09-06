@@ -11,19 +11,22 @@ export class AuthService {
 
   async login(username: string, password: string) {
     const admin = await this.adminService.findOne(username);
-    
+
     if (!admin) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await this.adminService.validatePassword(password, admin.password);
-    
+    const isPasswordValid = await this.adminService.validatePassword(
+      password,
+      admin.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = { sub: admin.id.toString(), username: admin.username };
-    
+
     return {
       access_token: this.jwtService.sign(payload),
     };

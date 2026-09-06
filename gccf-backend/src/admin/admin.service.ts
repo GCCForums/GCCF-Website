@@ -15,13 +15,19 @@ export class AdminService {
     return this.adminRepository.findOne({ where: { username } });
   }
 
-  async validatePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  async validatePassword(
+    plainPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
   async create(username: string, password: string): Promise<Admin> {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = this.adminRepository.create({ username, password: hashedPassword });
+    const admin = this.adminRepository.create({
+      username,
+      password: hashedPassword,
+    });
     return this.adminRepository.save(admin);
   }
 

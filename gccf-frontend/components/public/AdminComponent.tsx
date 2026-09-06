@@ -115,6 +115,30 @@ const defaultInitialTeams: TeamMember[] = [
   },
 ];
 
+const ADMIN_ACTIVITIES_KEY = "gccf_admin_activities";
+
+const getStoredActivities = (): ActivityItem[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(ADMIN_ACTIVITIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("Failed to read admin activities", err);
+    return [];
+  }
+};
+
+const recordAdminActivity = (item: ActivityItem) => {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getStoredActivities();
+    const updated = [item, ...current].slice(0, 50);
+    localStorage.setItem(ADMIN_ACTIVITIES_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error("Failed to save admin activity", err);
+  }
+};
+
 export default function AdminComponent() {
   const router = useRouter();
 
@@ -174,7 +198,7 @@ export default function AdminComponent() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<DeleteTarget | null>(null);
 
-  // Load stored teams
+  // Load stored teams and backfill recent activities for custom team members
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
@@ -183,9 +207,47 @@ export default function AdminComponent() {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setTeamList(parsed);
+
+            // Backfill any custom team members not yet in admin activities
+            const currentActivities = getStoredActivities();
+            const newActivities: ActivityItem[] = [];
+            parsed.forEach((member: TeamMember) => {
+              const isDefault = defaultInitialTeams.some(
+                (d) => d.name.toLowerCase() === member.name.toLowerCase()
+              );
+              const alreadyLogged = currentActivities.some(
+                (a) =>
+                  a.title.toLowerCase() === member.name.toLowerCase() &&
+                  a.type === "team"
+              );
+              if (!isDefault && !alreadyLogged) {
+                const numId = Number(member.id);
+                const ts =
+                  !isNaN(numId) && numId > 1000000000
+                    ? new Date(numId).toISOString()
+                    : new Date().toISOString();
+                newActivities.push({
+                  type: "team",
+                  action: "new team member added",
+                  title: member.name,
+                  timestamp: ts,
+                });
+              }
+            });
+
+            if (newActivities.length > 0) {
+              const updatedActivities = [...newActivities, ...currentActivities];
+              localStorage.setItem(
+                ADMIN_ACTIVITIES_KEY,
+                JSON.stringify(updatedActivities)
+              );
+            }
           }
         } else {
-          localStorage.setItem("gccf_team_members", JSON.stringify(defaultInitialTeams));
+          localStorage.setItem(
+            "gccf_team_members",
+            JSON.stringify(defaultInitialTeams)
+          );
         }
       } catch (err) {
         console.error("Failed to read team members", err);
@@ -259,7 +321,7 @@ export default function AdminComponent() {
           membershipsApi.getAll(),
           analyticsApi.getDashboardStats(),
           analyticsApi.getMemberGrowth(growthPeriod),
-          analyticsApi.getRecentActivity(8),
+          analyticsApi.getRecentActivity(12),
         ]);
       setNewsList(news);
       setEventsList(events);
@@ -267,7 +329,32 @@ export default function AdminComponent() {
       setMembershipsList(memberships);
       setDashboardStats(stats);
       setMemberGrowthData(growth);
-      setRecentActivity(activity);
+
+      // Merge backend activity and local admin activities
+      const localActivities = getStoredActivities();
+      const combined = [...localActivities, ...activity];
+      const seen = new Set<string>();
+      const mergedActivities: ActivityItem[] = [];
+
+      for (const item of combined) {
+        const tsTime = new Date(item.timestamp).getTime();
+        // Round to 1 minute to avoid duplicates across local and backend
+        const key = `${item.type}_${item.action}_${item.title}_${Math.floor(tsTime / 60000)}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          mergedActivities.push({
+            ...item,
+            timestamp: new Date(item.timestamp),
+          });
+        }
+      }
+
+      mergedActivities.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      setRecentActivity(mergedActivities.slice(0, 10));
     } catch (err) {
       setError("Failed to load data. Please check if the backend is running.");
       console.error(err);
@@ -478,7 +565,19 @@ export default function AdminComponent() {
   ) => {
     setLoading(true);
     try {
+      const targetMember = membershipsList.find((m) => m.id === id);
       await membershipsApi.update(id, { status });
+      if (targetMember) {
+        recordAdminActivity({
+          type: "member",
+          action:
+            status === "pending"
+              ? "application reset to pending"
+              : `membership ${status}`,
+          title: `${targetMember.firstName} ${targetMember.lastName}`,
+          timestamp: new Date().toISOString(),
+        });
+      }
       await fetchData();
     } catch (err) {
       setError("Failed to update membership status");
@@ -514,6 +613,7 @@ export default function AdminComponent() {
     setLoading(true);
     try {
       let updated: TeamMember[];
+      const isEditing = !!editingTeam;
       if (editingTeam) {
         updated = teamList.map((m) =>
           m.id === editingTeam.id
@@ -537,9 +637,18 @@ export default function AdminComponent() {
       if (typeof window !== "undefined") {
         localStorage.setItem("gccf_team_members", JSON.stringify(updated));
       }
+
+      recordAdminActivity({
+        type: "team",
+        action: isEditing ? "team member updated" : "new team member added",
+        title: teamForm.name,
+        timestamp: new Date().toISOString(),
+      });
+
       setShowTeamModal(false);
       setEditingTeam(null);
       setTeamForm(initialTeamForm);
+      await fetchData();
     } catch (err) {
       setError("Failed to save team member");
       console.error(err);
@@ -619,10 +728,19 @@ export default function AdminComponent() {
       } else if (showDeleteConfirm.type === "memberships") {
         await membershipsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "teams") {
+        const targetMember = teamList.find((m) => m.id === showDeleteConfirm.id);
         const updated = teamList.filter((m) => m.id !== showDeleteConfirm.id);
         setTeamList(updated);
         if (typeof window !== "undefined") {
           localStorage.setItem("gccf_team_members", JSON.stringify(updated));
+        }
+        if (targetMember) {
+          recordAdminActivity({
+            type: "team",
+            action: "team member removed",
+            title: targetMember.name,
+            timestamp: new Date().toISOString(),
+          });
         }
       } else if (showDeleteConfirm.type === "testimonials") {
         const updated = testimonialsList.filter((t) => t.id !== showDeleteConfirm.id);

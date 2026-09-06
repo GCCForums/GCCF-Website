@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThanOrEqual, LessThanOrEqual, Between } from 'typeorm';
+import { Repository, MoreThanOrEqual, Between } from 'typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
 import { News } from '../news/entities/news.entity';
 import { Event } from '../events/entities/event.entity';
 import { Gallery } from '../gallery/entities/gallery.entity';
-
-interface DateRange {
-  start: Date;
-  end: Date;
-}
 
 @Injectable()
 export class AnalyticsService {
@@ -38,6 +33,7 @@ export class AnalyticsService {
       newMembersThisMonth,
       newMembersThisWeek,
       approvedMembers,
+      declinedMembers,
     ] = await Promise.all([
       this.membershipRepository.count(),
       this.membershipRepository.count({ where: { status: 'pending' } }),
@@ -51,14 +47,17 @@ export class AnalyticsService {
         where: { createdAt: MoreThanOrEqual(sevenDaysAgo) },
       }),
       this.membershipRepository.count({ where: { status: 'approved' } }),
+      this.membershipRepository.count({ where: { status: 'declined' } }),
     ]);
 
-    const monthGrowth = totalMembers > 0 
-      ? Math.round((newMembersThisMonth / totalMembers) * 100) 
-      : 0;
-    const weekGrowth = totalMembers > 0 
-      ? Math.round((newMembersThisWeek / totalMembers) * 100) 
-      : 0;
+    const monthGrowth =
+      totalMembers > 0
+        ? Math.round((newMembersThisMonth / totalMembers) * 100)
+        : 0;
+    const weekGrowth =
+      totalMembers > 0
+        ? Math.round((newMembersThisWeek / totalMembers) * 100)
+        : 0;
 
     return {
       totalMembers,
@@ -67,6 +66,7 @@ export class AnalyticsService {
       totalNews,
       totalGallery,
       approvedMembers,
+      declinedMembers,
       newMembersThisMonth,
       newMembersThisWeek,
       monthGrowth,
@@ -92,7 +92,7 @@ export class AnalyticsService {
       dailyData[key] = 0;
     }
 
-    members.forEach(member => {
+    members.forEach((member) => {
       const key = member.createdAt.toISOString().split('T')[0];
       if (dailyData[key] !== undefined) {
         dailyData[key]++;
@@ -122,52 +122,58 @@ export class AnalyticsService {
       take: 10,
     });
 
-    const byType = await this.eventRepository
+    const byType: Array<{
+      category: string | null;
+      count: string;
+      total: string | null;
+    }> = await this.eventRepository
       .createQueryBuilder('event')
-      .select('event.category', 'category')
+      .select("COALESCE(event.organizer, 'GCCF')", 'category')
       .addSelect('COUNT(*)', 'count')
-      .addSelect('SUM(event.attendees)', 'total')
+      .addSelect('COALESCE(SUM(event.attendees), 0)', 'total')
       .where('event.status = :status', { status: 'completed' })
-      .groupBy('event.category')
+      .groupBy("COALESCE(event.organizer, 'GCCF')")
       .getRawMany();
 
     return {
-      events: events.map(e => ({
+      events: events.map((e) => ({
         id: e.id,
         title: e.title,
         date: e.eventDate,
         attendees: e.attendees || 0,
         location: e.location,
       })),
-      byType: byType.map(t => ({
-        category: t.category || 'Uncategorized',
-        count: parseInt(t.count) || 0,
-        total: parseInt(t.total) || 0,
+      byType: byType.map((t) => ({
+        category: t.category || 'GCCF',
+        count: parseInt(t.count, 10) || 0,
+        total: parseInt(t.total || '0', 10) || 0,
       })),
     };
   }
 
   async getMembershipStats() {
-    const byStatus = await this.membershipRepository
-      .createQueryBuilder('membership')
-      .select('membership.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('membership.status')
-      .getRawMany();
+    const byStatus: Array<{ status: string; count: string }> =
+      await this.membershipRepository
+        .createQueryBuilder('membership')
+        .select('membership.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('membership.status')
+        .getRawMany();
 
-    const byMonth = await this.membershipRepository
-      .createQueryBuilder('membership')
-      .select("TO_CHAR(membership.createdAt, 'YYYY-MM')", 'month')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy("TO_CHAR(membership.createdAt, 'YYYY-MM')")
-      .orderBy('month', 'DESC')
-      .limit(6)
-      .getRawMany();
+    const byMonth: Array<{ month: string; count: string }> =
+      await this.membershipRepository
+        .createQueryBuilder('membership')
+        .select("TO_CHAR(membership.createdAt, 'YYYY-MM')", 'month')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy("TO_CHAR(membership.createdAt, 'YYYY-MM')")
+        .orderBy('month', 'DESC')
+        .limit(6)
+        .getRawMany();
 
     return {
-      byStatus: byStatus.map(s => ({
+      byStatus: byStatus.map((s) => ({
         status: s.status,
-        count: parseInt(s.count),
+        count: parseInt(s.count, 10) || 0,
       })),
       byMonth: byMonth.reverse(),
     };
@@ -176,7 +182,7 @@ export class AnalyticsService {
   async getRecentActivity(limit: number = 10) {
     const [recentMembers, recentNews, recentEvents] = await Promise.all([
       this.membershipRepository.find({
-        order: { createdAt: 'DESC' },
+        order: { updatedAt: 'DESC' },
         take: limit,
       }),
       this.newsRepository.find({
@@ -190,22 +196,44 @@ export class AnalyticsService {
     ]);
 
     const activities: Array<{
-      type: 'member' | 'news' | 'event';
+      type: 'member' | 'news' | 'event' | 'team';
       action: string;
       title: string;
       timestamp: Date;
     }> = [];
 
-    recentMembers.forEach(m => {
+    recentMembers.forEach((m) => {
+      const isStatusUpdated =
+        m.status !== 'pending' &&
+        m.updatedAt &&
+        m.createdAt &&
+        Math.abs(
+          new Date(m.updatedAt).getTime() - new Date(m.createdAt).getTime(),
+        ) > 1000;
+
+      if (isStatusUpdated) {
+        activities.push({
+          type: 'member',
+          action: `membership ${m.status}`,
+          title: `${m.firstName} ${m.lastName}`,
+          timestamp: new Date(m.updatedAt),
+        });
+      }
+
       activities.push({
         type: 'member',
-        action: m.status === 'pending' ? 'applied for membership' : `membership ${m.status}`,
+        action:
+          m.status === 'pending'
+            ? 'applied for membership'
+            : isStatusUpdated
+              ? 'applied for membership'
+              : `membership ${m.status}`,
         title: `${m.firstName} ${m.lastName}`,
-        timestamp: m.createdAt,
+        timestamp: new Date(m.createdAt),
       });
     });
 
-    recentNews.forEach(n => {
+    recentNews.forEach((n) => {
       activities.push({
         type: 'news',
         action: 'article published',
@@ -214,7 +242,7 @@ export class AnalyticsService {
       });
     });
 
-    recentEvents.forEach(e => {
+    recentEvents.forEach((e) => {
       activities.push({
         type: 'event',
         action: e.status === 'upcoming' ? 'event created' : `event ${e.status}`,
@@ -282,20 +310,21 @@ export class AnalyticsService {
       .orderBy('month', 'ASC')
       .getRawMany();
 
-    const byCategory = await this.newsRepository
-      .createQueryBuilder('news')
-      .select('news.category', 'category')
-      .addSelect('COUNT(*)', 'count')
-      .where('news.publishedDate BETWEEN :start AND :end', { start, end })
-      .groupBy('news.category')
-      .getRawMany();
+    const byCategory: Array<{ category: string | null; count: string }> =
+      await this.newsRepository
+        .createQueryBuilder('news')
+        .select('news.category', 'category')
+        .addSelect('COUNT(*)', 'count')
+        .where('news.publishedDate BETWEEN :start AND :end', { start, end })
+        .groupBy('news.category')
+        .getRawMany();
 
     return {
       total,
       byMonth: byMonth.reverse(),
-      byCategory: byCategory.map(c => ({
+      byCategory: byCategory.map((c) => ({
         category: c.category || 'Uncategorized',
-        count: parseInt(c.count),
+        count: parseInt(c.count, 10) || 0,
       })),
     };
   }
@@ -304,27 +333,29 @@ export class AnalyticsService {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    const byStatus = await this.membershipRepository
-      .createQueryBuilder('membership')
-      .select('membership.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .where('membership.createdAt BETWEEN :start AND :end', { start, end })
-      .groupBy('membership.status')
-      .getRawMany();
+    const byStatus: Array<{ status: string; count: string }> =
+      await this.membershipRepository
+        .createQueryBuilder('membership')
+        .select('membership.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .where('membership.createdAt BETWEEN :start AND :end', { start, end })
+        .groupBy('membership.status')
+        .getRawMany();
 
-    const byMonth = await this.membershipRepository
-      .createQueryBuilder('membership')
-      .select("TO_CHAR(membership.createdAt, 'YYYY-MM')", 'month')
-      .addSelect('COUNT(*)', 'count')
-      .where('membership.createdAt BETWEEN :start AND :end', { start, end })
-      .groupBy("TO_CHAR(membership.createdAt, 'YYYY-MM')")
-      .orderBy('month', 'ASC')
-      .getRawMany();
+    const byMonth: Array<{ month: string; count: string }> =
+      await this.membershipRepository
+        .createQueryBuilder('membership')
+        .select("TO_CHAR(membership.createdAt, 'YYYY-MM')", 'month')
+        .addSelect('COUNT(*)', 'count')
+        .where('membership.createdAt BETWEEN :start AND :end', { start, end })
+        .groupBy("TO_CHAR(membership.createdAt, 'YYYY-MM')")
+        .orderBy('month', 'ASC')
+        .getRawMany();
 
     return {
-      byStatus: byStatus.map(s => ({
+      byStatus: byStatus.map((s) => ({
         status: s.status,
-        count: parseInt(s.count),
+        count: parseInt(s.count, 10) || 0,
       })),
       byMonth: byMonth.reverse(),
     };
@@ -332,8 +363,10 @@ export class AnalyticsService {
 
   async getComprehensiveAnalytics(startDate?: string, endDate?: string) {
     const now = new Date();
-    let start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    let end = endDate ? new Date(endDate) : now;
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : now;
 
     const [
       dashboardStats,
@@ -362,7 +395,11 @@ export class AnalyticsService {
     };
   }
 
-  async getExportData(type: 'members' | 'events' | 'news', startDate?: string, endDate?: string) {
+  async getExportData(
+    type: 'members' | 'events' | 'news',
+    startDate?: string,
+    endDate?: string,
+  ) {
     const start = startDate ? new Date(startDate) : new Date(0);
     const end = endDate ? new Date(endDate) : new Date();
 
@@ -373,7 +410,7 @@ export class AnalyticsService {
         },
         order: { createdAt: 'DESC' },
       });
-      return members.map(m => ({
+      return members.map((m) => ({
         id: m.id,
         name: `${m.firstName} ${m.lastName}`,
         email: m.email,
@@ -392,7 +429,7 @@ export class AnalyticsService {
         },
         order: { eventDate: 'DESC' },
       });
-      return events.map(e => ({
+      return events.map((e) => ({
         id: e.id,
         title: e.title,
         description: e.description,
@@ -411,7 +448,7 @@ export class AnalyticsService {
         },
         order: { publishedDate: 'DESC' },
       });
-      return news.map(n => ({
+      return news.map((n) => ({
         id: n.id,
         title: n.title,
         excerpt: n.excerpt,

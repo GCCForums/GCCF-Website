@@ -118,7 +118,6 @@ export default function MembershipPage() {
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 shadow-xs">
-            <FaShieldAlt className="text-[#3d73bd] text-[11px]" />
             <span>Join the Movement</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">

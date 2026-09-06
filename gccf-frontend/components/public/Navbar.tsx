@@ -1,18 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   FaBars,
   FaTimes,
   FaChevronDown,
   FaShieldAlt,
+  FaThLarge,
+  FaSignOutAlt,
 } from "react-icons/fa";
+import { isAdminLoggedIn, getAdminName, logoutAdmin } from "@/lib/auth";
 
 export default function Navbar() {
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileEventsOpen, setMobileEventsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminName, setAdminName] = useState("Admin User");
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync auth state on mount and on storage/auth changes
+  useEffect(() => {
+    const checkAuth = () => {
+      const loggedIn = isAdminLoggedIn();
+      setIsAdmin(loggedIn);
+      if (loggedIn) {
+        setAdminName(getAdminName());
+      }
+    };
+
+    checkAuth();
+
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener("authChange", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("authChange", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, []);
+
+  // Close profile dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logoutAdmin();
+    setIsAdmin(false);
+    setProfileDropdownOpen(false);
+    setMobileMenuOpen(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,7 +119,7 @@ export default function Navbar() {
             <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#3d73bd] group-hover:w-full transition-all duration-300" />
           </li>
 
-          {/* Our Team (Replaced About) */}
+          {/* Our Team */}
           <li className="relative group cursor-pointer py-1">
             <Link
               href="/team"
@@ -82,9 +129,6 @@ export default function Navbar() {
             </Link>
             <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#3d73bd] group-hover:w-full transition-all duration-300" />
           </li>
-
-          {/* Become a Member */}
-          
 
           <li className="relative group cursor-pointer py-1">
             <Link
@@ -134,6 +178,7 @@ export default function Navbar() {
               </ul>
             </div>
           </li>
+
           <li className="relative group cursor-pointer py-1">
             <Link
               href="/membership"
@@ -145,15 +190,68 @@ export default function Navbar() {
           </li>
         </ul>
 
-        {/* Desktop Admin Login Button (Admin Only) */}
+        {/* Desktop Auth Section */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/admin/login"
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold text-[#1d3c68] bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-xs group"
-          >
-           
-            <span> Login</span>
-          </Link>
+          {isAdmin ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-sm font-semibold text-slate-800 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-[#3d73bd]/60 transition-all duration-200 shadow-2xs cursor-pointer group"
+                aria-expanded={profileDropdownOpen}
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  {adminName.charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-[130px] truncate text-slate-800 font-semibold text-sm">
+                  {adminName}
+                </span>
+                <FaChevronDown
+                  size={10}
+                  className={`text-slate-400 group-hover:text-[#3d73bd] transition-transform duration-200 ${
+                    profileDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Card */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl p-2 shadow-2xl border border-slate-100 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3.5 py-2.5 bg-slate-50/80 rounded-xl mb-1.5 border border-slate-100">
+                    <p className="text-xs font-bold text-slate-900 truncate">
+                      {adminName}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#3d73bd] uppercase tracking-wider mt-0.5">
+                      <FaShieldAlt className="text-[9px]" /> Administrator
+                    </span>
+                  </div>
+
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-700 hover:text-[#3d73bd] hover:bg-blue-50/70 rounded-xl transition-colors"
+                  >
+                    <FaThLarge className="text-xs text-[#3d73bd]" />
+                    <span>Go to Dashboard</span>
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer text-left"
+                  >
+                    <FaSignOutAlt className="text-xs text-rose-500" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold text-[#1d3c68] bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-xs group"
+            >
+              <span>Login</span>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -180,7 +278,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/about#team"
+            href="/team"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-4 py-2.5 text-base font-semibold text-slate-800 hover:text-[#3d73bd] hover:bg-blue-50/50 rounded-xl transition-colors"
           >
@@ -245,16 +343,49 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Auth Button (Admin Only) */}
+          {/* Mobile Auth Button */}
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">
-            <Link
-              href="/admin/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-3 px-4 flex items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl bg-[#3d73bd] hover:bg-[#3462a1] text-white shadow-md shadow-blue-500/20 transition-colors"
-            >
-              <FaShieldAlt className="text-xs" />
-              <span>Admin Login</span>
-            </Link>
+            {isAdmin ? (
+              <div className="space-y-2 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+                <div className="flex items-center gap-3 px-1 pb-1">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] text-white flex items-center justify-center text-sm font-bold shadow-xs">
+                    {adminName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900 truncate">
+                      {adminName}
+                    </p>
+                    <p className="text-xs text-[#3d73bd] font-medium">
+                      Signed In as Administrator
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 px-4 flex items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl bg-[#3d73bd] hover:bg-[#3462a1] text-white shadow-xs transition-colors"
+                >
+                  <FaThLarge className="text-xs" />
+                  <span>Go to Dashboard</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full py-2 px-4 flex items-center justify-center gap-2 text-center text-xs font-semibold rounded-xl text-rose-600 hover:bg-rose-50 border border-rose-200/80 transition-colors cursor-pointer"
+                >
+                  <FaSignOutAlt className="text-xs" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/admin/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-3 px-4 flex items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl bg-[#3d73bd] hover:bg-[#3462a1] text-white shadow-md shadow-blue-500/20 transition-colors"
+              >
+                <FaShieldAlt className="text-xs" />
+                <span>Admin Login</span>
+              </Link>
+            )}
           </div>
         </div>
       )}

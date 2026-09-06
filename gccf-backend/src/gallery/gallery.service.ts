@@ -45,7 +45,10 @@ export class GalleryService {
     return gallery;
   }
 
-  async update(id: string, updateGalleryDto: UpdateGalleryDto): Promise<Gallery> {
+  async update(
+    id: string,
+    updateGalleryDto: UpdateGalleryDto,
+  ): Promise<Gallery> {
     await this.galleryRepository.update(id, updateGalleryDto);
     return this.findOne(id);
   }
@@ -59,7 +62,7 @@ export class GalleryService {
 
   async reorder(ids: string[]): Promise<Gallery[]> {
     const updates = ids.map((id, index) =>
-      this.galleryRepository.update(id, { order: index })
+      this.galleryRepository.update(id, { order: index }),
     );
     await Promise.all(updates);
     return this.findAll();

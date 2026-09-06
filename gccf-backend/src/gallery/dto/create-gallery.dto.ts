@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsArray,
+} from 'class-validator';
 
 export class CreateGalleryDto {
   @IsString()

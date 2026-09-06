@@ -19,7 +19,8 @@ Topics Include:
 - Regulatory compliance in AI security
 
 This conference is perfect for security professionals, data scientists, and technology leaders looking to stay ahead of emerging threats in the AI era.`,
-    shortDescription: 'Explore the cutting edge of AI-powered cybersecurity with leading experts, live demos, and hands-on workshops on ML-based threat detection.',
+    shortDescription:
+      'Explore the cutting edge of AI-powered cybersecurity with leading experts, live demos, and hands-on workshops on ML-based threat detection.',
     eventDate: new Date('2025-03-15'),
     location: 'Bangalore, India',
     status: 'upcoming' as const,
@@ -53,7 +54,8 @@ Key Topics:
 - Serverless security considerations
 
 Perfect for cloud architects, DevOps engineers, security engineers, and IT managers responsible for cloud infrastructure.`,
-    shortDescription: 'Master cloud security with hands-on labs, expert sessions on AWS/Azure/GCP, and real-world case studies from industry leaders.',
+    shortDescription:
+      'Master cloud security with hands-on labs, expert sessions on AWS/Azure/GCP, and real-world case studies from industry leaders.',
     eventDate: new Date('2025-05-20'),
     location: 'Hyderabad, India',
     status: 'upcoming' as const,
@@ -84,7 +86,9 @@ async function seedUpcomingEvents() {
     console.log(`✅ Created: ${event.title}`);
   }
 
-  console.log(`\n🎉 Successfully seeded ${upcomingEventsData.length} upcoming events!\n`);
+  console.log(
+    `\n🎉 Successfully seeded ${upcomingEventsData.length} upcoming events!\n`,
+  );
   await app.close();
 }
 

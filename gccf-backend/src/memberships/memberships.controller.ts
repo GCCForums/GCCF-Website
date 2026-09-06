@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
@@ -15,6 +16,7 @@ import { UpdateMembershipDto } from './dto/update-membership.dto';
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
   create(@Body() createMembershipDto: CreateMembershipDto) {
     return this.membershipsService.create(createMembershipDto);
@@ -41,7 +43,10 @@ export class MembershipsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMembershipDto: UpdateMembershipDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateMembershipDto: UpdateMembershipDto,
+  ) {
     return this.membershipsService.update(id, updateMembershipDto);
   }
 

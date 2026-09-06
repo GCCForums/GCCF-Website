@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useGallery } from "@/lib/hooks";
-import { X, ZoomIn } from "lucide-react";
+import { X, ZoomIn, Camera } from "lucide-react";
+import PageHero from "@/components/public/PageHero";
 import type { Gallery } from "@/types/gallery";
 
 export default function GalleryPage() {
@@ -38,23 +39,23 @@ export default function GalleryPage() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-neutral-50">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-[var(--primary-dark)]" />
-        <p className="mt-6 text-neutral-500">Loading gallery...</p>
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#1d3c68]" />
+        <p className="mt-6 text-slate-500 font-medium">Loading gallery...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
           <p className="mb-4 text-red-600">
             Failed to load gallery. Please try again later.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-md bg-[var(--primary-dark)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--primary)]"
+            className="rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white transition-all shadow-md hover:shadow-lg"
           >
             Retry
           </button>
@@ -64,24 +65,18 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Hero */}
-      <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden bg-[linear-gradient(135deg,var(--primary-dark)_0%,var(--primary)_100%)] px-5 pb-16 pt-28">
-        <div className="pointer-events-none absolute -right-36 -top-36 h-[500px] w-[500px] rounded-full bg-white/10" />
-        <div className="relative z-10 max-w-3xl animate-[fadeIn_0.8s_ease-out] text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-            Our Gallery
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-white/90 sm:text-xl">
-            Capturing moments of impact, celebration, and community connection
-            across our programs and initiatives.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50/60">
+      {/* Brand Grid Hero */}
+      <PageHero
+        badge="Visual Archive & Moments"
+        titlePrefix="Our"
+        titleHighlight="Gallery"
+        subtitle="Capturing moments of impact, celebration, and community connection across our programs and initiatives."
+      />
 
       {/* Filters */}
-      <section className="mx-auto max-w-6xl px-6 pb-8 pt-12 sm:px-10">
-        <div className="flex flex-wrap justify-center gap-3">
+      <section className="mx-auto max-w-6xl px-6 pb-8 pt-8 sm:px-10">
+        <div className="flex flex-wrap justify-center gap-2.5">
           {categories.map((category) => {
             const active = filter === category;
             return (
@@ -90,10 +85,10 @@ export default function GalleryPage() {
                 type="button"
                 onClick={() => setFilter(category)}
                 aria-pressed={active}
-                className={`rounded-full border-2 px-6 py-2.5 text-sm font-semibold transition-all hover:-translate-y-0.5 ${
+                className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
                   active
-                    ? "border-[var(--primary-dark)] bg-[linear-gradient(135deg,var(--primary-dark)_0%,var(--primary)_100%)] text-white"
-                    : "border-neutral-200 bg-white text-neutral-600 hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                    ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
                 }`}
               >
                 {category}
@@ -135,14 +130,14 @@ export default function GalleryPage() {
                       className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                     />
 
-                    <div className="absolute right-4 top-4 flex h-11 w-11 scale-75 items-center justify-center rounded-full bg-white/95 text-[var(--primary)] opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
+                    <div className="absolute right-4 top-4 flex h-11 w-11 scale-75 items-center justify-center rounded-full bg-white/95 text-[#1d3c68] opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 shadow-md">
                       <ZoomIn size={20} />
                     </div>
 
-                    <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[var(--primary-dark)]/90 to-transparent to-60% p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[#1d3c68]/95 via-[#1d3c68]/40 to-transparent to-60% p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <div className="translate-y-4 transition-transform duration-300 group-hover:translate-y-0">
                         {image.category && (
-                          <span className="mb-2 inline-block w-fit rounded-full bg-[var(--primary)]/90 px-4 py-1.5 text-xs font-semibold text-white">
+                          <span className="mb-2 inline-block w-fit rounded-full bg-[#3d73bd]/90 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-xs">
                             {image.category}
                           </span>
                         )}

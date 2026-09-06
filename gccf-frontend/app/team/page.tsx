@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Mail, Linkedin, Building2 } from "lucide-react";
+import { Mail, Linkedin } from "lucide-react";
 import { TeamMember } from "@/components/admin/types";
 
 const defaultTeamMembers: TeamMember[] = [
@@ -61,6 +61,9 @@ const defaultTeamMembers: TeamMember[] = [
   },
 ];
 
+import PageHero from "@/components/public/PageHero";
+import { FaShieldAlt } from "react-icons/fa";
+
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => {
     if (typeof window === "undefined") return defaultTeamMembers;
@@ -118,23 +121,17 @@ export default function TeamPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-20">
-      {/* Hero Header */}
-      <section className="max-w-6xl mx-auto px-6 mb-16 text-center">
-        <span className="text-xs font-bold uppercase tracking-widest text-[#3d73bd] mb-3 block">
-          Our Leadership & Community
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-          Meet the GCCF Team
-        </h1>
-        <p className="text-slate-600 max-w-2xl mx-auto text-base sm:text-lg">
-          A global coalition of security researchers, community leaders, and technologists 
-          dedicated to advancing cyber resilience and ethical knowledge sharing.
-        </p>
-      </section>
+    <div className="min-h-screen bg-slate-50/60 pb-24">
+      {/* Brand Grid Hero Section */}
+      <PageHero
+        badge="Our Leadership & Community"
+        titlePrefix="Meet the"
+        titleHighlight="GCCF Team"
+        subtitle="A global coalition of security researchers, community leaders, and technologists dedicated to advancing cyber resilience and ethical knowledge sharing."
+      />
 
       {/* Team Grid */}
-      <section className="max-w-6xl mx-auto px-6">
+      <section className="max-w-6xl mx-auto px-6 pt-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {teamMembers.map((member) => (
             <div
@@ -165,31 +162,36 @@ export default function TeamPage() {
                   </div>
                 )}
 
-                {/* Floating Social Icons Overlay */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
-                  <div className="flex gap-1.5 bg-white/90 backdrop-blur-md p-1.5 rounded-xl shadow-sm border border-slate-200/60">
-                    {member.email && (
-                      <a
-                        href={`mailto:${member.email}`}
-                        className="p-1.5 text-slate-500 hover:text-[#3d73bd] hover:bg-blue-50 rounded-lg transition-colors"
-                        title={member.email}
-                      >
-                        <Mail size={16} />
-                      </a>
-                    )}
-                    {member.linkedin && (
-                      <a
-                        href={member.linkedin}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 text-slate-500 hover:text-[#3d73bd] hover:bg-blue-50 rounded-lg transition-colors"
-                        title="LinkedIn Profile"
-                      >
-                        <Linkedin size={16} />
-                      </a>
-                    )}
+                {/* Subtle bottom gradient shadow on hover */}
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Social Icons Overlay: Centered at the bottom of the image with blue gradient, visible only on hover */}
+                {(member.email || member.linkedin) && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10 pointer-events-none group-hover:pointer-events-auto">
+                    <div className="flex items-center gap-1.5 p-1.5 px-3 rounded-full bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9] text-white shadow-lg shadow-[#1d3c68]/30 border border-white/20 backdrop-blur-xs">
+                      {member.email && (
+                        <a
+                          href={`mailto:${member.email}`}
+                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                          title={member.email}
+                        >
+                          <Mail size={15} />
+                        </a>
+                      )}
+                      {member.linkedin && (
+                        <a
+                          href={member.linkedin}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                          title="LinkedIn Profile"
+                        >
+                          <Linkedin size={15} />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="p-6 flex-1 flex flex-col justify-between">
@@ -197,16 +199,13 @@ export default function TeamPage() {
                   <h3 className="text-xl font-bold text-slate-900 mb-1">
                     {member.name}
                   </h3>
-                  <span className="text-xs font-semibold text-[#3d73bd] uppercase tracking-wider block mb-2">
+                  <span className="text-xs font-semibold text-[#3d73bd] uppercase tracking-wider block mb-1">
                     {member.title || "Team Leader"}
                   </span>
                   {member.affiliatedPart && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 py-1.5 px-2.5 rounded-lg border border-slate-100 mt-2">
-                      <Building2 size={13} className="text-[#3d73bd] flex-shrink-0" />
-                      <span className="font-medium text-slate-700">
-                        {member.affiliatedPart}
-                      </span>
-                    </div>
+                    <p className="text-xs text-slate-500 font-medium">
+                      {member.affiliatedPart}
+                    </p>
                   )}
                 </div>
               </div>

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -16,7 +20,7 @@ export class SettingsService {
 
   async getSettings(): Promise<Settings> {
     let settings = await this.settingsRepository.findOne({ where: { id: 1 } });
-    
+
     if (!settings) {
       settings = this.settingsRepository.create({
         id: 1,
@@ -25,7 +29,7 @@ export class SettingsService {
           email: 'admin@gccf.org',
           twoFactorEnabled: false,
           lastLogin: new Date().toISOString(),
-          lastLoginIP: '192.168.1.100'
+          lastLoginIP: '192.168.1.100',
         },
         securitySettings: {
           minPasswordLength: 8,
@@ -35,23 +39,23 @@ export class SettingsService {
           sessionTimeout: 30,
           maxLoginAttempts: 5,
           lockoutDuration: 15,
-          requireTwoFactor: false
+          requireTwoFactor: false,
         },
         analyticsSettings: {
           realTimeUpdates: true,
           defaultDateRange: '30',
           displayedMetrics: ['members', 'news', 'events', 'gallery'],
-          exportFormat: 'csv'
+          exportFormat: 'csv',
         },
         appearanceSettings: {
           theme: 'light',
           primaryColor: '#2563eb',
-          dashboardLayout: 'default'
-        }
+          dashboardLayout: 'default',
+        },
       });
       await this.settingsRepository.save(settings);
     }
-    
+
     return settings;
   }
 
@@ -103,8 +107,13 @@ export class SettingsService {
     return this.settingsRepository.save(settings);
   }
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    const admin = await this.adminRepository.findOne({ where: { username: 'admin' } });
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const admin = await this.adminRepository.findOne({
+      where: { username: 'admin' },
+    });
     if (!admin) {
       throw new NotFoundException('Admin user not found');
     }
@@ -117,7 +126,7 @@ export class SettingsService {
     return { success: true, message: 'Password changed successfully' };
   }
 
-  async logoutAllSessions(): Promise<{ success: boolean; message: string }> {
+  logoutAllSessions(): { success: boolean; message: string } {
     return { success: true, message: 'All sessions logged out successfully' };
   }
 }

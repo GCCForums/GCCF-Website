@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEvents } from "@/lib/hooks";
 import Link from "next/link";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaArrowRight } from "react-icons/fa";
+import PageHero from "@/components/public/PageHero";
 
 export default function EventsPage() {
   const { data: eventsList = [], isLoading, error } = useEvents();
@@ -11,51 +12,21 @@ export default function EventsPage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        position: "fixed",
-        inset: 0,
-        background: "#fafafa",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999
-      }}>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{
-          width: "50px",
-          height: "50px",
-          border: "4px solid #e0e0e0",
-          borderTopColor: "#0d47a1",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
-        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>Loading events...</p>
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#1d3c68]" />
+        <p className="mt-6 text-slate-500 font-medium">Loading events...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "#fafafa",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ color: "#dc2626", marginBottom: "1rem" }}>Failed to load events. Please try again later.</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <p className="mb-4 text-red-600 font-medium">Failed to load events. Please try again later.</p>
           <button
             onClick={() => window.location.reload()}
-            style={{
-              padding: "12px 24px",
-              background: "#0d47a1",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer"
-            }}
+            className="rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
             Retry
           </button>
@@ -69,89 +40,132 @@ export default function EventsPage() {
     : eventsList.filter(e => e.status === filter);
 
   return (
-    <div className="events-page">
-      <style>{`
-        .events-page { min-height: 100vh; background: #fafafa; }
-        .events-hero { background: linear-gradient(135deg, #0d47a1 0%, #2196f3 100%); padding: 120px 2rem 60px; text-align: center; }
-        .events-hero h1 { font-size: 3.5rem; color: white; margin: 0 0 1rem 0; }
-        .events-hero p { font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 600px; margin: 0 auto; }
-        .events-container { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; }
-        .filter-section { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-        .filter-btn { padding: 12px 28px; border: 2px solid #e0e0e0; background: white; color: #666; font-size: 0.95rem; font-weight: 600; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; }
-        .filter-btn:hover { border-color: #0d47a1; color: #0d47a1; }
-        .filter-btn.active { background: linear-gradient(135deg, #0d47a1, #2196f3); color: white; border-color: #0d47a1; }
-        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; }
-        .event-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; display: flex; flex-direction: column; text-decoration: none; color: inherit; }
-        .event-card:hover { transform: translateY(-8px); box-shadow: 0 12px 40px rgba(13, 71, 161, 0.15); }
-        .event-card-image { position: relative; height: 200px; overflow: hidden; }
-        .event-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-        .event-card:hover .event-card-image img { transform: scale(1.1); }
-        .event-status-badge { position: absolute; top: 16px; right: 16px; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
-        .event-status-badge.upcoming { background: #e3f2fd; color: #0d47a1; }
-        .event-status-badge.completed { background: #e8f5e9; color: #2e7d32; }
-        .event-card-content { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
-        .event-card-title { font-size: 1.35rem; font-weight: 600; color: #1a1a1a; margin: 0 0 0.75rem 0; line-height: 1.4; }
-        .event-card-description { font-size: 0.95rem; color: #666; line-height: 1.6; margin: 0 0 1rem 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .event-card-details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
-        .event-card-detail { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #666; }
-        .event-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #e8eaed; }
-        .event-card-link { display: flex; align-items: center; gap: 6px; color: #0d47a1; font-weight: 600; font-size: 0.9rem; }
-        .event-card:hover .event-card-link { gap: 10px; }
-        .empty-state { text-align: center; padding: 4rem 2rem; background: white; border-radius: 12px; grid-column: 1 / -1; }
-        .empty-state h3 { color: #333; margin: 0 0 0.5rem 0; }
-        .empty-state p { color: #666; margin: 0; }
-        @media (max-width: 768px) {
-          .events-hero { padding: 80px 1rem 40px; }
-          .events-hero h1 { font-size: 2.5rem; }
-          .events-container { padding: 2rem 1rem; }
-          .events-grid { grid-template-columns: 1fr; }
-          .filter-section { justify-content: center; }
-        }
-      `}</style>
+    <div className="min-h-screen bg-slate-50/60 pb-24">
+      {/* Brand Grid Hero */}
+      <PageHero
+        badge="Global Gatherings & Summits"
+        titlePrefix="Explore"
+        titleHighlight="Events & Workshops"
+        subtitle="Discover upcoming and past cybersecurity conferences, technical workshops, webinars, and global community roundtables."
+      />
 
-      <section className="events-hero">
-        <h1>Events</h1>
-        <p>Discover upcoming and past events from our community. Join us for workshops, conferences, and more.</p>
-      </section>
-
-      <div className="events-container">
-        <div className="filter-section">
-          <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>All Events</button>
-          <button className={`filter-btn ${filter === "upcoming" ? "active" : ""}`} onClick={() => setFilter("upcoming")}>Upcoming</button>
-          <button className={`filter-btn ${filter === "completed" ? "active" : ""}`} onClick={() => setFilter("completed")}>Completed</button>
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 pt-10">
+        {/* Filter Section */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12">
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+              filter === "all"
+                ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
+                : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
+            }`}
+          >
+            All Events
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("upcoming")}
+            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+              filter === "upcoming"
+                ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
+                : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
+            }`}
+          >
+            Upcoming
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("completed")}
+            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+              filter === "completed"
+                ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
+                : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
+            }`}
+          >
+            Completed
+          </button>
         </div>
 
-        <div className="events-grid">
+        {/* Events Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredEvents.length === 0 ? (
-            <div className="empty-state">
-              <h3>No Events Found</h3>
-              <p>No events match the selected filter.</p>
+            <div className="col-span-full bg-white rounded-3xl border border-slate-200/80 p-12 text-center max-w-lg mx-auto shadow-xs">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-2xl mx-auto mb-4 border border-blue-100">
+                <FaCalendarAlt />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">No Events Found</h3>
+              <p className="text-slate-500 text-sm">No events match the selected category filter.</p>
             </div>
           ) : (
             filteredEvents.map((event) => (
-              <Link key={event.id} href={`/events/${event.slug}`} className="event-card">
-                <div className="event-card-image">
-                  <img src={event.mainImage} alt={event.title} />
-                  <span className={`event-status-badge ${event.status}`}>{event.status}</span>
+              <Link
+                key={event.id}
+                href={`/events/${event.slug}`}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-xl hover:shadow-[#3d73bd]/10 hover:border-[#3d73bd]/30 transition-all duration-300 flex flex-col hover:-translate-y-1"
+              >
+                {/* Event Image */}
+                <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+                  <img
+                    src={event.mainImage}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                  <span
+                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold capitalize backdrop-blur-md shadow-xs border ${
+                      event.status === "upcoming"
+                        ? "bg-emerald-500/90 text-white border-emerald-400/40"
+                        : "bg-slate-700/80 text-white border-white/20"
+                    }`}
+                  >
+                    {event.status}
+                  </span>
                 </div>
-                <div className="event-card-content">
-                  <h2 className="event-card-title">{event.title}</h2>
-                  <p className="event-card-description">{event.shortDescription}</p>
-                  <div className="event-card-details">
-                    <span className="event-card-detail">
-                      <FaCalendarAlt /> {new Date(event.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </span>
-                    <span className="event-card-detail">
-                      <FaMapMarkerAlt /> {event.location}
-                    </span>
-                    {event.attendees !== undefined && event.attendees > 0 && (
-                      <span className="event-card-detail">
-                        <FaUsers /> {event.attendees} attendees
-                      </span>
-                    )}
+
+                {/* Event Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 group-hover:text-[#1d3c68] transition-colors leading-snug mb-3">
+                      {event.title}
+                    </h2>
+                    <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-5 font-normal">
+                      {event.shortDescription}
+                    </p>
+
+                    <div className="space-y-2 mb-6">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                        <FaCalendarAlt className="text-[#3d73bd] shrink-0" />
+                        <span>
+                          {new Date(event.eventDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <FaMapMarkerAlt className="text-[#3d73bd] shrink-0" />
+                        <span className="truncate">{event.location}</span>
+                      </div>
+                      {event.attendees !== undefined && event.attendees > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <FaUsers className="text-[#3d73bd] shrink-0" />
+                          <span>{event.attendees} attendees</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="event-card-footer">
-                    <span className="event-card-link">View Details <FaArrowRight /></span>
+
+                  {/* Footer */}
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      GCCF Event
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1d3c68] group-hover:text-[#3d73bd] transition-colors group-hover:translate-x-1 duration-200">
+                      <span>View Details</span>
+                      <FaArrowRight className="text-[11px]" />
+                    </span>
                   </div>
                 </div>
               </Link>

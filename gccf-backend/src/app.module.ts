@@ -2,7 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { EventsModule } from './events/events.module';
 import { NewsModule } from './news/news.module';
 import { GalleryModule } from './gallery/gallery.module';
@@ -21,7 +26,21 @@ import { SupabaseModule } from './supabase/supabase.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/uploads',
     }),
+    // In-memory caching for performance optimization
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 30000, // 30 seconds default TTL
+      max: 100, // max 100 items in cache
+    }),
+    // Rate limiting to protect against abuse and DDoS
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds
+        limit: 100, // 100 requests per 60 seconds
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -42,7 +61,8 @@ import { SupabaseModule } from './supabase/supabase.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+            synchronize:
+              configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
             ssl: sslConfig,
           };
         }
@@ -55,7 +75,8 @@ import { SupabaseModule } from './supabase/supabase.module';
           password: configService.get<string>('DB_PASSWORD', 'postgres'),
           database: configService.get<string>('DB_DATABASE', 'gccf_db'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+          synchronize:
+            configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
           ssl: sslConfig,
         };
       },
@@ -71,6 +92,13 @@ import { SupabaseModule } from './supabase/supabase.module';
     MembershipsModule,
     SettingsModule,
   ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
-

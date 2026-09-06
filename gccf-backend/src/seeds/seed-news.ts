@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { NewsService } from '../news/news.service';
+import { CreateNewsDto } from '../news/dto/create-news.dto';
 
 export const newsData = [
   {
@@ -15,7 +16,8 @@ Security experts are advising all affected users to immediately change their pas
 "This incident highlights the critical importance of robust security practices and the need for organizations to prioritize cybersecurity investments," said Dr. Sarah Chen, Chief Security Officer at CyberDefense Solutions.
 
 The investigation is ongoing, and law enforcement agencies have been notified. Users are encouraged to monitor their accounts for suspicious activity and report any concerns immediately.`,
-    excerpt: 'Security researchers discover vulnerability in authentication service exposing millions of user credentials. Immediate password changes recommended.',
+    excerpt:
+      'Security researchers discover vulnerability in authentication service exposing millions of user credentials. Immediate password changes recommended.',
     publishedDate: new Date('2025-01-28'),
     author: 'Alex Rodriguez',
     category: 'Data Breach',
@@ -38,7 +40,8 @@ The attackers are demanding ransoms ranging from $500,000 to $2 million in crypt
 Federal agencies including the FBI and CISA have issued joint advisories urging healthcare organizations to review their security postures and implement recommended mitigation strategies. These include network segmentation, regular backups, and employee security training.
 
 Healthcare organizations are advised to maintain offline backups of critical data and implement multi-factor authentication across all systems. The investigation into the ransomware group's identity and infrastructure is ongoing.`,
-    excerpt: 'Healthcare sector faces new targeted ransomware threat. MediCrypt variant disrupts critical medical systems and patient care services.',
+    excerpt:
+      'Healthcare sector faces new targeted ransomware threat. MediCrypt variant disrupts critical medical systems and patient care services.',
     publishedDate: new Date('2025-01-26'),
     author: 'Jessica Martinez',
     category: 'Ransomware',
@@ -63,7 +66,8 @@ Security experts recommend organizations implement advanced email authentication
 Industry leaders are calling for updated security frameworks that account for AI-enhanced threats. The Cybersecurity and Infrastructure Security Agency (CISA) has announced plans to release new guidelines specifically addressing AI-powered social engineering attacks.
 
 Organizations are urged to adopt a zero-trust security model and implement multi-factor authentication for all sensitive transactions, regardless of the apparent source of requests.`,
-    excerpt: 'AI-generated phishing emails bypass traditional defenses with unprecedented sophistication. Organizations urged to update security protocols.',
+    excerpt:
+      'AI-generated phishing emails bypass traditional defenses with unprecedented sophistication. Organizations urged to update security protocols.',
     publishedDate: new Date('2025-01-24'),
     author: 'David Kim',
     category: 'Phishing',
@@ -88,7 +92,8 @@ Major manufacturers have begun releasing security patches, but the fragmented na
 The Department of Homeland Security has issued an alert urging critical infrastructure operators to assess their IoT device inventories and apply available patches immediately. For devices that cannot be patched, network-level protections and monitoring are recommended.
 
 This incident has renewed calls for mandatory security standards in IoT manufacturing and clearer disclosure of device support lifecycles.`,
-    excerpt: 'Widespread IoT chipset vulnerability affects over 100 million devices. Immediate patching and network segmentation recommended.',
+    excerpt:
+      'Widespread IoT chipset vulnerability affects over 100 million devices. Immediate patching and network segmentation recommended.',
     publishedDate: new Date('2025-01-22'),
     author: 'Sarah Johnson',
     category: 'Vulnerabilities',
@@ -113,12 +118,18 @@ The National Institute of Standards and Technology (NIST) has already published 
 Industry leaders are calling for coordinated efforts to develop and deploy quantum-resistant encryption across critical infrastructure. The estimated cost of transitioning to post-quantum cryptography for large enterprises is projected to be in the tens of millions of dollars.
 
 Cybersecurity professionals recommend organizations begin assessing their cryptographic inventories and developing migration strategies immediately, even if quantum computers capable of breaking current encryption are still several years away.`,
-    excerpt: 'New quantum computing advancement accelerates timeline for breaking current encryption. Organizations urged to prepare for post-quantum cryptography.',
+    excerpt:
+      'New quantum computing advancement accelerates timeline for breaking current encryption. Organizations urged to prepare for post-quantum cryptography.',
     publishedDate: new Date('2025-01-20'),
     author: 'Michael Zhang',
     category: 'Emerging Threats',
     featuredImage: 'http://localhost:4000/uploads/news/news5.jpg',
-    tags: ['quantum computing', 'encryption', 'post-quantum cryptography', 'security'],
+    tags: [
+      'quantum computing',
+      'encryption',
+      'post-quantum cryptography',
+      'security',
+    ],
     source: 'GCCF News Team',
     sourceUrl: null,
   },
@@ -132,10 +143,11 @@ async function seedNews() {
 
   for (const articleData of newsData) {
     try {
-      await newsService.create(articleData as any);
+      await newsService.create(articleData as unknown as CreateNewsDto);
       console.log(`✅ Created: ${articleData.title}`);
-    } catch (error) {
-      console.error(`❌ Failed to create: ${articleData.title}`, error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error(`❌ Failed to create: ${articleData.title}`, err.message);
     }
   }
 

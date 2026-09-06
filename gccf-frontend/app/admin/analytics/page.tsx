@@ -14,8 +14,10 @@ import {
   FaClock,
   FaArrowLeft,
   FaGlobe,
+  FaUserShield,
 } from "react-icons/fa";
 import Link from "next/link";
+import { exportToExcel } from "@/lib/excelExport";
 import {
   analyticsApi,
   DashboardStats,
@@ -133,17 +135,73 @@ export default function AnalyticsPage() {
     setExporting(type);
     try {
       const { startDate, endDate } = getDateRange();
-      const data = await analyticsApi.exportData(type, startDate, endDate);
+      const rawData = await analyticsApi.exportData(type, startDate, endDate);
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${type}-report-${startDate}-to-${endDate}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      let formattedData: Record<string, unknown>[] = [];
+
+      const rawList = Array.isArray(rawData)
+        ? (rawData as Record<string, unknown>[])
+        : [];
+
+      if (type === "members") {
+        formattedData = rawList.map((m) => ({
+          "Member ID": String(m.id || "—"),
+          "Full Name": String(
+            m.name || `${m.firstName || ""} ${m.lastName || ""}`.trim() || "—"
+          ),
+          "Email Address": String(m.email || "—"),
+          "Phone": String(m.phone || "—"),
+          "Organization": String(m.organization || "Independent"),
+          "Occupation": String(m.occupation || "—"),
+          "Status": m.status ? String(m.status).toUpperCase() : "PENDING",
+          "Applied Date": m.createdAt
+            ? new Date(String(m.createdAt)).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "—",
+        }));
+      } else if (type === "events") {
+        formattedData = rawList.map((e) => ({
+          "Event ID": String(e.id || "—"),
+          "Title": String(e.title || "—"),
+          "Status": e.status ? String(e.status).toUpperCase() : "UPCOMING",
+          "Date": e.eventDate
+            ? new Date(String(e.eventDate)).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "—",
+          "Location": String(e.location || "Online"),
+          "Attendees": Number(e.attendees || 0),
+          "Organizer": String(e.organizer || "GCCF"),
+          "Description": String(e.description || ""),
+        }));
+      } else if (type === "news") {
+        formattedData = rawList.map((n) => ({
+          "Article ID": String(n.id || "—"),
+          "Title": String(n.title || "—"),
+          "Category": String(n.category || "General"),
+          "Author": String(n.author || "GCCF Newsroom"),
+          "Status": n.isPublished ? "PUBLISHED" : "DRAFT",
+          "Publication Date": n.createdAt
+            ? new Date(String(n.createdAt)).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "—",
+          "Excerpt": String(n.excerpt || ""),
+        }));
+      } else {
+        formattedData = rawList;
+      }
+
+      const filename = `GCCF-${type.toUpperCase()}-Analytics-${startDate}-to-${endDate}.xlsx`;
+      const sheetName = `${type.charAt(0).toUpperCase() + type.slice(1)} Analytics`;
+      exportToExcel(formattedData, filename, sheetName);
     } catch (err) {
       console.error("Export failed:", err);
     } finally {
@@ -243,24 +301,24 @@ export default function AnalyticsPage() {
             onClick={() => handleExport("members")}
             disabled={!!exporting}
           >
-            <FaDownload />
-            {exporting === "members" ? " Exporting..." : " Members"}
+            <FaDownload className="text-emerald-600" />
+            {exporting === "members" ? " Exporting..." : " Export Members (.xlsx)"}
           </button>
           <button
             className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             onClick={() => handleExport("events")}
             disabled={!!exporting}
           >
-            <FaDownload />
-            {exporting === "events" ? " Exporting..." : " Events"}
+            <FaDownload className="text-emerald-600" />
+            {exporting === "events" ? " Exporting..." : " Export Events (.xlsx)"}
           </button>
           <button
             className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             onClick={() => handleExport("news")}
             disabled={!!exporting}
           >
-            <FaDownload />
-            {exporting === "news" ? " Exporting..." : " News"}
+            <FaDownload className="text-emerald-600" />
+            {exporting === "news" ? " Exporting..." : " Export News (.xlsx)"}
           </button>
         </div>
       </div>
@@ -570,14 +628,18 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm shrink-0 ${
-                      activity.type === "member"
+                      activity.type === "team"
+                        ? "bg-purple-50 text-purple-600"
+                        : activity.type === "member"
                         ? "bg-blue-50 text-blue-600"
                         : activity.type === "news"
                         ? "bg-emerald-50 text-emerald-600"
                         : "bg-amber-50 text-amber-600"
                     }`}
                   >
-                    {activity.type === "member" ? (
+                    {activity.type === "team" ? (
+                      <FaUserShield />
+                    ) : activity.type === "member" ? (
                       <FaUsers />
                     ) : activity.type === "news" ? (
                       <FaNewspaper />

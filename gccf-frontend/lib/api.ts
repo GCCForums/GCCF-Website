@@ -194,6 +194,7 @@ export interface DashboardStats {
   totalNews: number;
   totalGallery: number;
   approvedMembers: number;
+  declinedMembers?: number;
   newMembersThisMonth: number;
   newMembersThisWeek: number;
   monthGrowth: number;
@@ -228,10 +229,10 @@ export interface MembershipStats {
 }
 
 export interface ActivityItem {
-  type: 'member' | 'news' | 'event';
+  type: 'member' | 'news' | 'event' | 'team';
   action: string;
   title: string;
-  timestamp: Date;
+  timestamp: Date | string;
 }
 
 export interface EventStats {

@@ -6,7 +6,9 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -20,21 +22,29 @@ export class EventsController {
     return this.eventsService.create(createEventDto);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get()
   findAll() {
     return this.eventsService.findAll();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get('completed')
   findCompleted() {
     return this.eventsService.findCompleted();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get('upcoming')
   findUpcoming() {
     return this.eventsService.findUpcoming();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.eventsService.findBySlug(slug);

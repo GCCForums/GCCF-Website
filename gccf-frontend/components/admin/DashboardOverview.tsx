@@ -9,6 +9,7 @@ import {
   FaArrowDown,
   FaCheck,
   FaClock,
+  FaUserShield,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -83,7 +84,7 @@ export default function DashboardOverview({
   const declinedCount =
     membershipsList && membershipsList.length > 0
       ? membershipsList.filter((m) => m.status === "declined").length
-      : 0;
+      : dashboardStats?.declinedMembers ?? 0;
 
   const totalMemberships = approvedCount + pendingCount + declinedCount;
 
@@ -430,6 +431,7 @@ export default function DashboardOverview({
         <div className="space-y-3">
           {recentActivity.length > 0 ? (
             recentActivity.map((activity, index) => {
+              const isTeam = activity.type === "team";
               const isMember = activity.type === "member";
               const isNews = activity.type === "news";
               return (
@@ -440,14 +442,18 @@ export default function DashboardOverview({
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 shadow-xs ${
-                        isMember
+                        isTeam
+                          ? "bg-purple-100 text-purple-700"
+                          : isMember
                           ? "bg-blue-100 text-blue-700"
                           : isNews
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-amber-100 text-amber-700"
                       }`}
                     >
-                      {isMember ? (
+                      {isTeam ? (
+                        <FaUserShield />
+                      ) : isMember ? (
                         <FaUsers />
                       ) : isNews ? (
                         <FaNewspaper />
