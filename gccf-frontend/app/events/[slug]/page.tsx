@@ -134,7 +134,7 @@ export default function EventDetailPage() {
           {/* Quick Meta Row */}
           <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
-              <FaCalendarAlt className="text-emerald-400 shrink-0" />
+              <FaCalendarAlt className="text-[#60a5fa] shrink-0" />
               <span>
                 {eventDate.toLocaleDateString("en-US", {
                   weekday: "short",
@@ -146,7 +146,7 @@ export default function EventDetailPage() {
             </div>
 
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
-              <FaClock className="text-blue-400 shrink-0" />
+              <FaClock className="text-[#60a5fa] shrink-0" />
               <span>
                 {eventDate.toLocaleTimeString("en-US", {
                   hour: "2-digit",
@@ -156,7 +156,7 @@ export default function EventDetailPage() {
             </div>
 
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
-              <FaMapMarkerAlt className="text-rose-400 shrink-0" />
+              <FaMapMarkerAlt className="text-[#60a5fa] shrink-0" />
               <span>{event.location}</span>
             </div>
 
@@ -165,7 +165,7 @@ export default function EventDetailPage() {
               className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10 text-white transition-colors cursor-pointer ml-auto"
               title="Share event link"
             >
-              {copied ? <FaCheck className="text-emerald-400 text-xs" /> : <FaShareAlt className="text-xs" />}
+              {copied ? <FaCheck className="text-emerald-400 text-xs" /> : <FaShareAlt className="text-xs text-blue-200" />}
               <span>{copied ? "Link Copied!" : "Share"}</span>
             </button>
           </div>
@@ -189,7 +189,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg shrink-0 border border-indigo-100">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
               <FaClock />
             </div>
             <div>
@@ -201,7 +201,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-lg shrink-0 border border-rose-100">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
               <FaMapMarkerAlt />
             </div>
             <div className="min-w-0">
@@ -213,7 +213,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0 border border-emerald-100">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
               <FaUsers />
             </div>
             <div className="min-w-0">

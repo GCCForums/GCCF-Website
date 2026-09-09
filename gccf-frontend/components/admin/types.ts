@@ -1,5 +1,6 @@
 export type AdminTab =
   | "dashboard"
+  | "homepage"
   | "news"
   | "events"
   | "gallery"
@@ -18,6 +19,7 @@ export interface FeaturePermission {
 
 export const AVAILABLE_PERMISSIONS: FeaturePermission[] = [
   { id: "dashboard", name: "Dashboard", description: "View dashboard analytics and statistics" },
+  { id: "homepage", name: "Homepage Content", description: "Edit Hero, Metrics, About Us, and FAQ sections" },
   { id: "news", name: "News Management", description: "Create, publish, edit, and delete news posts" },
   { id: "events", name: "Events Management", description: "Create, manage events, registration links & images" },
   { id: "gallery", name: "Gallery Media", description: "Upload and manage photos in public gallery" },

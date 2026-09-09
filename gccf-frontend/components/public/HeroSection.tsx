@@ -1,10 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { FaArrowRight } from "react-icons/fa";
 import CyberThreatGlobe from "./CyberThreatGlobe";
+import { HeroSectionContent } from "@/lib/api";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  content?: HeroSectionContent;
+}
+
+export default function HeroSection({ content }: HeroSectionProps) {
+  const badge = content?.badge ?? "GLOBAL CYBERSECURITY FORUM";
+  const title = content?.title ?? "Protecting the Digital World";
+  const titleHighlight = content?.titleHighlight ?? "Together";
+  const subtitle =
+    content?.subtitle ??
+    "Join thousands of cybersecurity practitioners, researchers, and enterprise defenders. Share threat intelligence, collaborate on live defense, and elevate the security posture of global systems.";
+
   return (
     <section className="relative min-h-[85vh] flex items-center bg-white overflow-hidden pt-32 sm:pt-36 pb-16">
       {/* Brand Color Grid Background */}
@@ -32,41 +42,26 @@ export default function HeroSection() {
           {/* Left Column: Hero Text & Circular CTAs */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-start text-left">
             {/* Badge: Simple text without pulse effect */}
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 mb-6 shadow-xs">
-              GLOBAL CYBERSECURITY FORUM
-            </div>
+            {badge && (
+              <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 mb-6 shadow-xs">
+                {badge}
+              </div>
+            )}
 
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
-              Protecting the Digital World{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9]">
-                Together
-              </span>
+              {title}{" "}
+              {titleHighlight && (
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9]">
+                  {titleHighlight}
+                </span>
+              )}
             </h1>
 
             {/* Subtext */}
-            <p className="text-base sm:text-lg text-slate-600 mb-8 max-w-xl font-normal leading-relaxed">
-              Join thousands of cybersecurity practitioners, researchers, and enterprise defenders.
-              Share threat intelligence, collaborate on live defense, and elevate the security posture of global systems.
+            <p className="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed">
+              {subtitle}
             </p>
-
-            {/* Circular CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-              <Link
-                href="/membership"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#3d73bd] hover:to-[#5a8fd9] rounded-full shadow-lg shadow-[#3d73bd]/25 hover:shadow-xl hover:shadow-[#3d73bd]/35 hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <span>Join Our Community</span>
-                <FaArrowRight className="text-sm" />
-              </Link>
-
-              <Link
-                href="/events"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-base font-semibold text-[#1d3c68] bg-white hover:bg-slate-50 border-2 border-[#3d73bd]/30 hover:border-[#3d73bd] rounded-full shadow-xs hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <span>Explore Events</span>
-              </Link>
-            </div>
           </div>
 
           {/* Right Column: Transparent 3D Cyber Threat Globe */}

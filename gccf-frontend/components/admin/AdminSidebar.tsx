@@ -18,6 +18,7 @@ import {
   FaBullhorn,
   FaQuoteRight,
   FaUserShield,
+  FaLayerGroup,
 } from "react-icons/fa";
 import { AdminTab } from "./types";
 import { hasPermission, isSuperAdmin } from "@/lib/auth";
@@ -78,6 +79,16 @@ export default function AdminSidebar({
           >
             <FaTachometerAlt />
             {sidebarOpen && <span>Dashboard</span>}
+          </button>
+        )}
+
+        {checkPerm("homepage") && (
+          <button
+            className={`nav-item ${activeTab === "homepage" ? "active" : ""}`}
+            onClick={() => setActiveTab("homepage")}
+          >
+            <FaLayerGroup />
+            {sidebarOpen && <span>Homepage</span>}
           </button>
         )}
 

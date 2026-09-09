@@ -60,6 +60,7 @@ import TeamManager from "../admin/TeamManager";
 import PopupManager from "../admin/PopupManager";
 import TestimonialsManager from "../admin/TestimonialsManager";
 import AdminUsersManager from "../admin/AdminUsersManager";
+import HomepageContentManager from "../admin/HomepageContentManager";
 import { NewsModal } from "../admin/NewsModal";
 import { EventModal } from "../admin/EventModal";
 import { GalleryModal } from "../admin/GalleryModal";
@@ -306,6 +307,7 @@ export default function AdminComponent() {
         };
         if (!isPermitted("dashboard")) {
           const tabOrder: AdminTab[] = [
+            "homepage",
             "news",
             "events",
             "gallery",
@@ -891,6 +893,8 @@ export default function AdminComponent() {
               setGrowthPeriod={setGrowthPeriod}
             />
           )}
+
+          {activeTab === "homepage" && <HomepageContentManager />}
 
           {activeTab === "news" && (
             <NewsManager

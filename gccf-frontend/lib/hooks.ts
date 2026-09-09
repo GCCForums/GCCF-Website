@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { newsApi, eventsApi, galleryApi, membershipsApi, queryKeys } from "@/lib/api";
+import { newsApi, eventsApi, galleryApi, membershipsApi, homepageApi, queryKeys } from "@/lib/api";
 import { CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { CreateEventDto, UpdateEventDto } from "@/types/events";
 import { CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
@@ -234,5 +234,13 @@ export function useDeleteMembership() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.memberships.lists() });
     },
+  });
+}
+
+export function useHomepageContent() {
+  return useQuery({
+    queryKey: ["homepage", "content"],
+    queryFn: homepageApi.get,
+    staleTime: 1000 * 60 * 5,
   });
 }

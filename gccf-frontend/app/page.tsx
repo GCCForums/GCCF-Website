@@ -1,3 +1,5 @@
+"use client";
+
 import {
   FaShieldAlt,
   FaUsers,
@@ -13,8 +15,11 @@ import EventsSection from "@/components/public/EventsSection";
 import GallerySection from "@/components/public/GallerySection";
 import TestimonialsSection from "@/components/public/TestimonialsSection";
 import FaqSection from "@/components/public/FaqSection";
+import { useHomepageContent } from "@/lib/hooks";
 
 export default function HomePage() {
+  const { data: homepageContent } = useHomepageContent();
+
   const services = [
     {
       icon: FaShieldAlt,
@@ -51,12 +56,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <HeroSection content={homepageContent?.hero} />
 
-      <HeroSection />
+      <AboutSection content={homepageContent?.about} />
 
-      <AboutSection />
-
-      <MetricsSection />
+      <MetricsSection content={homepageContent?.metrics} />
 
       <EventsSection />
 
@@ -67,7 +71,7 @@ export default function HomePage() {
               What We Offer
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Services & Activities
+              Services &amp; Activities
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -98,7 +102,7 @@ export default function HomePage() {
 
       <TestimonialsSection />
 
-      <FaqSection />
+      <FaqSection content={homepageContent?.faq} />
     </div>
   );
 }

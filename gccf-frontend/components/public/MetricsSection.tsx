@@ -1,15 +1,27 @@
-export default function MetricsSection() {
-  const metrics = [
-    { number: "15+", label: "Years of Impact" },
-    { number: "50K+", label: "Lives Touched" },
-    { number: "120+", label: "Active Projects" },
-    { number: "35+", label: "Countries" },
-  ];
+"use client";
+
+import { MetricsSectionContent } from "@/lib/api";
+
+interface MetricsSectionProps {
+  content?: MetricsSectionContent;
+}
+
+const DEFAULT_METRICS = [
+  { number: "15+", label: "Years of Impact" },
+  { number: "50K+", label: "Lives Touched" },
+  { number: "120+", label: "Active Projects" },
+  { number: "35+", label: "Countries" },
+];
+
+export default function MetricsSection({ content }: MetricsSectionProps) {
+  const metrics =
+    content?.items && content.items.length > 0 ? content.items : DEFAULT_METRICS;
+  const bgImage = content?.backgroundImage || "/statsbg2.png";
 
   return (
     <section
       className="relative bg-cover bg-center bg-fixed py-24 px-6"
-      style={{ backgroundImage: "url('/statsbg2.png')" }}
+      style={{ backgroundImage: `url('${bgImage}')` }}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-[#1d3c68]/92 via-[#3d73bd]/85 to-[#122746]/92" />
       <div className="relative z-10 max-w-6xl mx-auto">

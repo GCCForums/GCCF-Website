@@ -20,6 +20,7 @@ import { SettingsModule } from './settings/settings.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TeamModule } from './team/team.module';
 import { PopupsModule } from './popups/popups.module';
+import { HomepageModule } from './homepage/homepage.module';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { PopupsModule } from './popups/popups.module';
     SettingsModule,
     TeamModule,
     PopupsModule,
+    HomepageModule,
   ],
   controllers: [AppController],
   providers: [

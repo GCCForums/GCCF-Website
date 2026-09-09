@@ -427,4 +427,67 @@ export const adminUsersApi = {
       method: 'DELETE',
     }),
 };
+
+export interface HeroSectionContent {
+  badge?: string;
+  title?: string;
+  titleHighlight?: string;
+  subtitle?: string;
+  primaryButtonText?: string;
+  primaryButtonUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
+}
+
+export interface MetricItem {
+  number: string;
+  label: string;
+}
+
+export interface MetricsSectionContent {
+  backgroundImage?: string;
+  items: MetricItem[];
+}
+
+export interface AboutSectionContent {
+  badge?: string;
+  title?: string;
+  paragraphs: string[];
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface FaqSectionContent {
+  badge?: string;
+  title?: string;
+  items: FaqItem[];
+}
+
+export interface HomepageContent {
+  id: number;
+  hero: HeroSectionContent;
+  metrics: MetricsSectionContent;
+  about: AboutSectionContent;
+  faq: FaqSectionContent;
+  extraSections?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const homepageApi = {
+  get: () => fetchApi<HomepageContent>('/homepage'),
+  update: (data: Partial<HomepageContent>) =>
+    fetchApi<HomepageContent>('/homepage', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  reset: () =>
+    fetchApi<HomepageContent>('/homepage/reset', {
+      method: 'POST',
+    }),
+};
+
 
