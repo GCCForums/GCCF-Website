@@ -18,6 +18,8 @@ import { AuthModule } from './auth/auth.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SettingsModule } from './settings/settings.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { TeamModule } from './team/team.module';
+import { PopupsModule } from './popups/popups.module';
 
 @Module({
   imports: [
@@ -91,6 +93,8 @@ import { SupabaseModule } from './supabase/supabase.module';
     GalleryModule,
     MembershipsModule,
     SettingsModule,
+    TeamModule,
+    PopupsModule,
   ],
   controllers: [AppController],
   providers: [

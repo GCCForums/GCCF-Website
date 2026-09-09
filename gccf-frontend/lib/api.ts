@@ -2,6 +2,7 @@ import { News, CreateNewsDto, UpdateNewsDto } from '@/types/news';
 import { Event, CreateEventDto, UpdateEventDto } from '@/types/events';
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from '@/types/gallery';
 import { Membership, CreateMembershipDto, UpdateMembershipDto } from '@/types/membership';
+import { TeamMember, PopupItem } from '@/components/admin/types';
 import { getAdminToken } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -152,6 +153,56 @@ export const membershipsApi = {
   
   delete: (id: string) => 
     fetchApi<void>(`/memberships/${id}`, { method: 'DELETE' }),
+};
+
+export const teamApi = {
+  getAll: (activeOnly?: boolean) =>
+    fetchApi<TeamMember[]>(`/team${activeOnly ? '?activeOnly=true' : ''}`),
+  getById: (id: string) =>
+    fetchApi<TeamMember>(`/team/${id}`),
+  create: (data: Partial<TeamMember>) =>
+    fetchApi<TeamMember>('/team', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<TeamMember>) =>
+    fetchApi<TeamMember>(`/team/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    fetchApi<void>(`/team/${id}`, { method: 'DELETE' }),
+  reorder: (ids: string[]) =>
+    fetchApi<TeamMember[]>('/team/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ ids }),
+    }),
+};
+
+export const popupsApi = {
+  getAll: () =>
+    fetchApi<PopupItem[]>('/popups'),
+  getActive: () =>
+    fetchApi<PopupItem | null>('/popups/active'),
+  getById: (id: string) =>
+    fetchApi<PopupItem>(`/popups/${id}`),
+  create: (data: Partial<PopupItem>) =>
+    fetchApi<PopupItem>('/popups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<PopupItem>) =>
+    fetchApi<PopupItem>(`/popups/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  toggle: (id: string, enabled: boolean) =>
+    fetchApi<PopupItem>(`/popups/${id}/toggle`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
+    }),
+  delete: (id: string) =>
+    fetchApi<void>(`/popups/${id}`, { method: 'DELETE' }),
 };
 
 export const queryKeys = {
@@ -330,4 +381,50 @@ export const settingsApi = {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
-};
+};
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  role: 'super_admin' | 'admin';
+  permissions: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAdminUserDto {
+  username: string;
+  password: string;
+  role?: 'super_admin' | 'admin';
+  permissions?: string[];
+  isActive?: boolean;
+}
+
+export interface UpdateAdminUserDto {
+  username?: string;
+  password?: string;
+  role?: 'super_admin' | 'admin';
+  permissions?: string[];
+  isActive?: boolean;
+}
+
+export const adminUsersApi = {
+  getAll: () => fetchApi<AdminUser[]>('/admin/users'),
+  getById: (id: number) => fetchApi<AdminUser>(`/admin/users/${id}`),
+  create: (data: CreateAdminUserDto) =>
+    fetchApi<AdminUser>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: UpdateAdminUserDto) =>
+    fetchApi<AdminUser>(`/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number) =>
+    fetchApi<{ success: boolean; message: string }>(`/admin/users/${id}`, {
+      method: 'DELETE',
+    }),
+};
+

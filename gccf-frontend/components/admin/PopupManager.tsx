@@ -13,6 +13,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import { PopupItem } from "./types";
+import { popupsApi } from "@/lib/api";
 
 const defaultPopups: PopupItem[] = [
   {
@@ -83,8 +84,21 @@ export default function PopupManager() {
     window.dispatchEvent(new Event("storage"));
   }, []);
 
-  // Initialize storage if missing
+  // Initialize and fetch from backend
   useEffect(() => {
+    let isMounted = true;
+    popupsApi
+      .getAll()
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setPopups(data);
+          syncActivePopupToPublic(data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Backend popupsApi unavailable, using local state", err);
+      });
+
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("gccf_popups_list");
@@ -99,6 +113,10 @@ export default function PopupManager() {
         console.error("Failed to initialize popups", err);
       }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [syncActivePopupToPublic]);
 
   const showSaveNotice = () => {
@@ -124,11 +142,21 @@ export default function PopupManager() {
     setModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let updated: PopupItem[];
 
     if (editingPopup) {
+      try {
+        await popupsApi.update(editingPopup.id, {
+          name: formName,
+          imageUrl: formImageUrl,
+          delaySeconds: formDelaySeconds,
+          enabled: formEnabled,
+        });
+      } catch (err) {
+        console.warn("Backend update popup failed, updating local state", err);
+      }
       updated = popups.map((p) => {
         if (p.id === editingPopup.id) {
           return {
@@ -142,7 +170,18 @@ export default function PopupManager() {
         return formEnabled ? { ...p, enabled: false } : p;
       });
     } else {
-      const newPopup: PopupItem = {
+      let created: PopupItem | null = null;
+      try {
+        created = await popupsApi.create({
+          name: formName,
+          imageUrl: formImageUrl,
+          delaySeconds: formDelaySeconds,
+          enabled: formEnabled,
+        });
+      } catch (err) {
+        console.warn("Backend create popup failed, updating local state", err);
+      }
+      const newPopup: PopupItem = created || {
         id: Date.now().toString(),
         name: formName,
         imageUrl: formImageUrl,
@@ -164,7 +203,15 @@ export default function PopupManager() {
     showSaveNotice();
   };
 
-  const handleToggleActive = (id: string) => {
+  const handleToggleActive = async (id: string) => {
+    const target = popups.find((p) => p.id === id);
+    if (target) {
+      try {
+        await popupsApi.toggle(id, !target.enabled);
+      } catch (err) {
+        console.warn("Backend toggle popup failed, updating local state", err);
+      }
+    }
     const updated = popups.map((p) => {
       if (p.id === id) {
         return { ...p, enabled: !p.enabled };
@@ -180,8 +227,13 @@ export default function PopupManager() {
     showSaveNotice();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTargetId) return;
+    try {
+      await popupsApi.delete(deleteTargetId);
+    } catch (err) {
+      console.warn("Backend delete popup failed, updating local state", err);
+    }
     const updated = popups.filter((p) => p.id !== deleteTargetId);
     setPopups(updated);
     if (typeof window !== "undefined") {

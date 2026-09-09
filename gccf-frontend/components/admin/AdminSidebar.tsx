@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   FaTachometerAlt,
@@ -16,8 +17,10 @@ import {
   FaUserFriends,
   FaBullhorn,
   FaQuoteRight,
+  FaUserShield,
 } from "react-icons/fa";
 import { AdminTab } from "./types";
+import { hasPermission, isSuperAdmin } from "@/lib/auth";
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -34,6 +37,19 @@ export default function AdminSidebar({
   setActiveTab,
   onLogout,
 }: AdminSidebarProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const checkPerm = (perm: string) => {
+    if (!mounted) return true;
+    return hasPermission(perm);
+  };
+
+  const superAdmin = mounted ? isSuperAdmin() : false;
+
   return (
     <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
       <div className="sidebar-header">
@@ -43,7 +59,6 @@ export default function AdminSidebar({
             alt="GCCF Logo"
             className="sidebar-logo-img"
           />
-          
         </Link>
         <button
           className="sidebar-toggle"
@@ -56,73 +71,121 @@ export default function AdminSidebar({
       </div>
 
       <nav className="sidebar-nav">
-        <button
-          className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`}
-          onClick={() => setActiveTab("dashboard")}
-        >
-          <FaTachometerAlt />
-          {sidebarOpen && <span>Dashboard</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "news" ? "active" : ""}`}
-          onClick={() => setActiveTab("news")}
-        >
-          <FaNewspaper />
-          {sidebarOpen && <span>News</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "events" ? "active" : ""}`}
-          onClick={() => setActiveTab("events")}
-        >
-          <FaCalendarAlt />
-          {sidebarOpen && <span>Events</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "gallery" ? "active" : ""}`}
-          onClick={() => setActiveTab("gallery")}
-        >
-          <FaImages />
-          {sidebarOpen && <span>Gallery</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "members" ? "active" : ""}`}
-          onClick={() => setActiveTab("members")}
-        >
-          <FaUsers />
-          {sidebarOpen && <span>Members</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "teams" ? "active" : ""}`}
-          onClick={() => setActiveTab("teams")}
-        >
-          <FaUserFriends />
-          {sidebarOpen && <span>Teams</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "popup" ? "active" : ""}`}
-          onClick={() => setActiveTab("popup")}
-        >
-          <FaBullhorn />
-          {sidebarOpen && <span>Pop-Up</span>}
-        </button>
-        <button
-          className={`nav-item ${activeTab === "testimonials" ? "active" : ""}`}
-          onClick={() => setActiveTab("testimonials")}
-        >
-          <FaQuoteRight />
-          {sidebarOpen && <span>Testimonials</span>}
-        </button>
-        <Link href="/admin/analytics" className="nav-item">
-          <FaChartLine />
-          {sidebarOpen && <span>Analytics</span>}
-        </Link>
-        <button
-          className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
-          onClick={() => setActiveTab("settings")}
-        >
-          <FaCog />
-          {sidebarOpen && <span>Settings</span>}
-        </button>
+        {checkPerm("dashboard") && (
+          <button
+            className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`}
+            onClick={() => setActiveTab("dashboard")}
+          >
+            <FaTachometerAlt />
+            {sidebarOpen && <span>Dashboard</span>}
+          </button>
+        )}
+
+        {checkPerm("news") && (
+          <button
+            className={`nav-item ${activeTab === "news" ? "active" : ""}`}
+            onClick={() => setActiveTab("news")}
+          >
+            <FaNewspaper />
+            {sidebarOpen && <span>News</span>}
+          </button>
+        )}
+
+        {checkPerm("events") && (
+          <button
+            className={`nav-item ${activeTab === "events" ? "active" : ""}`}
+            onClick={() => setActiveTab("events")}
+          >
+            <FaCalendarAlt />
+            {sidebarOpen && <span>Events</span>}
+          </button>
+        )}
+
+        {checkPerm("gallery") && (
+          <button
+            className={`nav-item ${activeTab === "gallery" ? "active" : ""}`}
+            onClick={() => setActiveTab("gallery")}
+          >
+            <FaImages />
+            {sidebarOpen && <span>Gallery</span>}
+          </button>
+        )}
+
+        {checkPerm("members") && (
+          <button
+            className={`nav-item ${activeTab === "members" ? "active" : ""}`}
+            onClick={() => setActiveTab("members")}
+          >
+            <FaUsers />
+            {sidebarOpen && <span>Members</span>}
+          </button>
+        )}
+
+        {checkPerm("teams") && (
+          <button
+            className={`nav-item ${activeTab === "teams" ? "active" : ""}`}
+            onClick={() => setActiveTab("teams")}
+          >
+            <FaUserFriends />
+            {sidebarOpen && <span>Teams</span>}
+          </button>
+        )}
+
+        {checkPerm("popup") && (
+          <button
+            className={`nav-item ${activeTab === "popup" ? "active" : ""}`}
+            onClick={() => setActiveTab("popup")}
+          >
+            <FaBullhorn />
+            {sidebarOpen && <span>Pop-Up</span>}
+          </button>
+        )}
+
+        {checkPerm("testimonials") && (
+          <button
+            className={`nav-item ${activeTab === "testimonials" ? "active" : ""}`}
+            onClick={() => setActiveTab("testimonials")}
+          >
+            <FaQuoteRight />
+            {sidebarOpen && <span>Testimonials</span>}
+          </button>
+        )}
+
+        {checkPerm("analytics") && (
+          <Link href="/admin/analytics" className="nav-item">
+            <FaChartLine />
+            {sidebarOpen && <span>Analytics</span>}
+          </Link>
+        )}
+
+        {checkPerm("settings") && (
+          <button
+            className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
+            onClick={() => setActiveTab("settings")}
+          >
+            <FaCog />
+            {sidebarOpen && <span>Settings</span>}
+          </button>
+        )}
+
+        {superAdmin && (
+          <button
+            className={`nav-item ${activeTab === "admins" ? "active" : ""}`}
+            onClick={() => setActiveTab("admins")}
+            style={{
+              borderTop: "1px solid rgba(226, 232, 240, 0.8)",
+              marginTop: "0.5rem",
+              paddingTop: "0.75rem",
+            }}
+          >
+            <FaUserShield className="text-purple-600" />
+            {sidebarOpen && (
+              <span className="font-semibold text-purple-700">
+                Admins &amp; Roles
+              </span>
+            )}
+          </button>
+        )}
       </nav>
 
       <div className="sidebar-footer">

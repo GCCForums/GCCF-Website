@@ -7,7 +7,26 @@ export type AdminTab =
   | "teams"
   | "popup"
   | "testimonials"
-  | "settings";
+  | "settings"
+  | "admins";
+
+export interface FeaturePermission {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const AVAILABLE_PERMISSIONS: FeaturePermission[] = [
+  { id: "dashboard", name: "Dashboard", description: "View dashboard analytics and statistics" },
+  { id: "news", name: "News Management", description: "Create, publish, edit, and delete news posts" },
+  { id: "events", name: "Events Management", description: "Create, manage events, registration links & images" },
+  { id: "gallery", name: "Gallery Media", description: "Upload and manage photos in public gallery" },
+  { id: "members", name: "Members & Applications", description: "Manage member directory and membership applications" },
+  { id: "teams", name: "Team Members", description: "Manage board, leadership, and team profiles" },
+  { id: "popup", name: "Announcement Popups", description: "Configure website popups and banner announcements" },
+  { id: "testimonials", name: "Testimonials", description: "Manage community reviews and testimonials" },
+  { id: "settings", name: "Settings", description: "Configure dashboard profile and account settings" },
+];
 
 export type NewsFormData = {
   title: string;
@@ -18,6 +37,7 @@ export type NewsFormData = {
   category: string;
   slug: string;
   featuredImage: string;
+  galleryImages: string;
   tags: string;
   source: string;
   sourceUrl: string;
@@ -33,6 +53,7 @@ export type EventFormData = {
   status: "upcoming" | "completed";
   mainImage: string;
   galleryImages: string;
+  registrationUrl: string;
   organizer: string;
   attendees: string;
 };
@@ -69,6 +90,7 @@ export const initialNewsForm: NewsFormData = {
   category: "",
   slug: "",
   featuredImage: "",
+  galleryImages: "",
   tags: "",
   source: "",
   sourceUrl: "",
@@ -84,6 +106,7 @@ export const initialEventForm: EventFormData = {
   status: "upcoming",
   mainImage: "",
   galleryImages: "",
+  registrationUrl: "",
   organizer: "",
   attendees: "0",
 };

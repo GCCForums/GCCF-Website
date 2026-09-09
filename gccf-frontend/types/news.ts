@@ -8,6 +8,7 @@ export interface News {
   category?: string;
   slug: string;
   featuredImage: string;
+  galleryImages?: string[];
   tags?: string[];
   source?: string;
   sourceUrl?: string;
@@ -24,6 +25,7 @@ export interface CreateNewsDto {
   category?: string;
   slug: string;
   featuredImage: string;
+  galleryImages?: string[];
   tags?: string[];
   source?: string;
   sourceUrl?: string;
@@ -38,6 +40,7 @@ export interface UpdateNewsDto {
   category?: string;
   slug?: string;
   featuredImage?: string;
+  galleryImages?: string[];
   tags?: string[];
   source?: string;
   sourceUrl?: string;

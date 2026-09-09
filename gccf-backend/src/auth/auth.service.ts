@@ -16,6 +16,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (admin.isActive === false) {
+      throw new UnauthorizedException('Account has been deactivated. Please contact Super Admin.');
+    }
+
     const isPasswordValid = await this.adminService.validatePassword(
       password,
       admin.password,
@@ -25,10 +29,22 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: admin.id.toString(), username: admin.username };
+    const payload = {
+      sub: admin.id.toString(),
+      username: admin.username,
+      role: admin.role,
+      permissions: admin.permissions || [],
+    };
 
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        id: admin.id,
+        username: admin.username,
+        role: admin.role,
+        permissions: admin.permissions || [],
+        isActive: admin.isActive,
+      },
     };
   }
 }

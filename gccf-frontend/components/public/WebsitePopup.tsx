@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { WebsitePopupConfig, initialPopupConfig } from "../admin/types";
+import { popupsApi } from "@/lib/api";
 
 export default function WebsitePopup() {
   const [config, setConfig] = useState<WebsitePopupConfig | null>(null);
@@ -11,23 +12,40 @@ export default function WebsitePopup() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const checkAndShowPopup = () => {
+    let timer: NodeJS.Timeout | null = null;
+
+    const checkAndShowPopup = async () => {
       try {
         const dismissed = sessionStorage.getItem("gccf_popup_dismissed");
         if (dismissed === "true") return;
 
-        const stored = localStorage.getItem("gccf_website_popup_config");
-        const parsed: WebsitePopupConfig = stored
-          ? JSON.parse(stored)
-          : initialPopupConfig;
+        let activeConfig: WebsitePopupConfig | null = null;
+        try {
+          const backendActive = await popupsApi.getActive();
+          if (backendActive && backendActive.enabled && backendActive.imageUrl) {
+            activeConfig = {
+              name: backendActive.name,
+              imageUrl: backendActive.imageUrl,
+              delaySeconds: backendActive.delaySeconds || 3,
+              enabled: true,
+            };
+          }
+        } catch (e) {
+          // Backend not reachable, fallback to localStorage
+        }
 
-        if (parsed && parsed.enabled && parsed.imageUrl) {
-          setConfig(parsed);
-          const timer = setTimeout(() => {
+        if (!activeConfig) {
+          const stored = localStorage.getItem("gccf_website_popup_config");
+          activeConfig = stored
+            ? JSON.parse(stored)
+            : initialPopupConfig;
+        }
+
+        if (activeConfig && activeConfig.enabled && activeConfig.imageUrl) {
+          setConfig(activeConfig);
+          timer = setTimeout(() => {
             setIsOpen(true);
-          }, (parsed.delaySeconds || 3) * 1000);
-
-          return () => clearTimeout(timer);
+          }, (activeConfig.delaySeconds || 3) * 1000);
         }
       } catch (err) {
         console.error("Popup check error", err);
@@ -38,7 +56,10 @@ export default function WebsitePopup() {
 
     // Listen to localStorage changes across tabs/admin saves
     window.addEventListener("storage", checkAndShowPopup);
-    return () => window.removeEventListener("storage", checkAndShowPopup);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("storage", checkAndShowPopup);
+    };
   }, []);
 
   const handleDismiss = () => {

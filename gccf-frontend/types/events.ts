@@ -9,6 +9,7 @@ export interface Event {
   status: 'completed' | 'upcoming';
   mainImage: string;
   galleryImages?: string[];
+  registrationUrl?: string;
   organizer?: string;
   attendees?: number;
   createdAt: string;
@@ -25,6 +26,7 @@ export interface CreateEventDto {
   status: 'completed' | 'upcoming';
   mainImage: string;
   galleryImages?: string[];
+  registrationUrl?: string;
   organizer?: string;
   attendees?: number;
 }
@@ -39,6 +41,7 @@ export interface UpdateEventDto {
   status?: 'completed' | 'upcoming';
   mainImage?: string;
   galleryImages?: string[];
+  registrationUrl?: string;
   organizer?: string;
   attendees?: number;
 }

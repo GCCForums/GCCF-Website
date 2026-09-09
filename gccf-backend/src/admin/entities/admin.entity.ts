@@ -17,6 +17,15 @@ export class Admin {
   @Column()
   password: string;
 
+  @Column({ default: 'admin' })
+  role: 'super_admin' | 'admin';
+
+  @Column('simple-array', { nullable: true })
+  permissions: string[];
+
+  @Column({ default: true })
+  isActive: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

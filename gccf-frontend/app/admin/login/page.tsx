@@ -20,12 +20,12 @@ export default function AdminLogin() {
     setError("");
     setLoading(true);
 
-    const success = await loginAdmin(username, password);
+    const res = await loginAdmin(username, password);
 
-    if (success) {
+    if (res.success) {
       router.push("/admin/dashboard");
     } else {
-      setError("Invalid username or password. Please try again.");
+      setError(res.message || "Invalid username or password. Please try again.");
       setLoading(false);
     }
   }

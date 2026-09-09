@@ -5,119 +5,59 @@ import { Mail, Linkedin } from "lucide-react";
 import { TeamMember } from "@/components/admin/types";
 
 const defaultTeamMembers: TeamMember[] = [
-  {
-    id: "1",
-    name: "Sarah Mitchell",
-    title: "Founder & CEO",
-    affiliatedPart: "Executive Leadership / Global Chapter",
-    image: "",
-    email: "sarah@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "2",
-    name: "David Chen",
-    title: "Director of Operations",
-    affiliatedPart: "Operations & Partnerships",
-    image: "",
-    email: "david@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "3",
-    name: "Maya Patel",
-    title: "Program Manager",
-    affiliatedPart: "Community Initiatives & Standards",
-    image: "",
-    email: "maya@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "4",
-    name: "James Wilson",
-    title: "Communications Lead",
-    affiliatedPart: "Global Outreach & Public Relations",
-    image: "",
-    email: "james@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "5",
-    name: "Aisha Rahman",
-    title: "Community Outreach",
-    affiliatedPart: "Regional Chapters & Engagement",
-    image: "",
-    email: "aisha@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "6",
-    name: "Michael Torres",
-    title: "Finance Director",
-    affiliatedPart: "Finance & Resource Governance",
-    image: "",
-    email: "michael@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
+  
 ];
 
 import PageHero from "@/components/public/PageHero";
 import { FaShieldAlt } from "react-icons/fa";
+import { teamApi } from "@/lib/api";
 
 export default function TeamPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => {
-    if (typeof window === "undefined") return defaultTeamMembers;
-    try {
-      const stored = localStorage.getItem("gccf_team_members");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((m: Partial<TeamMember>) => ({
-            id: m.id || String(Date.now()),
-            name: m.name || "Member",
-            title: m.title || "Team Leader",
-            affiliatedPart: m.affiliatedPart || "GCCF Leadership",
-            image: m.image || "",
-            email: m.email || "",
-            linkedin: m.linkedin || "",
-          }));
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load team members from storage", err);
-    }
-    return defaultTeamMembers;
-  });
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    let isMounted = true;
 
-    const handleStorage = () => {
+    async function loadTeam() {
       try {
-        const stored = localStorage.getItem("gccf_team_members");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTeamMembers(
-              parsed.map((m: Partial<TeamMember>) => ({
-                id: m.id || String(Date.now()),
-                name: m.name || "Member",
-                title: m.title || "Team Leader",
-                affiliatedPart: m.affiliatedPart || "GCCF Leadership",
-                image: m.image || "",
-                email: m.email || "",
-                linkedin: m.linkedin || "",
-              }))
-            );
-          }
+        const data = await teamApi.getAll(true);
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setTeamMembers(data);
+          setLoading(false);
+          return;
         }
       } catch (err) {
-        console.error("Failed to sync team members", err);
+        console.warn("Backend teamApi unavailable, falling back to storage", err);
       }
+
+      // Fallback to localStorage if backend is loading or returned empty
+      try {
+        const stored = typeof window !== "undefined" ? localStorage.getItem("gccf_team_members") : null;
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
+            setTeamMembers(parsed);
+          }
+        }
+      } catch (e) {
+        console.error("Storage read error", e);
+      }
+
+      if (isMounted) setLoading(false);
+    }
+
+    loadTeam();
+
+    const handleStorage = () => {
+      loadTeam();
     };
 
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   return (
@@ -132,7 +72,19 @@ export default function TeamPage() {
 
       {/* Team Grid */}
       <section className="max-w-6xl mx-auto px-6 pt-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <div className="w-10 h-10 border-4 border-[#3d73bd] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-sm font-medium">Loading team members...</p>
+          </div>
+        ) : teamMembers.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+            <FaShieldAlt className="mx-auto text-4xl text-slate-300 mb-3" />
+            <h3 className="text-lg font-bold text-slate-700 mb-1">No Team Members Found</h3>
+            <p className="text-sm text-slate-500">Team members added from the admin dashboard will appear here.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {teamMembers.map((member) => (
             <div
               key={member.id}
@@ -212,6 +164,7 @@ export default function TeamPage() {
             </div>
           ))}
         </div>
+      )}
       </section>
     </div>
   );

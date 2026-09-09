@@ -41,6 +41,9 @@ export class Event {
   @Column({ nullable: true })
   organizer: string;
 
+  @Column({ nullable: true })
+  registrationUrl: string;
+
   @Column({ type: 'int', nullable: true })
   attendees: number;
 

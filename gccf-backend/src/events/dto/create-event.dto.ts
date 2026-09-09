@@ -43,6 +43,10 @@ export class CreateEventDto {
   organizer?: string;
 
   @IsOptional()
+  @IsString()
+  registrationUrl?: string;
+
+  @IsOptional()
   @IsNumber()
   attendees?: number;
 }

@@ -21,7 +21,8 @@
     "seed:all": "ts-node src/seeds/seed-all.ts",
     "seed:completed": "ts-node src/seeds/seed-completed-events.ts",
     "seed:upcoming": "ts-node src/seeds/seed-upcoming-events.ts",
-    "seed:news": "ts-node src/seeds/seed-news.ts"
+    "seed:news": "ts-node src/seeds/seed-news.ts",
+    "seed:team-popups": "ts-node src/seeds/seed-team-and-popups.ts"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^12.0.0",

@@ -229,10 +229,29 @@ export const EventModal: React.FC<EventModalProps> = ({
               </div>
             </div>
 
+            {/* Registration URL */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Registration Link / Form URL (Optional)
+              </label>
+              <input
+                type="url"
+                placeholder="https://forms.gle/... or https://eventbrite.com/..."
+                value={eventForm.registrationUrl || ""}
+                onChange={(e) =>
+                  setEventForm({ ...eventForm, registrationUrl: e.target.value })
+                }
+                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Attendees will click &quot;Register for Event&quot; on the event page to visit this link.
+              </p>
+            </div>
+
             {/* Main Image URL */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Main Image URL *
+                Main Banner Image URL *
               </label>
               <input
                 type="url"
@@ -244,22 +263,58 @@ export const EventModal: React.FC<EventModalProps> = ({
                 required
                 className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
               />
+              {eventForm.mainImage && (
+                <div className="mt-2 h-24 w-full max-w-xs rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                  <img
+                    src={eventForm.mainImage}
+                    alt="Main preview"
+                    className="h-full w-full object-cover"
+                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Gallery Images */}
+            {/* Multiple Gallery Images */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Gallery Images (comma separated URLs)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Gallery Images (Multiple Image URLs, comma or newline separated)
+                </label>
+                {eventForm.galleryImages && (
+                  <span className="text-[11px] font-semibold text-[#3d73bd] bg-blue-50 px-2 py-0.5 rounded-full">
+                    {eventForm.galleryImages.split(/[,\n]/).map((u) => u.trim()).filter(Boolean).length} image(s)
+                  </span>
+                )}
+              </div>
               <textarea
-                placeholder="https://image1.jpg, https://image2.jpg"
-                rows={2}
+                placeholder="https://images.unsplash.com/photo-1..., https://images.unsplash.com/photo-2..."
+                rows={3}
                 value={eventForm.galleryImages}
                 onChange={(e) =>
                   setEventForm({ ...eventForm, galleryImages: e.target.value })
                 }
-                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors resize-none"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
               />
+              {eventForm.galleryImages && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {eventForm.galleryImages
+                    .split(/[,\n]/)
+                    .map((url) => url.trim())
+                    .filter(Boolean)
+                    .slice(0, 6)
+                    .map((url, idx) => (
+                      <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                        <img
+                          src={url}
+                          alt={`Gallery ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                        />
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
 

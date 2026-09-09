@@ -2,231 +2,402 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEventBySlug } from "@/lib/hooks";
-import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaUser, FaArrowLeft, FaClock } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaUser,
+  FaArrowLeft,
+  FaClock,
+  FaExternalLinkAlt,
+  FaImages,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
+  FaShareAlt,
+  FaCheck,
+} from "react-icons/fa";
 
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: event, isLoading, error } = useEventBySlug(params.slug as string);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   if (isLoading) {
     return (
-      <div style={{
-        position: "fixed",
-        inset: 0,
-        background: "#fafafa",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999
-      }}>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{
-          width: "50px",
-          height: "50px",
-          border: "4px solid #e0e0e0",
-          borderTopColor: "#0d47a1",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
-        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>Loading event...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-[#1d3c68] animate-spin" />
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading event details...</p>
       </div>
     );
   }
 
   if (error || !event) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "#fafafa",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
-        <h1 style={{ fontSize: "2rem", marginBottom: "1rem", color: "#333" }}>Event Not Found</h1>
-        <p style={{ color: "#666", marginBottom: "2rem" }}>The requested event could not be found.</p>
-        <button
-          onClick={() => router.push("/events")}
-          style={{
-            padding: "12px 24px",
-            background: "#0d47a1",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px"
-          }}
-        >
-          <FaArrowLeft /> Back to Events
-        </button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 text-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-100">
+            <FaCalendarAlt />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Event Not Found</h1>
+          <p className="text-sm text-slate-500 mb-6">
+            The event you are looking for does not exist or has been removed.
+          </p>
+          <button
+            onClick={() => router.push("/events")}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#315ea0] shadow-md transition-all cursor-pointer"
+          >
+            <FaArrowLeft className="text-xs" />
+            <span>Back to Events</span>
+          </button>
+        </div>
       </div>
     );
   }
 
   const eventDate = new Date(event.eventDate);
-  const isPast = eventDate < new Date();
+  const galleryImages = event.galleryImages || [];
+
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedImageIndex !== null && galleryImages.length > 0) {
+      setSelectedImageIndex((prev) => (prev! > 0 ? prev! - 1 : galleryImages.length - 1));
+    }
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedImageIndex !== null && galleryImages.length > 0) {
+      setSelectedImageIndex((prev) => (prev! < galleryImages.length - 1 ? prev! + 1 : 0));
+    }
+  };
 
   return (
-    <div className="event-detail-page">
-      <style>{`
-        .event-detail-page { min-height: 100vh; background: #fafafa; }
-        .event-hero { position: relative; height: 50vh; min-height: 400px; overflow: hidden; }
-        .event-hero img { width: 100%; height: 100%; object-fit: cover; }
-        .event-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%); display: flex; align-items: flex-end; padding: 3rem; }
-        .event-hero-content { max-width: 900px; margin: 0 auto; width: 100%; }
-        .event-status { display: inline-block; padding: 8px 20px; border-radius: 25px; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; }
-        .event-status.upcoming { background: #e3f2fd; color: #0d47a1; }
-        .event-status.completed { background: #e8f5e9; color: #2e7d32; }
-        .event-hero h1 { font-size: 3rem; color: white; margin: 0 0 1rem 0; line-height: 1.2; }
-        .event-hero-excerpt { font-size: 1.25rem; color: rgba(255,255,255,0.9); margin: 0; line-height: 1.5; }
-        .event-content-wrapper { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
-        .back-button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; border: 1px solid #e0e0e0; border-radius: 6px; color: #333; font-weight: 500; cursor: pointer; transition: all 0.3s ease; margin-bottom: 2rem; }
-        .back-button:hover { background: #0d47a1; color: white; border-color: #0d47a1; }
-        .event-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .event-info-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 1rem; }
-        .event-info-icon { width: 50px; height: 50px; background: #e3f2fd; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-size: 1.25rem; }
-        .event-info-text h4 { margin: 0 0 4px 0; font-size: 0.85rem; color: #666; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .event-info-text p { margin: 0; font-size: 1.1rem; color: #333; font-weight: 600; }
-        .event-content-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 2rem; }
-        .event-content-header { padding: 1.5rem 2rem; border-bottom: 1px solid #e0e0e0; }
-        .event-content-header h2 { margin: 0; color: #333; font-size: 1.5rem; }
-        .event-content { padding: 2rem; font-size: 1.1rem; line-height: 1.8; color: #333; }
-        .event-content p { margin-bottom: 1.5rem; }
-        .event-gallery { padding: 2rem; border-top: 1px solid #e0e0e0; }
-        .event-gallery h3 { margin: 0 0 1.5rem 0; color: #333; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-        .gallery-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-        .gallery-item:hover img { transform: scale(1.1); }
-        .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-        .lightbox img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
-        .lightbox-close { position: absolute; top: 2rem; right: 2rem; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; color: white; font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease; }
-        .lightbox-close:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
-        .cta-section { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 2rem; text-align: center; }
-        .cta-section h3 { margin: 0 0 1rem 0; color: #333; }
-        .cta-section p { margin: 0 0 1.5rem 0; color: #666; }
-        .cta-button { padding: 14px 32px; background: linear-gradient(135deg, #0d47a1, #2196f3); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3); }
-        @media (max-width: 768px) { .event-hero { height: 40vh; min-height: 300px; } .event-hero h1 { font-size: 1.75rem; } .event-hero-excerpt { font-size: 1rem; } .event-content { padding: 1.5rem; } .event-info-grid { grid-template-columns: 1fr; } }
-      `}</style>
+    <div className="min-h-screen bg-slate-50/70 pb-28">
+      {/* Hero Banner Section */}
+      <section className="relative w-full min-h-[460px] md:min-h-[520px] bg-slate-950 overflow-hidden flex items-end">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={event.mainImage}
+            alt={event.title}
+            className="w-full h-full object-cover object-center opacity-40 blur-xs scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/40" />
+        </div>
 
-      <section className="event-hero">
-        <img src={event.mainImage} alt={event.title} />
-        <div className="event-hero-overlay">
-          <div className="event-hero-content">
-            <span className={`event-status ${event.status}`}>
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 pb-12 pt-28 w-full">
+          {/* Breadcrumb & Badges */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <Link
+              href="/events"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full transition-all"
+            >
+              <FaArrowLeft className="text-[10px]" />
+              <span>All Events</span>
+            </Link>
+
+            <span
+              className={`inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md border ${
+                event.status === "upcoming"
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                  : "bg-slate-700/50 text-slate-300 border-white/10"
+              }`}
+            >
               {event.status === "upcoming" ? "Upcoming Event" : "Completed Event"}
             </span>
-            <h1>{event.title}</h1>
-            <p className="event-hero-excerpt">{event.shortDescription}</p>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight mb-4">
+            {event.title}
+          </h1>
+
+          {event.shortDescription && (
+            <p className="text-base sm:text-lg text-slate-200/90 max-w-3xl leading-relaxed mb-6 font-normal">
+              {event.shortDescription}
+            </p>
+          )}
+
+          {/* Quick Meta Row */}
+          <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
+              <FaCalendarAlt className="text-emerald-400 shrink-0" />
+              <span>
+                {eventDate.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
+              <FaClock className="text-blue-400 shrink-0" />
+              <span>
+                {eventDate.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
+              <FaMapMarkerAlt className="text-rose-400 shrink-0" />
+              <span>{event.location}</span>
+            </div>
+
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10 text-white transition-colors cursor-pointer ml-auto"
+              title="Share event link"
+            >
+              {copied ? <FaCheck className="text-emerald-400 text-xs" /> : <FaShareAlt className="text-xs" />}
+              <span>{copied ? "Link Copied!" : "Share"}</span>
+            </button>
           </div>
         </div>
       </section>
 
-      <div className="event-content-wrapper">
-        <button className="back-button" onClick={() => router.push("/events")}>
-          <FaArrowLeft /> Back to Events
-        </button>
-
-        <div className="event-info-grid">
-          <div className="event-info-card">
-            <div className="event-info-icon"><FaCalendarAlt /></div>
-            <div className="event-info-text">
-              <h4>Date</h4>
-              <p>{eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      {/* Main Container */}
+      <main className="max-w-5xl mx-auto px-6 sm:px-8 -mt-6 relative z-20">
+        {/* Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
+              <FaCalendarAlt />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Date</p>
+              <p className="text-sm font-bold text-slate-800">
+                {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
             </div>
           </div>
 
-          <div className="event-info-card">
-            <div className="event-info-icon"><FaClock /></div>
-            <div className="event-info-text">
-              <h4>Time</h4>
-              <p>{eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg shrink-0 border border-indigo-100">
+              <FaClock />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Time</p>
+              <p className="text-sm font-bold text-slate-800">
+                {eventDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </p>
             </div>
           </div>
 
-          <div className="event-info-card">
-            <div className="event-info-icon"><FaMapMarkerAlt /></div>
-            <div className="event-info-text">
-              <h4>Location</h4>
-              <p>{event.location}</p>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-lg shrink-0 border border-rose-100">
+              <FaMapMarkerAlt />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Location</p>
+              <p className="text-sm font-bold text-slate-800 truncate" title={event.location}>
+                {event.location}
+              </p>
             </div>
           </div>
 
-          {event.attendees !== undefined && event.attendees > 0 && (
-            <div className="event-info-card">
-              <div className="event-info-icon"><FaUsers /></div>
-              <div className="event-info-text">
-                <h4>Attendees</h4>
-                <p>{event.attendees} people</p>
-              </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0 border border-emerald-100">
+              <FaUsers />
             </div>
-          )}
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                {event.attendees && event.attendees > 0 ? "Attendees" : "Audience"}
+              </p>
+              <p className="text-sm font-bold text-slate-800 truncate">
+                {event.attendees && event.attendees > 0
+                  ? `${event.attendees} People`
+                  : "Open to Community"}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="event-content-card">
-          <div className="event-content-header">
-            <h2>About This Event</h2>
+        {/* Registration CTA Banner (Driven by Dashboard registrationUrl) */}
+        {event.registrationUrl && (
+          <div className="mb-8 rounded-3xl overflow-hidden bg-gradient-to-r from-[#1d3c68] via-[#2a528a] to-[#3d73bd] p-8 text-white shadow-xl shadow-blue-900/15 border border-blue-400/20 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn">
+            <div className="max-w-xl">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 mb-3">
+                Registration Open
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-2">
+                Reserve Your Seat for this Event
+              </h3>
+              <p className="text-sm text-blue-100/90 leading-relaxed">
+                Click below to complete registration on our official registration portal or partner form.
+              </p>
+            </div>
+            <a
+              href={event.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-bold text-sm text-slate-900 bg-white hover:bg-slate-100 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer shrink-0"
+            >
+              <span>Register for Event</span>
+              <FaExternalLinkAlt className="text-xs text-[#1d3c68]" />
+            </a>
           </div>
-          <div className="event-content">
-            {event.description.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
+        )}
+
+        {/* Main Event Article Content Card */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs mb-8">
+          <div className="border-b border-slate-100 pb-5 mb-8 flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              About This Event
+            </h2>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {event.status === "upcoming" ? "GCCF Upcoming Summit" : "GCCF Archive"}
+            </span>
           </div>
 
-          {event.galleryImages && event.galleryImages.length > 0 && (
-            <div className="event-gallery">
-              <h3>Event Gallery</h3>
-              <div className="gallery-grid">
-                {event.galleryImages.map((image, index) => (
-                  <div key={index} className="gallery-item" onClick={() => setSelectedImage(image)}>
-                    <img src={image} alt={`${event.title} - Image ${index + 1}`} />
+          <div className="prose prose-slate max-w-none text-slate-700 text-base leading-relaxed space-y-4">
+            {event.description.split("\n").map((paragraph, index) => {
+              const trimmed = paragraph.trim();
+              if (!trimmed) return null;
+              return (
+                <p key={index} className="text-slate-700 leading-relaxed text-base">
+                  {trimmed}
+                </p>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Multiple Images Gallery */}
+        {galleryImages.length > 0 && (
+          <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-base">
+                  <FaImages />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                    Event Photo Gallery
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Snapshots, highlights, and keynote moments from this gathering
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                {galleryImages.length} {galleryImages.length === 1 ? "Photo" : "Photos"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {galleryImages.map((image, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setSelectedImageIndex(index)}
+                  className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#3d73bd] cursor-pointer"
+                >
+                  <img
+                    src={image}
+                    alt={`${event.title} photo ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
+                    <span>View Image</span>
                   </div>
-                ))}
-              </div>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Back Navigation Bar */}
+        <div className="flex items-center justify-between pt-6 border-t border-slate-200/60">
+          <Link
+            href="/events"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#1d3c68] transition-colors"
+          >
+            <FaArrowLeft className="text-xs" />
+            <span>Back to All Events</span>
+          </Link>
+          <Link
+            href="/news"
+            className="text-sm font-semibold text-[#3d73bd] hover:underline"
+          >
+            Read Latest GCCF News &rarr;
+          </Link>
         </div>
+      </main>
 
-        {event.organizer && (
-          <div className="event-content-card" style={{ padding: "1.5rem 2rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div className="event-info-icon"><FaUser /></div>
-              <div>
-                <h4 style={{ margin: "0 0 4px 0", color: "#666", fontWeight: "500" }}>Organized by</h4>
-                <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{event.organizer}</p>
-              </div>
+      {/* Lightbox Modal for Gallery Images */}
+      {selectedImageIndex !== null && galleryImages[selectedImageIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setSelectedImageIndex(null)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setSelectedImageIndex(null)}
+            className="absolute top-6 right-6 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-colors cursor-pointer z-50"
+            aria-label="Close"
+          >
+            <FaTimes />
+          </button>
+
+          {/* Previous image */}
+          {galleryImages.length > 1 && (
+            <button
+              type="button"
+              onClick={handlePrevImage}
+              className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-colors cursor-pointer z-50"
+              aria-label="Previous image"
+            >
+              <FaChevronLeft />
+            </button>
+          )}
+
+          {/* Main lightbox image */}
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={galleryImages[selectedImageIndex]}
+              alt={`Gallery image ${selectedImageIndex + 1}`}
+              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
+            />
+            <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 text-white/80 text-xs font-semibold bg-black/60 px-4 py-1.5 rounded-full">
+              {selectedImageIndex + 1} of {galleryImages.length}
             </div>
           </div>
-        )}
 
-        {event.status === "upcoming" && !isPast && (
-          <div className="cta-section">
-            <h3>Interested in attending?</h3>
-            <p>Join us for this exciting event. Registration may be required.</p>
-            <button className="cta-button">Register Now</button>
-          </div>
-        )}
-
-        {event.status === "completed" && (
-          <div className="cta-section">
-            <h3>This event has concluded</h3>
-            <p>Thank you to everyone who attended! Check out our upcoming events.</p>
-            <button className="cta-button" onClick={() => router.push("/events")}>View Upcoming Events</button>
-          </div>
-        )}
-      </div>
-
-      {selectedImage && (
-        <div className="lightbox" onClick={() => setSelectedImage(null)}>
-          <button className="lightbox-close" onClick={() => setSelectedImage(null)}>×</button>
-          <img src={selectedImage} alt="Gallery image" />
+          {/* Next image */}
+          {galleryImages.length > 1 && (
+            <button
+              type="button"
+              onClick={handleNextImage}
+              className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-colors cursor-pointer z-50"
+              aria-label="Next image"
+            >
+              <FaChevronRight />
+            </button>
+          )}
         </div>
       )}
     </div>

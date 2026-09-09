@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { logoutAdmin } from "@/lib/auth";
+import {
+  logoutAdmin,
+  isSuperAdmin,
+  getAdminRole,
+  getAdminName,
+  syncCurrentUserProfile,
+  hasPermission,
+} from "@/lib/auth";
 import {
   newsApi,
   eventsApi,
@@ -10,6 +17,7 @@ import {
   membershipsApi,
   analyticsApi,
   settingsApi,
+  teamApi,
   DashboardStats,
   MemberGrowthData,
   ActivityItem,
@@ -51,6 +59,7 @@ import { SettingsManager } from "../admin/SettingsManager";
 import TeamManager from "../admin/TeamManager";
 import PopupManager from "../admin/PopupManager";
 import TestimonialsManager from "../admin/TestimonialsManager";
+import AdminUsersManager from "../admin/AdminUsersManager";
 import { NewsModal } from "../admin/NewsModal";
 import { EventModal } from "../admin/EventModal";
 import { GalleryModal } from "../admin/GalleryModal";
@@ -274,18 +283,54 @@ export default function AdminComponent() {
     }
   }, []);
 
-  // Load Settings
+  // Load Auth Profile and Settings
   useEffect(() => {
-    const loadSettings = async () => {
+    const initAuthAndSettings = async () => {
+      // Sync user profile from backend
+      const user = await syncCurrentUserProfile();
+      const currentRole = user?.role || getAdminRole();
+      const currentName = user?.username || getAdminName();
+
+      setAdminProfile((prev) => ({
+        ...prev,
+        name: currentName,
+        role: currentRole === "super_admin" ? "Super Admin" : "Admin",
+      }));
+
+      // If activeTab is not permitted, select the first permitted tab
+      if (currentRole !== "super_admin") {
+        const perms = user?.permissions || [];
+        const isPermitted = (tab: AdminTab) => {
+          if (perms.includes("all")) return true;
+          return perms.includes(tab);
+        };
+        if (!isPermitted("dashboard")) {
+          const tabOrder: AdminTab[] = [
+            "news",
+            "events",
+            "gallery",
+            "members",
+            "teams",
+            "popup",
+            "testimonials",
+            "settings",
+          ];
+          const fallback = tabOrder.find((t) => isPermitted(t));
+          if (fallback) {
+            setActiveTab(fallback);
+          }
+        }
+      }
+
       try {
         const settings = await settingsApi.getSettings();
         if (settings) {
           if (settings.accountSettings) {
-            setAdminProfile({
-              name: settings.accountSettings.name || "Admin User",
-              email: settings.accountSettings.email || "admin@gccf.org",
-              role: "Admin",
-            });
+            setAdminProfile((prev) => ({
+              ...prev,
+              name: settings.accountSettings.name || prev.name,
+              email: settings.accountSettings.email || prev.email,
+            }));
           }
           if (settings.analyticsSettings) {
             setAnalyticsSettings({
@@ -305,7 +350,7 @@ export default function AdminComponent() {
         console.error("Failed to load settings:", err);
       }
     };
-    loadSettings();
+    initAuthAndSettings();
   }, []);
 
   // Fetch Dashboard and CMS Data
@@ -313,7 +358,7 @@ export default function AdminComponent() {
     setLoading(true);
     setError(null);
     try {
-      const [news, events, gallery, memberships, stats, growth, activity] =
+      const [news, events, gallery, memberships, stats, growth, activity, team] =
         await Promise.all([
           newsApi.getAll(),
           eventsApi.getAll(),
@@ -322,11 +367,15 @@ export default function AdminComponent() {
           analyticsApi.getDashboardStats(),
           analyticsApi.getMemberGrowth(growthPeriod),
           analyticsApi.getRecentActivity(12),
+          teamApi.getAll().catch(() => []),
         ]);
       setNewsList(news);
       setEventsList(events);
       setGalleryList(gallery);
       setMembershipsList(memberships);
+      if (Array.isArray(team) && team.length > 0) {
+        setTeamList(team);
+      }
       setDashboardStats(stats);
       setMemberGrowthData(growth);
 
@@ -391,6 +440,7 @@ export default function AdminComponent() {
       category: news.category || "",
       slug: news.slug,
       featuredImage: news.featuredImage,
+      galleryImages: news.galleryImages?.join(", ") || "",
       tags: news.tags?.join(", ") || "",
       source: news.source || "",
       sourceUrl: news.sourceUrl || "",
@@ -411,8 +461,11 @@ export default function AdminComponent() {
         category: newsForm.category || undefined,
         slug: newsForm.slug || generateSlug(newsForm.title),
         featuredImage: newsForm.featuredImage,
+        galleryImages: newsForm.galleryImages
+          ? newsForm.galleryImages.split(",").map((i) => i.trim()).filter(Boolean)
+          : undefined,
         tags: newsForm.tags
-          ? newsForm.tags.split(",").map((t) => t.trim())
+          ? newsForm.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : undefined,
         source: newsForm.source || undefined,
         sourceUrl: newsForm.sourceUrl || undefined,
@@ -455,6 +508,7 @@ export default function AdminComponent() {
       status: event.status,
       mainImage: event.mainImage,
       galleryImages: event.galleryImages?.join(", ") || "",
+      registrationUrl: event.registrationUrl || "",
       organizer: event.organizer || "",
       attendees: event.attendees?.toString() || "0",
     });
@@ -475,8 +529,9 @@ export default function AdminComponent() {
         status: eventForm.status,
         mainImage: eventForm.mainImage,
         galleryImages: eventForm.galleryImages
-          ? eventForm.galleryImages.split(",").map((i) => i.trim())
+          ? eventForm.galleryImages.split(",").map((i) => i.trim()).filter(Boolean)
           : undefined,
+        registrationUrl: eventForm.registrationUrl || undefined,
         organizer: eventForm.organizer || undefined,
         attendees: eventForm.attendees
           ? parseInt(eventForm.attendees)
@@ -615,6 +670,14 @@ export default function AdminComponent() {
       let updated: TeamMember[];
       const isEditing = !!editingTeam;
       if (editingTeam) {
+        try {
+          await teamApi.update(editingTeam.id, {
+            ...teamForm,
+            order: parseInt(teamForm.order) || 0,
+          });
+        } catch (e) {
+          console.warn("Backend team update failed, falling back to local state", e);
+        }
         updated = teamList.map((m) =>
           m.id === editingTeam.id
             ? {
@@ -625,7 +688,16 @@ export default function AdminComponent() {
             : m
         );
       } else {
-        const newMember: TeamMember = {
+        let createdMember: TeamMember | null = null;
+        try {
+          createdMember = await teamApi.create({
+            ...teamForm,
+            order: parseInt(teamForm.order) || 0,
+          });
+        } catch (e) {
+          console.warn("Backend team create failed, falling back to local state", e);
+        }
+        const newMember: TeamMember = createdMember || {
           id: Date.now().toString(),
           ...teamForm,
           order: parseInt(teamForm.order) || 0,
@@ -728,6 +800,11 @@ export default function AdminComponent() {
       } else if (showDeleteConfirm.type === "memberships") {
         await membershipsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "teams") {
+        try {
+          await teamApi.delete(showDeleteConfirm.id);
+        } catch (e) {
+          console.warn("Backend team delete failed", e);
+        }
         const targetMember = teamList.find((m) => m.id === showDeleteConfirm.id);
         const updated = teamList.filter((m) => m.id !== showDeleteConfirm.id);
         setTeamList(updated);
@@ -882,6 +959,10 @@ export default function AdminComponent() {
               eventsCount={eventsList.length}
               galleryCount={galleryList.length}
             />
+          )}
+
+          {activeTab === "admins" && (
+            <AdminUsersManager currentUsername={adminProfile.name} />
           )}
         </div>
       </main>

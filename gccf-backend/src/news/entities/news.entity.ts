@@ -38,6 +38,9 @@ export class News {
   @Column('simple-array', { nullable: true })
   tags: string[];
 
+  @Column('simple-array', { nullable: true })
+  galleryImages: string[];
+
   @Column({ nullable: true })
   source: string;
 

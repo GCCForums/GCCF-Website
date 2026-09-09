@@ -188,14 +188,14 @@ export const NewsModal: React.FC<NewsModalProps> = ({
               </div>
             </div>
 
-            {/* Featured Image */}
+            {/* Featured Cover Image URL */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Featured Image URL *
+                Featured Cover Image URL *
               </label>
               <input
                 type="url"
-                placeholder="https://images.unsplash.com/... or /article.jpg"
+                placeholder="https://images.unsplash.com/... or /news.jpg"
                 value={newsForm.featuredImage}
                 onChange={(e) =>
                   setNewsForm({ ...newsForm, featuredImage: e.target.value })
@@ -203,6 +203,58 @@ export const NewsModal: React.FC<NewsModalProps> = ({
                 required
                 className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
               />
+              {newsForm.featuredImage && (
+                <div className="mt-2 h-24 w-full max-w-xs rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                  <img
+                    src={newsForm.featuredImage}
+                    alt="Featured cover preview"
+                    className="h-full w-full object-cover"
+                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Multiple Gallery Images */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Additional Article Images (Multiple Image URLs, comma or newline separated)
+                </label>
+                {newsForm.galleryImages && (
+                  <span className="text-[11px] font-semibold text-[#3d73bd] bg-blue-50 px-2 py-0.5 rounded-full">
+                    {newsForm.galleryImages.split(/[,\n]/).map((u) => u.trim()).filter(Boolean).length} image(s)
+                  </span>
+                )}
+              </div>
+              <textarea
+                placeholder="https://images.unsplash.com/photo-1..., https://images.unsplash.com/photo-2..."
+                rows={3}
+                value={newsForm.galleryImages}
+                onChange={(e) =>
+                  setNewsForm({ ...newsForm, galleryImages: e.target.value })
+                }
+                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
+              />
+              {newsForm.galleryImages && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {newsForm.galleryImages
+                    .split(/[,\n]/)
+                    .map((url) => url.trim())
+                    .filter(Boolean)
+                    .slice(0, 6)
+                    .map((url, idx) => (
+                      <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                        <img
+                          src={url}
+                          alt={`Article gallery ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                        />
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
 
             {/* Tags */}

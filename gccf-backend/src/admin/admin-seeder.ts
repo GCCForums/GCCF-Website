@@ -23,9 +23,18 @@ export class AdminSeeder implements OnModuleInit {
       const admin = adminRepository.create({
         username: 'admin',
         password: hashedPassword,
+        role: 'super_admin',
+        permissions: ['all'],
+        isActive: true,
       });
       await adminRepository.save(admin);
-      console.log('Admin user created with default credentials');
+      console.log('Super Admin user created with default credentials');
+    } else if (existingAdmin.role !== 'super_admin') {
+      existingAdmin.role = 'super_admin';
+      existingAdmin.permissions = ['all'];
+      existingAdmin.isActive = true;
+      await adminRepository.save(existingAdmin);
+      console.log('Existing admin upgraded to super_admin');
     }
   }
 }

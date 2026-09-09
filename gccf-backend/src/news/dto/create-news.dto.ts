@@ -34,6 +34,10 @@ export class CreateNewsDto {
   tags?: string[];
 
   @IsOptional()
+  @IsArray()
+  galleryImages?: string[];
+
+  @IsOptional()
   @IsString()
   source?: string;
 
