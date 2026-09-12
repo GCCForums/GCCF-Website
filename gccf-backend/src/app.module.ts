@@ -59,6 +59,14 @@ import { HomepageModule } from './homepage/homepage.module';
 
         const sslConfig = isSsl ? { rejectUnauthorized: false } : false;
 
+        const extraPoolConfig = {
+          max: 10,
+          connectionTimeoutMillis: 10000,
+          idleTimeoutMillis: 30000,
+          keepAlive: true,
+          keepAliveInitialDelayMillis: 10000,
+        };
+
         if (databaseUrl) {
           return {
             type: 'postgres',
@@ -67,6 +75,7 @@ import { HomepageModule } from './homepage/homepage.module';
             synchronize:
               configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
             ssl: sslConfig,
+            extra: extraPoolConfig,
           };
         }
 
@@ -81,6 +90,7 @@ import { HomepageModule } from './homepage/homepage.module';
           synchronize:
             configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
           ssl: sslConfig,
+          extra: extraPoolConfig,
         };
       },
     }),

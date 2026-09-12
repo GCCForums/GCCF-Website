@@ -36,4 +36,12 @@ export class CreateMembershipDto {
   @IsOptional()
   @IsString()
   message?: string;
+
+  @IsOptional()
+  @IsString()
+  membershipType?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentAttachment?: string;
 }

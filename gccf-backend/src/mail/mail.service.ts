@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
   private transporter: Transporter | null = null;
   private readonly logger = new Logger(MailService.name);
   private isConfigured = false;
@@ -21,10 +21,19 @@ export class MailService {
       !smtpPass.includes('your-app-password')
     ) {
       try {
+        const port = Number(this.configService.get<number>('SMTP_PORT', 465));
+        const secureEnv = this.configService.get<string>('SMTP_SECURE');
+        // Port 465 uses SSL (secure: true). Port 587 uses STARTTLS (secure: false).
+        const isSecure =
+          secureEnv !== undefined ? secureEnv === 'true' : port === 465;
+
         this.transporter = nodemailer.createTransport({
-          host: this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com'),
-          port: this.configService.get<number>('SMTP_PORT', 587),
-          secure: false,
+          host: this.configService.get<string>(
+            'SMTP_HOST',
+            'smtp.hostinger.com',
+          ),
+          port,
+          secure: isSecure,
           auth: {
             user: smtpUser,
             pass: smtpPass,
@@ -40,6 +49,30 @@ export class MailService {
         'SMTP credentials not configured or using placeholder credentials. Email delivery is safely skipped.',
       );
     }
+  }
+
+  async onModuleInit() {
+    if (this.isConfigured && this.transporter) {
+      try {
+        await this.transporter.verify();
+        this.logger.log(
+          'SMTP server connection verified successfully. Ready to send emails.',
+        );
+      } catch (error) {
+        this.logger.error(
+          `SMTP connection verification failed: ${(error as Error).message}. Please verify your Hostinger email and password in .env.`,
+        );
+      }
+    }
+  }
+
+  private getFromAddress(): string {
+    const customFrom = this.configService.get<string>('SMTP_FROM');
+    if (customFrom && customFrom.trim()) {
+      return customFrom;
+    }
+    const user = this.configService.get<string>('SMTP_USER', 'info@gccf.org');
+    return `"GCCF" <${user}>`;
   }
 
   async sendMembershipApprovalEmail(
@@ -58,7 +91,7 @@ export class MailService {
 
     try {
       await this.transporter.sendMail({
-        from: this.configService.get<string>('SMTP_FROM', 'noreply@gccf.com'),
+        from: this.getFromAddress(),
         to: email,
         subject: 'Welcome to GCCF - Your Membership has been Approved!',
         html: `
@@ -98,7 +131,7 @@ export class MailService {
 
     try {
       await this.transporter.sendMail({
-        from: this.configService.get<string>('SMTP_FROM', 'noreply@gccf.com'),
+        from: this.getFromAddress(),
         to: email,
         subject: 'GCCF Membership Application Update',
         html: `
@@ -139,7 +172,7 @@ export class MailService {
 
     try {
       await this.transporter.sendMail({
-        from: this.configService.get<string>('SMTP_FROM', 'noreply@gccf.com'),
+        from: this.getFromAddress(),
         to: email,
         subject: `GCCF Upcoming Event: ${eventTitle}`,
         html: `

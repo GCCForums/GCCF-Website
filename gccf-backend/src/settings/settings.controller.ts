@@ -66,6 +66,28 @@ export class SettingsController {
     return this.settingsService.updateAppearanceSettings(data);
   }
 
+  @Get('membership')
+  async getMembershipSettings() {
+    return this.settingsService.getMembershipSettings();
+  }
+
+  @Put('membership')
+  async updateMembershipSettings(
+    @Body()
+    data: {
+      badge?: string;
+      title?: string;
+      subtitle?: string;
+      formTitle?: string;
+      formDescription?: string;
+      membershipTypes?: string[];
+      paymentInstructions?: string;
+      qrCodeUrl?: string;
+    },
+  ) {
+    return this.settingsService.updateMembershipSettings(data);
+  }
+
   @Post('change-password')
   async changePassword(
     @Body() data: { currentPassword: string; newPassword: string },

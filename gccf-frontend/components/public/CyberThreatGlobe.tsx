@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import worldBordersData from "./worldBorders.json";
 import landDotsData from "./landDots.json";
 
@@ -32,32 +32,24 @@ interface ImpactPulse {
   opacity: number;
 }
 
-// Target Hub is Nepal (NP) as requested in the reference image
-const TARGET_NEPAL: CountryNode = {
-  name: "Kathmandu",
-  country: "Nepal",
-  code: "NP",
-  lat: 28.39,
-  lng: 84.12,
-  isTarget: true,
-};
-
-// Attacking and prominent world countries (same as reference image: US, DE, CN, TR, etc.)
-const ATTACKING_COUNTRIES: CountryNode[] = [
+// Major global cybersecurity & threat hubs across all continents
+const GLOBAL_COUNTRIES: CountryNode[] = [
+  { name: "Kathmandu", country: "Nepal", code: "NP", lat: 28.39, lng: 84.12 },
   { name: "Washington", country: "United States", code: "US", lat: 38.9, lng: -77.0 },
   { name: "Frankfurt", country: "Germany", code: "DE", lat: 50.1, lng: 8.68 },
   { name: "Beijing", country: "China", code: "CN", lat: 39.9, lng: 116.4 },
-  { name: "Istanbul", country: "Turkey", code: "TR", lat: 41.0, lng: 28.98 },
   { name: "London", country: "United Kingdom", code: "UK", lat: 51.5, lng: -0.12 },
-  { name: "Paris", country: "France", code: "FR", lat: 48.85, lng: 2.35 },
-  { name: "Moscow", country: "Russia", code: "RU", lat: 55.75, lng: 37.6 },
   { name: "Tokyo", country: "Japan", code: "JP", lat: 35.68, lng: 139.75 },
+  { name: "Paris", country: "France", code: "FR", lat: 48.85, lng: 2.35 },
+  { name: "Singapore", country: "Singapore", code: "SG", lat: 1.35, lng: 103.82 },
   { name: "Sydney", country: "Australia", code: "AU", lat: -33.87, lng: 151.2 },
   { name: "Brasilia", country: "Brazil", code: "BR", lat: -15.8, lng: -47.9 },
-  { name: "Buenos Aires", country: "Argentina", code: "AR", lat: -34.6, lng: -58.4 },
   { name: "Delhi", country: "India", code: "IN", lat: 28.6, lng: 77.2 },
-  { name: "Bangkok", country: "Thailand", code: "TH", lat: 13.75, lng: 100.5 },
+  { name: "Seoul", country: "South Korea", code: "KR", lat: 37.56, lng: 126.97 },
+  { name: "Dubai", country: "UAE", code: "AE", lat: 25.2, lng: 55.27 },
   { name: "Johannesburg", country: "South Africa", code: "ZA", lat: -26.2, lng: 28.0 },
+  { name: "Toronto", country: "Canada", code: "CA", lat: 43.65, lng: -79.38 },
+  { name: "Istanbul", country: "Turkey", code: "TR", lat: 41.0, lng: 28.98 },
 ];
 
 // REAL country/coastline borders — sourced from Natural Earth (110m admin-0 countries),
@@ -84,6 +76,16 @@ export default function CyberThreatGlobe() {
   const activeArcsRef = useRef<AttackArc[]>([]);
   const impactPulsesRef = useRef<ImpactPulse[]>([]);
   const lastSpawnTimeRef = useRef(0);
+
+  // Live attacks list for the ticker bar
+  const [liveAttacks, setLiveAttacks] = useState<
+    { id: string; from: string; to: string; color: string }[]
+  >([
+    { id: "1", from: "US", to: "DE", color: "#ef4444" },
+    { id: "2", from: "CN", to: "JP", color: "#f43f5e" },
+    { id: "3", from: "UK", to: "SG", color: "#fb7185" },
+    { id: "4", from: "DE", to: "NP", color: "#f59e0b" },
+  ]);
 
   // worldDots now comes straight from real geometry — no synthetic block generator needed
   const worldDots = useMemo(() => REAL_LAND_DOTS, []);
@@ -140,16 +142,22 @@ export default function CyberThreatGlobe() {
       return { x: x1, y: y2, z: z2 };
     };
 
-    // Spawn live attack targeting Nepal from one of the active countries
+    // Spawn live attack between random source and target countries across the globe
     const spawnAttack = (timestamp: number) => {
-      if (timestamp - lastSpawnTimeRef.current > 1400 && activeArcsRef.current.length < 6) {
+      if (timestamp - lastSpawnTimeRef.current > 1200 && activeArcsRef.current.length < 7) {
         lastSpawnTimeRef.current = timestamp;
 
-        // Choose random attacker (e.g. US, DE, CN, TR, UK, etc.)
-        const source = ATTACKING_COUNTRIES[Math.floor(Math.random() * ATTACKING_COUNTRIES.length)];
-        const target = TARGET_NEPAL;
+        // Choose random source country and a different random target country
+        const sourceIndex = Math.floor(Math.random() * GLOBAL_COUNTRIES.length);
+        let targetIndex = Math.floor(Math.random() * (GLOBAL_COUNTRIES.length - 1));
+        if (targetIndex >= sourceIndex) {
+          targetIndex++;
+        }
 
-        const colors = ["#f87171", "#fb7185", "#f43f5e", "#ef4444"];
+        const source = GLOBAL_COUNTRIES[sourceIndex];
+        const target = GLOBAL_COUNTRIES[targetIndex];
+
+        const colors = ["#f87171", "#fb7185", "#f43f5e", "#ef4444", "#f59e0b", "#ec4899"];
         const arcColor = colors[Math.floor(Math.random() * colors.length)];
 
         const newArc: AttackArc = {
@@ -157,12 +165,17 @@ export default function CyberThreatGlobe() {
           source,
           target,
           progress: 0,
-          speed: 0.009 + Math.random() * 0.005,
+          speed: 0.008 + Math.random() * 0.006,
           color: arcColor,
-          altitude: 0.25 + Math.random() * 0.15,
+          altitude: 0.22 + Math.random() * 0.18,
         };
 
         activeArcsRef.current.push(newArc);
+
+        setLiveAttacks((prev) => [
+          { id: newArc.id, from: source.code, to: target.code, color: arcColor },
+          ...prev.slice(0, 3),
+        ]);
       }
     };
 
@@ -318,64 +331,55 @@ export default function CyberThreatGlobe() {
         }
       });
 
-      // 6. Draw Focal Target Beacon: NEPAL (NP)
-      const npPt = latLngTo3D(TARGET_NEPAL.lat, TARGET_NEPAL.lng, globeRadius);
-      const npRot = rotate3D(npPt.x, npPt.y, npPt.z, yaw, pitch);
-
-      if (npRot.z > 0) {
-        const sx = centerX + npRot.x;
-        const sy = centerY - npRot.y;
-        const depthAlpha = Math.min(1, Math.max(0.3, npRot.z / globeRadius));
-
-        // Expanding pulsating rings on Nepal
-        const pulseSize = (time % 2000) / 2000;
-        ctx.strokeStyle = `rgba(96, 165, 250, ${(1 - pulseSize) * depthAlpha})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 8 + pulseSize * 18, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Blue target halo
-        ctx.fillStyle = `rgba(59, 130, 246, ${0.45 * depthAlpha})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 9, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Blue target core
-        ctx.fillStyle = "#3b82f6";
-        ctx.beginPath();
-        ctx.arc(sx, sy, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Nepal Country Label
-        ctx.fillStyle = `rgba(255, 255, 255, ${depthAlpha})`;
-        ctx.font = "bold 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        ctx.shadowColor = "rgba(0,0,0,0.9)";
-        ctx.shadowBlur = 4;
-        ctx.fillText("Nepal (NP)", sx + 8, sy + 3);
-        ctx.shadowBlur = 0;
-      }
-
-      // 7. Draw Attacking Country Pins & Labels
-      ATTACKING_COUNTRIES.forEach((c) => {
+      // 6. Draw Global Threat & Defense Country Nodes
+      GLOBAL_COUNTRIES.forEach((c) => {
         const pt = latLngTo3D(c.lat, c.lng, globeRadius);
         const rot = rotate3D(pt.x, pt.y, pt.z, yaw, pitch);
 
         if (rot.z > 0) {
           const sx = centerX + rot.x;
           const sy = centerY - rot.y;
-          const depthAlpha = Math.min(1, Math.max(0.2, rot.z / globeRadius));
+          const depthAlpha = Math.min(1, Math.max(0.25, rot.z / globeRadius));
 
-          // Check if this country is currently launching an attack
+          // Check if this country is currently being targeted or launching an attack
           const isAttacking = activeArcsRef.current.some((a) => a.source.code === c.code);
+          const isTargeted = activeArcsRef.current.some((a) => a.target.code === c.code);
 
-          if (isAttacking) {
-            // Glowing Red/Amber Pin
+          if (isTargeted) {
+            // Target Defense Pulse (Cyan/Blue pulsating ring)
+            const pulse = (time % 1800) / 1800;
+            ctx.strokeStyle = `rgba(56, 189, 248, ${(1 - pulse) * depthAlpha})`;
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 5 + pulse * 14, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Cyan Target Core
+            ctx.fillStyle = `rgba(14, 165, 233, ${0.45 * depthAlpha})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.95 * depthAlpha})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (rot.z > globeRadius * 0.22) {
+              ctx.fillStyle = `rgba(186, 230, 253, ${depthAlpha * 0.95})`;
+              ctx.font = "bold 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+              ctx.shadowColor = "rgba(0,0,0,0.85)";
+              ctx.shadowBlur = 4;
+              ctx.fillText(c.country, sx + 7, sy + 3);
+              ctx.shadowBlur = 0;
+            }
+          } else if (isAttacking) {
+            // Glowing Red/Amber Attacker Node
             ctx.fillStyle = `rgba(239, 68, 68, ${0.45 * depthAlpha})`;
             ctx.beginPath();
             ctx.arc(sx, sy, 7, 0, Math.PI * 2);
@@ -391,7 +395,6 @@ export default function CyberThreatGlobe() {
             ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
             ctx.fill();
 
-            // Noticeable Country Name
             if (rot.z > globeRadius * 0.25) {
               ctx.fillStyle = `rgba(255, 255, 255, ${depthAlpha * 0.95})`;
               ctx.font = "bold 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -401,21 +404,21 @@ export default function CyberThreatGlobe() {
               ctx.shadowBlur = 0;
             }
           } else {
-            // Subtle node dot
-            ctx.fillStyle = `rgba(248, 113, 113, ${0.35 * depthAlpha})`;
+            // Subtle idle country node dot
+            ctx.fillStyle = `rgba(147, 197, 253, ${0.3 * depthAlpha})`;
             ctx.beginPath();
-            ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+            ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = `rgba(255, 255, 255, ${0.85 * depthAlpha})`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.75 * depthAlpha})`;
             ctx.beginPath();
-            ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+            ctx.arc(sx, sy, 1.6, 0, Math.PI * 2);
             ctx.fill();
 
-            if (rot.z > globeRadius * 0.5) {
-              ctx.fillStyle = `rgba(200, 220, 250, ${depthAlpha * 0.75})`;
+            if (rot.z > globeRadius * 0.45) {
+              ctx.fillStyle = `rgba(180, 210, 245, ${depthAlpha * 0.65})`;
               ctx.font = "8px ui-monospace, SFMono-Regular, monospace";
-              ctx.fillText(c.code, sx + 5, sy - 3);
+              ctx.fillText(c.code, sx + 5, sy - 2);
             }
           }
         }
@@ -507,7 +510,7 @@ export default function CyberThreatGlobe() {
             if (arc.progress > 0.2 && arc.progress < 0.8 && headRot.z > 0) {
               ctx.save();
               ctx.font = "bold 9px ui-monospace, monospace";
-              const tagText = `${arc.source.code} ➔ NP`;
+              const tagText = `${arc.source.code} ➔ ${arc.target.code}`;
               const textWidth = ctx.measureText(tagText).width;
 
               ctx.fillStyle = "rgba(7, 18, 36, 0.88)";
@@ -524,12 +527,13 @@ export default function CyberThreatGlobe() {
             }
           }
         } else {
-          // Impact Ripple on Nepal
-          const npRot = rotate3D(npPt.x, npPt.y, npPt.z, yaw, pitch);
-          if (npRot.z > 0) {
+          // Impact Ripple on the destination target country
+          const tgtPt = latLngTo3D(arc.target.lat, arc.target.lng, globeRadius);
+          const tgtRot = rotate3D(tgtPt.x, tgtPt.y, tgtPt.z, yaw, pitch);
+          if (tgtRot.z > 0) {
             impactPulsesRef.current.push({
-              x: centerX + npRot.x,
-              y: centerY - npRot.y,
+              x: centerX + tgtRot.x,
+              y: centerY - tgtRot.y,
               radius: 4,
               maxRadius: 28,
               color: arc.color,
@@ -638,36 +642,26 @@ export default function CyberThreatGlobe() {
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      {/* Live Attacks Bar (Matches the attached reference image) */}
+      {/* Live Dynamic Attacks Bar */}
       <div className="mt-2 inline-flex items-center gap-2 sm:gap-3 px-4 py-2 rounded-full bg-slate-900/90 border border-[#3d73bd]/35 shadow-lg backdrop-blur-md text-white text-xs font-mono">
         <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-slate-300">
           LIVE ATTACKS:
         </span>
         <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950/40 border border-red-900/40 text-[11px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-            <span className="font-semibold text-red-300">US</span>
-            <span className="text-slate-400">➔</span>
-            <span className="font-semibold text-blue-300">NP</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950/40 border border-red-900/40 text-[11px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-            <span className="font-semibold text-red-300">DE</span>
-            <span className="text-slate-400">➔</span>
-            <span className="font-semibold text-blue-300">NP</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950/40 border border-red-900/40 text-[11px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-            <span className="font-semibold text-red-300">CN</span>
-            <span className="text-slate-400">➔</span>
-            <span className="font-semibold text-blue-300">NP</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950/40 border border-red-900/40 text-[11px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-            <span className="font-semibold text-red-300">TR</span>
-            <span className="text-slate-400">➔</span>
-            <span className="font-semibold text-blue-300">NP</span>
-          </div>
+          {liveAttacks.map((attack) => (
+            <div
+              key={attack.id}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950/40 border border-red-900/40 text-[11px]"
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-ping"
+                style={{ backgroundColor: attack.color }}
+              />
+              <span className="font-semibold text-red-300">{attack.from}</span>
+              <span className="text-slate-400">➔</span>
+              <span className="font-semibold text-cyan-300">{attack.to}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

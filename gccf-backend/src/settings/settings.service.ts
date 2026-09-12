@@ -107,6 +107,52 @@ export class SettingsService {
     return this.settingsRepository.save(settings);
   }
 
+  async getMembershipSettings(): Promise<any> {
+    const settings = await this.getSettings();
+    const defaults = {
+      badge: 'Join the Movement',
+      title: 'Become a Member',
+      subtitle:
+        'Join the GCCF global community and stay connected with our events, research, and cybersecurity initiatives.',
+      formTitle: 'Membership Application Form',
+      formDescription:
+        'Please complete all required fields below. We will review your application and contact you.',
+      membershipTypes: [
+        'Individual Member',
+        'Student Member',
+        'Corporate Member',
+        'Institutional Member',
+        'Lifetime Member',
+      ],
+      paymentInstructions:
+        'Please complete your membership fee payment and attach your payment receipt or screenshot below.',
+      qrCodeUrl: '',
+    };
+    return {
+      ...defaults,
+      ...(settings.membershipSettings || {}),
+    };
+  }
+
+  async updateMembershipSettings(data: {
+    badge?: string;
+    title?: string;
+    subtitle?: string;
+    formTitle?: string;
+    formDescription?: string;
+    membershipTypes?: string[];
+    paymentInstructions?: string;
+    qrCodeUrl?: string;
+  }): Promise<any> {
+    const settings = await this.getSettings();
+    settings.membershipSettings = {
+      ...(settings.membershipSettings || {}),
+      ...data,
+    };
+    await this.settingsRepository.save(settings);
+    return this.getMembershipSettings();
+  }
+
   async changePassword(
     currentPassword: string,
     newPassword: string,

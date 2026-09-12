@@ -10,6 +10,8 @@ export interface Membership {
   occupation?: string;
   organization?: string;
   message?: string;
+  membershipType?: string;
+  paymentAttachment?: string;
   status: 'pending' | 'approved' | 'declined';
   createdAt: string;
   updatedAt: string;
@@ -26,6 +28,8 @@ export interface CreateMembershipDto {
   occupation?: string;
   organization?: string;
   message?: string;
+  membershipType?: string;
+  paymentAttachment?: string;
 }
 
 export interface UpdateMembershipDto {
@@ -39,5 +43,18 @@ export interface UpdateMembershipDto {
   occupation?: string;
   organization?: string;
   message?: string;
+  membershipType?: string;
+  paymentAttachment?: string;
   status?: 'pending' | 'approved' | 'declined';
+}
+
+export interface MembershipSettings {
+  badge: string;
+  title: string;
+  subtitle: string;
+  formTitle: string;
+  formDescription: string;
+  membershipTypes: string[];
+  paymentInstructions: string;
+  qrCodeUrl?: string;
 }

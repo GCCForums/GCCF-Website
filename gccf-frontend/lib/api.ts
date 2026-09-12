@@ -1,7 +1,12 @@
 import { News, CreateNewsDto, UpdateNewsDto } from '@/types/news';
 import { Event, CreateEventDto, UpdateEventDto } from '@/types/events';
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from '@/types/gallery';
-import { Membership, CreateMembershipDto, UpdateMembershipDto } from '@/types/membership';
+import {
+  Membership,
+  CreateMembershipDto,
+  UpdateMembershipDto,
+  MembershipSettings,
+} from '@/types/membership';
 import { TeamMember, PopupItem } from '@/components/admin/types';
 import { getAdminToken } from './auth';
 
@@ -380,6 +385,15 @@ export const settingsApi = {
     fetchApi<{ success: boolean; message: string }>('/settings/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+};
+
+export const membershipSettingsApi = {
+  getSettings: () => fetchApi<MembershipSettings>('/settings/membership'),
+  updateSettings: (data: Partial<MembershipSettings>) =>
+    fetchApi<MembershipSettings>('/settings/membership', {
+      method: 'PUT',
+      body: JSON.stringify(data),
     }),
 };
 

@@ -41,6 +41,12 @@ export class Membership {
   @Column({ type: 'text', nullable: true })
   message: string;
 
+  @Column({ nullable: true, default: 'Individual Member' })
+  membershipType: string;
+
+  @Column({ type: 'text', nullable: true })
+  paymentAttachment: string;
+
   @Column({ default: 'pending' })
   status: 'pending' | 'approved' | 'declined';
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaUsers,
@@ -17,9 +17,21 @@ import {
   FaBriefcase,
   FaCommentAlt,
   FaCalendarAlt,
+  FaSlidersH,
+  FaReceipt,
+  FaDownload,
+  FaPlus,
+  FaFilePdf,
+  FaIdCard,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaSpinner,
+  FaMoneyCheckAlt,
 } from "react-icons/fa";
-import { Membership } from "@/types/membership";
+import { Membership, MembershipSettings } from "@/types/membership";
 import { DeleteTarget } from "./types";
+import { membershipSettingsApi } from "@/lib/api";
+import { hasPermission, isSuperAdmin } from "@/lib/auth";
 
 interface MembersManagerProps {
   membershipsList: Membership[];
@@ -28,15 +40,78 @@ interface MembersManagerProps {
   onSetDeleteTarget: (target: DeleteTarget) => void;
 }
 
+const DEFAULT_MEMBERSHIP_SETTINGS: MembershipSettings = {
+  badge: "Join the Movement",
+  title: "Become a Member",
+  subtitle:
+    "Join the GCCF global community and stay connected with our events, research, and cybersecurity initiatives.",
+  formTitle: "Membership Application",
+  formDescription:
+    "Fill out the form below to apply for GCCF membership. Our team will review your application.",
+  membershipTypes: [
+    "Individual Member",
+    "Student Member",
+    "Corporate Member",
+    "Institutional Member",
+    "Lifetime Member",
+  ],
+  paymentInstructions:
+    "Please complete your membership payment and attach your payment receipt, slip, or screenshot below.",
+};
+
 export const MembersManager: React.FC<MembersManagerProps> = ({
   membershipsList,
   loading,
   onStatusChange,
   onSetDeleteTarget,
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedMember, setSelectedMember] = useState<Membership | null>(null);
+
+  // Fullscreen Receipt Preview Modal
+  const [selectedReceipt, setSelectedReceipt] = useState<{
+    url: string;
+    memberName: string;
+  } | null>(null);
+
+  // Dynamic Form Customization State
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsNotice, setSettingsNotice] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [formSettings, setFormSettings] = useState<MembershipSettings>(
+    DEFAULT_MEMBERSHIP_SETTINGS
+  );
+  const [newTierInput, setNewTierInput] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+    membershipSettingsApi
+      .getSettings()
+      .then((data) => {
+        if (data) {
+          setFormSettings((prev) => ({
+            ...prev,
+            ...data,
+            membershipTypes:
+              data.membershipTypes && data.membershipTypes.length > 0
+                ? data.membershipTypes
+                : prev.membershipTypes,
+          }));
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not load membership settings:", err);
+      });
+  }, []);
+
+  const canCustomizeForm = mounted
+    ? isSuperAdmin() || hasPermission("members")
+    : false;
 
   const pendingCount = membershipsList.filter((m) => m.status === "pending").length;
   const approvedCount = membershipsList.filter((m) => m.status === "approved").length;
@@ -46,7 +121,9 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
     const matchesSearch =
       m.firstName.toLowerCase().includes(searchFilter.toLowerCase()) ||
       m.lastName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchFilter.toLowerCase());
+      m.email.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (m.membershipType &&
+        m.membershipType.toLowerCase().includes(searchFilter.toLowerCase()));
     const matchesStatus = statusFilter === "all" || m.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -81,22 +158,89 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
     },
   ];
 
-  const handleModalStatusChange = async (status: "approved" | "declined" | "pending") => {
+  const handleModalStatusChange = async (
+    status: "approved" | "declined" | "pending"
+  ) => {
     if (!selectedMember) return;
     await onStatusChange(selectedMember.id, status);
     setSelectedMember((prev) => (prev ? { ...prev, status } : null));
   };
 
+  const handleDownloadReceipt = (dataUrl: string, applicantName: string) => {
+    const isPdf = dataUrl.startsWith("data:application/pdf");
+    const ext = isPdf ? "pdf" : "png";
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `payment-receipt-${applicantName
+      .toLowerCase()
+      .replace(/\s+/g, "-")}.${ext}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleAddTier = () => {
+    const trimmed = newTierInput.trim();
+    if (!trimmed) return;
+    if (formSettings.membershipTypes.includes(trimmed)) return;
+    setFormSettings((prev) => ({
+      ...prev,
+      membershipTypes: [...prev.membershipTypes, trimmed],
+    }));
+    setNewTierInput("");
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    setSettingsNotice(null);
+    try {
+      const updated = await membershipSettingsApi.updateSettings(formSettings);
+      setFormSettings(updated);
+      setSettingsNotice({
+        type: "success",
+        message: "Membership form settings updated successfully!",
+      });
+      setTimeout(() => {
+        setIsSettingsModalOpen(false);
+        setSettingsNotice(null);
+      }, 1400);
+    } catch (err: any) {
+      console.error("Failed to update membership settings:", err);
+      setSettingsNotice({
+        type: "error",
+        message: err.message || "Failed to update form settings.",
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-[1400px]">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">
-          Membership Management
-        </h1>
-        <p className="text-sm text-slate-500">
-          Review, approve, or decline community registration applications
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">
+            Membership Management
+          </h1>
+          <p className="text-sm text-slate-500">
+            Review member applications, verify payment attachments, and configure registration tiers
+          </p>
+        </div>
+
+        {canCustomizeForm && (
+          <button
+            onClick={() => {
+              setSettingsNotice(null);
+              setIsSettingsModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162e50] hover:to-[#2b5894] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <FaSlidersH className="text-xs" />
+            <span>Customize Application Form</span>
+          </button>
+        )}
       </div>
 
       {/* Modern Status Stat Cards */}
@@ -134,7 +278,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
             <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
             <input
               type="text"
-              placeholder="Search by name or email..."
+              placeholder="Search by name, email, or tier..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors placeholder:text-slate-400"
@@ -166,6 +310,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3.5 px-6">Applicant Name</th>
+                <th className="py-3.5 px-5">Tier</th>
+                <th className="py-3.5 px-5">Payment Receipt</th>
                 <th className="py-3.5 px-6">Email Address</th>
                 <th className="py-3.5 px-6">Contact / Phone</th>
                 <th className="py-3.5 px-6">Organization</th>
@@ -180,6 +326,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                   key={member.id}
                   className="hover:bg-slate-50/70 transition-colors group"
                 >
+                  {/* Applicant Name */}
                   <td className="py-4 px-6 whitespace-nowrap">
                     <div className="font-semibold text-slate-900 group-hover:text-[#3d73bd] transition-colors">
                       {member.firstName} {member.lastName}
@@ -190,6 +337,43 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       </span>
                     )}
                   </td>
+
+                  {/* Tier Badge */}
+                  <td className="py-4 px-5 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#1d3c68] border border-blue-200/70">
+                      <FaIdCard className="text-[11px] text-[#3d73bd]" />
+                      <span>{member.membershipType || "Individual Member"}</span>
+                    </span>
+                  </td>
+
+                  {/* Payment Receipt */}
+                  <td className="py-4 px-5 whitespace-nowrap">
+                    {member.paymentAttachment ? (
+                      <button
+                        onClick={() =>
+                          setSelectedReceipt({
+                            url: member.paymentAttachment!,
+                            memberName: `${member.firstName} ${member.lastName}`,
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-[#1d3c68] bg-slate-100 hover:bg-blue-50 hover:text-[#3d73bd] border border-slate-200/80 transition-colors cursor-pointer group/rcpt"
+                        title="View attached payment receipt"
+                      >
+                        {member.paymentAttachment.startsWith(
+                          "data:application/pdf"
+                        ) ? (
+                          <FaFilePdf className="text-rose-500 text-xs" />
+                        ) : (
+                          <FaReceipt className="text-[#3d73bd] text-xs" />
+                        )}
+                        <span>View Slip</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">None</span>
+                    )}
+                  </td>
+
+                  {/* Email */}
                   <td className="py-4 px-6 whitespace-nowrap">
                     <a
                       href={`mailto:${member.email}`}
@@ -199,6 +383,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       <span>{member.email}</span>
                     </a>
                   </td>
+
+                  {/* Phone */}
                   <td className="py-4 px-6 text-slate-600 whitespace-nowrap text-xs">
                     {member.phone ? (
                       <div className="flex items-center gap-1.5">
@@ -209,6 +395,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
+
+                  {/* Organization */}
                   <td className="py-4 px-6 text-slate-600 whitespace-nowrap text-xs">
                     {member.organization ? (
                       <div className="flex items-center gap-1.5 font-medium">
@@ -219,6 +407,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       <span className="text-slate-400">Independent</span>
                     )}
                   </td>
+
+                  {/* Status */}
                   <td className="py-4 px-6 whitespace-nowrap">
                     <span
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
@@ -232,6 +422,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       {member.status}
                     </span>
                   </td>
+
+                  {/* Date */}
                   <td className="py-4 px-6 text-slate-500 whitespace-nowrap text-xs">
                     {new Date(member.createdAt).toLocaleDateString("en-US", {
                       month: "short",
@@ -239,6 +431,8 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       year: "numeric",
                     })}
                   </td>
+
+                  {/* Actions */}
                   <td className="py-4 px-6 text-right whitespace-nowrap">
                     <div className="inline-flex items-center gap-1.5">
                       {/* View Details Button */}
@@ -302,7 +496,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
               {filteredMemberships.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="py-12 text-center text-sm text-slate-400"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
@@ -337,7 +531,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                     Application Review
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Detailed registration profile & statement
+                    Detailed registration profile, tier selection & payment verification
                   </p>
                 </div>
               </div>
@@ -385,6 +579,15 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
 
               {/* Information Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 rounded-xl border border-blue-100 bg-blue-50/50">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#3d73bd] uppercase tracking-wider mb-1">
+                    <FaIdCard className="text-[#3d73bd]" /> Membership Tier
+                  </div>
+                  <div className="text-sm font-bold text-slate-900">
+                    {selectedMember.membershipType || "Individual Member"}
+                  </div>
+                </div>
+
                 <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     <FaEnvelope className="text-[#3d73bd]" /> Email Address
@@ -424,6 +627,21 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                   </div>
                 </div>
 
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <FaCalendarAlt className="text-[#3d73bd]" /> Submission Date
+                  </div>
+                  <div className="text-sm font-medium text-slate-800">
+                    {new Date(selectedMember.createdAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+
                 <div className="p-3.5 rounded-xl border border-slate-100 bg-white sm:col-span-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     <FaMapMarkerAlt className="text-[#3d73bd]" /> Address & Location
@@ -438,22 +656,85 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       .join(", ") || "No address provided"}
                   </div>
                 </div>
+              </div>
 
-                <div className="p-3.5 rounded-xl border border-slate-100 bg-white sm:col-span-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    <FaCalendarAlt className="text-[#3d73bd]" /> Submission Date
+              {/* Payment Attachment Review Card */}
+              <div className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <FaMoneyCheckAlt className="text-[#3d73bd] text-sm" /> Proof of Payment Receipt
                   </div>
-                  <div className="text-sm font-medium text-slate-800">
-                    {new Date(selectedMember.createdAt).toLocaleString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
+                  {selectedMember.paymentAttachment && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownloadReceipt(
+                            selectedMember.paymentAttachment!,
+                            `${selectedMember.firstName} ${selectedMember.lastName}`
+                          )
+                        }
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs hover:bg-slate-50 transition-colors cursor-pointer"
+                      >
+                        <FaDownload className="text-[10px]" />
+                        <span>Download</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedReceipt({
+                            url: selectedMember.paymentAttachment!,
+                            memberName: `${selectedMember.firstName} ${selectedMember.lastName}`,
+                          })
+                        }
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-[#3d73bd] hover:bg-[#2b5894] px-2.5 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <FaEye className="text-[10px]" />
+                        <span>Fullscreen</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {selectedMember.paymentAttachment ? (
+                  selectedMember.paymentAttachment.startsWith(
+                    "data:application/pdf"
+                  ) ? (
+                    <div className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200/80">
+                      <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                        <FaFilePdf />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-800 truncate">
+                          Payment Receipt PDF Document
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          Uploaded with application
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white max-h-56 flex items-center justify-center">
+                      <img
+                        src={selectedMember.paymentAttachment}
+                        alt="Payment Receipt Slip"
+                        className="max-h-56 w-full object-contain cursor-pointer transition-transform duration-300 group-hover:scale-[1.02]"
+                        onClick={() =>
+                          setSelectedReceipt({
+                            url: selectedMember.paymentAttachment!,
+                            memberName: `${selectedMember.firstName} ${selectedMember.lastName}`,
+                          })
+                        }
+                      />
+                    </div>
+                  )
+                ) : (
+                  <div className="p-3 bg-white rounded-xl border border-dashed border-slate-200 text-center">
+                    <p className="text-xs text-slate-400 italic">
+                      No payment receipt was attached to this application.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Motivation Message */}
@@ -512,6 +793,363 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Payment Receipt Viewer Modal */}
+      {selectedReceipt && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center">
+                  <FaReceipt />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Payment Receipt: {selectedReceipt.memberName}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Attached verification slip for membership registration
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    handleDownloadReceipt(
+                      selectedReceipt.url,
+                      selectedReceipt.memberName
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <FaDownload />
+                  <span>Download</span>
+                </button>
+                <button
+                  onClick={() => setSelectedReceipt(null)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-100/60 overflow-auto flex-1 flex items-center justify-center min-h-[320px]">
+              {selectedReceipt.url.startsWith("data:application/pdf") ? (
+                <iframe
+                  src={selectedReceipt.url}
+                  title="PDF Receipt Document"
+                  className="w-full h-[65vh] rounded-xl border border-slate-200 bg-white"
+                />
+              ) : (
+                <img
+                  src={selectedReceipt.url}
+                  alt={`Receipt - ${selectedReceipt.memberName}`}
+                  className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-md border border-slate-200 bg-white"
+                />
+              )}
+            </div>
+
+            <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Ensure payment amount matches designated membership tier rate.
+              </span>
+              <button
+                onClick={() => setSelectedReceipt(null)}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Form Customization Modal */}
+      {isSettingsModalOpen && canCustomizeForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] flex items-center justify-center text-white shadow-sm">
+                  <FaSlidersH className="text-base" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Customize Membership Form
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Configure public form titles, tier options, and payment instructions
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSettingsModalOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Body / Form */}
+            <form
+              onSubmit={handleSaveSettings}
+              className="flex flex-col flex-1 overflow-hidden"
+            >
+              <div className="p-6 space-y-5 overflow-y-auto flex-1">
+                {settingsNotice && (
+                  <div
+                    className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+                      settingsNotice.type === "success"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        : "bg-rose-50 text-rose-800 border-rose-200"
+                    }`}
+                  >
+                    {settingsNotice.type === "success" ? (
+                      <FaCheckCircle className="text-emerald-600 text-sm shrink-0" />
+                    ) : (
+                      <FaExclamationCircle className="text-rose-600 text-sm shrink-0" />
+                    )}
+                    <span>{settingsNotice.message}</span>
+                  </div>
+                )}
+
+                {/* Section 1: Hero Banner Settings */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Page Header & Titles
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Hero Badge Text
+                      </label>
+                      <input
+                        type="text"
+                        value={formSettings.badge}
+                        onChange={(e) =>
+                          setFormSettings({
+                            ...formSettings,
+                            badge: e.target.value,
+                          })
+                        }
+                        className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                        placeholder="e.g. Join the Movement"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Main Page Title
+                      </label>
+                      <input
+                        type="text"
+                        value={formSettings.title}
+                        onChange={(e) =>
+                          setFormSettings({
+                            ...formSettings,
+                            title: e.target.value,
+                          })
+                        }
+                        className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                        placeholder="e.g. Become a Member"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Header Subtitle
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={formSettings.subtitle}
+                      onChange={(e) =>
+                        setFormSettings({
+                          ...formSettings,
+                          subtitle: e.target.value,
+                        })
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                      placeholder="Subtitle explaining the benefits of joining..."
+                    />
+                  </div>
+                </div>
+
+                {/* Section 2: Form Card Settings */}
+                <div className="space-y-4 pt-2 border-t border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Application Form Header
+                  </h4>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Form Box Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formSettings.formTitle}
+                      onChange={(e) =>
+                        setFormSettings({
+                          ...formSettings,
+                          formTitle: e.target.value,
+                        })
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                      placeholder="e.g. Membership Application"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Form Box Description
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={formSettings.formDescription}
+                      onChange={(e) =>
+                        setFormSettings({
+                          ...formSettings,
+                          formDescription: e.target.value,
+                        })
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                      placeholder="Instructions for applicants..."
+                    />
+                  </div>
+                </div>
+
+                {/* Section 3: Membership Tiers */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Selectable Membership Tiers
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormSettings({
+                          ...formSettings,
+                          membershipTypes:
+                            DEFAULT_MEMBERSHIP_SETTINGS.membershipTypes,
+                        })
+                      }
+                      className="text-[11px] text-[#3d73bd] hover:underline cursor-pointer"
+                    >
+                      Reset to defaults
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {formSettings.membershipTypes.map((tier, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-medium rounded-xl transition-colors"
+                      >
+                        <span>{tier}</span>
+                        {formSettings.membershipTypes.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormSettings({
+                                ...formSettings,
+                                membershipTypes:
+                                  formSettings.membershipTypes.filter(
+                                    (_, i) => i !== idx
+                                  ),
+                              })
+                            }
+                            className="text-slate-400 hover:text-rose-500 cursor-pointer"
+                          >
+                            <FaTimes className="text-[10px]" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newTierInput}
+                      onChange={(e) => setNewTierInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTier();
+                        }
+                      }}
+                      placeholder="Enter new tier name (e.g. Honorary Fellow)..."
+                      className="flex-1 px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTier}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer shrink-0"
+                    >
+                      <FaPlus className="text-[10px]" />
+                      <span>Add Tier</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section 4: Payment Instructions */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Payment & Bank Details Instructions
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    This will be displayed directly above the payment slip upload
+                    box on the public registration page.
+                  </p>
+                  <textarea
+                    rows={3}
+                    value={formSettings.paymentInstructions}
+                    onChange={(e) =>
+                      setFormSettings({
+                        ...formSettings,
+                        paymentInstructions: e.target.value,
+                      })
+                    }
+                    className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                    placeholder="e.g. Bank: Standard Chartered Bank Nepal, Account No: 1234567890, Account Name: GCCF..."
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingSettings}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#3d73bd] hover:bg-[#2b5894] shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingSettings ? (
+                    <>
+                      <FaSpinner className="animate-spin text-xs" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck className="text-xs" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

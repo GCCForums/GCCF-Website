@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCreateMembership } from "@/lib/hooks";
-import { CreateMembershipDto } from "@/types/membership";
+import { CreateMembershipDto, MembershipSettings } from "@/types/membership";
+import { membershipSettingsApi } from "@/lib/api";
 import {
   FaSpinner,
   FaCheckCircle,
@@ -14,11 +15,39 @@ import {
   FaBuilding,
   FaComment,
   FaShieldAlt,
+  FaIdCard,
+  FaReceipt,
+  FaUpload,
+  FaTimes,
+  FaFilePdf,
+  FaCheck,
 } from "react-icons/fa";
 
 export default function MembershipPage() {
   const createMembership = useCreateMembership();
   const [submitted, setSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Dynamic CMS Settings for Membership Page
+  const [settings, setSettings] = useState<MembershipSettings>({
+    badge: "Join the Movement",
+    title: "Become a Member",
+    subtitle:
+      "Join the GCCF global community and stay connected with our events, research, and cybersecurity initiatives.",
+    formTitle: "Membership Application",
+    formDescription:
+      "Fill out the form below to apply for GCCF membership. Our team will review your application.",
+    membershipTypes: [
+      "Individual Member",
+      "Student Member",
+      "Corporate Member",
+      "Institutional Member",
+      "Lifetime Member",
+    ],
+    paymentInstructions:
+      "Please complete your membership payment and attach your payment receipt, slip, or screenshot below.",
+  });
+
   const [formData, setFormData] = useState<CreateMembershipDto>({
     firstName: "",
     lastName: "",
@@ -30,13 +59,87 @@ export default function MembershipPage() {
     occupation: "",
     organization: "",
     message: "",
+    membershipType: "Individual Member",
+    paymentAttachment: "",
   });
 
+  const [fileName, setFileName] = useState<string>("");
+  const [fileSize, setFileSize] = useState<string>("");
+  const [filePreview, setFilePreview] = useState<string>("");
+  const [isPdf, setIsPdf] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string>("");
+
+  useEffect(() => {
+    membershipSettingsApi
+      .getSettings()
+      .then((res) => {
+        if (res) {
+          setSettings((prev) => ({
+            ...prev,
+            ...res,
+            membershipTypes:
+              res.membershipTypes && res.membershipTypes.length > 0
+                ? res.membershipTypes
+                : prev.membershipTypes,
+          }));
+          if (res.membershipTypes && res.membershipTypes.length > 0) {
+            setFormData((prev) => ({
+              ...prev,
+              membershipType: prev.membershipType || res.membershipTypes[0],
+            }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not load dynamic membership settings, using defaults", err);
+      });
+  }, []);
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setUploadError("");
+    if (!file) return;
+
+    // Max 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("File size exceeds 5MB limit. Please upload a smaller receipt.");
+      return;
+    }
+
+    setFileName(file.name);
+    setFileSize((file.size / 1024).toFixed(1) + " KB");
+    const isFilePdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
+    setIsPdf(isFilePdf);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setFormData((prev) => ({ ...prev, paymentAttachment: result }));
+      if (!isFilePdf) {
+        setFilePreview(result);
+      } else {
+        setFilePreview("");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeAttachment = () => {
+    setFormData((prev) => ({ ...prev, paymentAttachment: "" }));
+    setFileName("");
+    setFileSize("");
+    setFilePreview("");
+    setIsPdf(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,16 +221,14 @@ export default function MembershipPage() {
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 shadow-xs">
-            <span>Join the Movement</span>
+            <span>{settings.badge || "Join the Movement"}</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Become a{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9]">
-              Member
-            </span>
+            {settings.title || "Become a Member"}
           </h1>
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Join the GCCF global community and stay connected with our events, research, and cybersecurity initiatives.
+            {settings.subtitle ||
+              "Join the GCCF global community and stay connected with our events, research, and cybersecurity initiatives."}
           </p>
         </div>
       </section>
@@ -138,14 +239,44 @@ export default function MembershipPage() {
           {/* Form Header */}
           <div className="text-center pb-6 border-b border-slate-100 space-y-2">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              Membership Application
+              {settings.formTitle || "Membership Application"}
             </h2>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
-              Fill out the form below to apply for GCCF membership. Our team will review your application.
+              {settings.formDescription ||
+                "Fill out the form below to apply for GCCF membership. Our team will review your application."}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Membership Tier / Type Selection */}
+            <div>
+              <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2.5">
+                <FaIdCard className="text-[#3d73bd]" /> Membership Tier *
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {settings.membershipTypes.map((type) => {
+                  const isSelected = formData.membershipType === type;
+                  return (
+                    <button
+                      type="button"
+                      key={type}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, membershipType: type }))
+                      }
+                      className={`flex items-center justify-between p-3.5 rounded-xl border text-left text-sm font-medium transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-[#3d73bd] bg-[#3d73bd]/5 text-[#1d3c68] ring-2 ring-[#3d73bd]/20 shadow-xs"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <span>{type}</span>
+                      {isSelected && <FaCheck className="text-[#3d73bd] text-xs shrink-0 ml-1.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Name Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
@@ -285,6 +416,88 @@ export default function MembershipPage() {
               </div>
             </div>
 
+            {/* Payment Proof / Receipt Attachment Box */}
+            <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700">
+                    <FaReceipt className="text-[#3d73bd]" /> Proof of Payment (Receipt / Slip)
+                  </label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {settings.paymentInstructions ||
+                      "Attach your bank transfer slip, receipt, or transaction screenshot (JPG, PNG, WebP, or PDF, max 5MB)."}
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#3d73bd] border border-blue-100 uppercase tracking-wider shrink-0">
+                  Receipt Upload
+                </span>
+              </div>
+
+              {!formData.paymentAttachment ? (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="payment-attachment-input"
+                  />
+                  <label
+                    htmlFor="payment-attachment-input"
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-[#3d73bd] bg-white rounded-xl cursor-pointer transition-all hover:bg-blue-50/20 group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                      <FaUpload />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Click to upload payment receipt
+                    </span>
+                    <span className="text-xs text-slate-400 mt-0.5">
+                      PNG, JPG, WebP, or PDF (up to 5MB)
+                    </span>
+                  </label>
+                  {uploadError && (
+                    <p className="text-xs text-rose-600 mt-2 font-medium">{uploadError}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3.5 bg-white border border-slate-200 rounded-xl shadow-xs">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    {filePreview ? (
+                      <img
+                        src={filePreview}
+                        alt="Receipt Preview"
+                        className="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-xs shrink-0"
+                      />
+                    ) : isPdf ? (
+                      <div className="w-12 h-12 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xl shrink-0">
+                        <FaFilePdf />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-blue-50 text-[#3d73bd] flex items-center justify-center text-xl shrink-0">
+                        <FaReceipt />
+                      </div>
+                    )}
+                    <div className="truncate">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
+                        {fileName || "Payment Receipt Attached"}
+                      </p>
+                      <p className="text-xs text-slate-400">{fileSize || "File ready for submission"}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeAttachment}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                    title="Remove attachment"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Message */}
             <div>
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
@@ -295,7 +508,7 @@ export default function MembershipPage() {
                 value={formData.message}
                 onChange={handleChange}
                 placeholder="Tell us why you would like to join GCCF..."
-                rows={4}
+                rows={3}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/30 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-all"
               />
             </div>

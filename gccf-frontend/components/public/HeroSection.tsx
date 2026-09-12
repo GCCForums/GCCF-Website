@@ -8,7 +8,7 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ content }: HeroSectionProps) {
-  const badge = content?.badge ?? "GLOBAL CYBERSECURITY FORUM";
+  const badge = content?.badge ?? "GLOBAL CYBERSECURITY COMMUNITY FORUM";
   const title = content?.title ?? "Protecting the Digital World";
   const titleHighlight = content?.titleHighlight ?? "Together";
   const subtitle =

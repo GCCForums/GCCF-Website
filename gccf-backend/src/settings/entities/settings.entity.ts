@@ -47,6 +47,18 @@ export class Settings {
     dashboardLayout?: string;
   };
 
+  @Column({ type: 'jsonb', nullable: true, default: {} })
+  membershipSettings: {
+    badge?: string;
+    title?: string;
+    subtitle?: string;
+    formTitle?: string;
+    formDescription?: string;
+    membershipTypes?: string[];
+    paymentInstructions?: string;
+    qrCodeUrl?: string;
+  };
+
   @CreateDateColumn()
   createdAt: Date;
 
