@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import { PopupItem } from "./types";
 import { popupsApi } from "@/lib/api";
+import { ImageUploadInput } from "./ImageUploadInput";
 
 const defaultPopups: PopupItem[] = [
   {
@@ -446,21 +447,16 @@ export default function PopupManager() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Image URL *
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/... or /flyer.jpg"
+              <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                <ImageUploadInput
+                  label="Popup Image / Graphic"
                   value={formImageUrl}
-                  onChange={(e) => setFormImageUrl(e.target.value)}
+                  onChange={(url) => setFormImageUrl(url)}
+                  folder="popups"
+                  placeholder="https://... or upload flyer"
                   required
-                  className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                  helperText="The pop-up will display this promotional graphic directly to visitors."
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  The pop-up will display this promotional image directly to visitors.
-                </p>
               </div>
 
               <div>

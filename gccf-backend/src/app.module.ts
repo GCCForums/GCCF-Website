@@ -21,6 +21,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { TeamModule } from './team/team.module';
 import { PopupsModule } from './popups/popups.module';
 import { HomepageModule } from './homepage/homepage.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { HomepageModule } from './homepage/homepage.module';
           return {
             type: 'postgres',
             url: databaseUrl,
+            autoLoadEntities: true,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize:
               configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
@@ -86,6 +88,7 @@ import { HomepageModule } from './homepage/homepage.module';
           username: configService.get<string>('DB_USERNAME', 'postgres'),
           password: configService.get<string>('DB_PASSWORD', 'postgres'),
           database: configService.get<string>('DB_DATABASE', 'gccf_db'),
+          autoLoadEntities: true,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize:
             configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
@@ -107,6 +110,7 @@ import { HomepageModule } from './homepage/homepage.module';
     TeamModule,
     PopupsModule,
     HomepageModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

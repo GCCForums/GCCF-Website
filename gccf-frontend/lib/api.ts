@@ -504,4 +504,34 @@ export const homepageApi = {
     }),
 };
 
+export const uploadApi = {
+  uploadImage: async (
+    file: File,
+    folder?: string,
+  ): Promise<{ url: string; public_id: string }> => {
+    const token = getAdminToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(err.message || `Upload failed with status ${response.status}`);
+    }
+
+    return response.json();
+  },
+};
+
+
 

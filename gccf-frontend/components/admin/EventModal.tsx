@@ -16,6 +16,8 @@ import {
 } from "react-icons/fa";
 import { Event, EventSponsorTier, EventSponsorItem } from "@/types/events";
 import { EventFormData, generateSlug } from "./types";
+import { ImageUploadInput } from "./ImageUploadInput";
+import { uploadApi } from "@/lib/api";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -131,20 +133,60 @@ export const EventModal: React.FC<EventModalProps> = ({
     });
   };
 
-  const handleFileUpload = (
+  const [uploadingSponsorKey, setUploadingSponsorKey] = React.useState<string | null>(null);
+  const [uploadingGallery, setUploadingGallery] = React.useState(false);
+
+  const handleFileUpload = async (
     tierIndex: number,
     spIndex: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        handleUpdateSponsor(tierIndex, spIndex, "logo", reader.result);
+    const key = `${tierIndex}_${spIndex}`;
+    try {
+      setUploadingSponsorKey(key);
+      const res = await uploadApi.uploadImage(file, 'sponsors');
+      if (res?.url) {
+        handleUpdateSponsor(tierIndex, spIndex, "logo", res.url);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error('Sponsor logo upload error:', err);
+      // Fallback to local Data URL preview if offline or error
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          handleUpdateSponsor(tierIndex, spIndex, "logo", reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingSponsorKey(null);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      setUploadingGallery(true);
+      const urls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const res = await uploadApi.uploadImage(files[i], 'events/gallery');
+        if (res?.url) urls.push(res.url);
+      }
+      const existing = eventForm.galleryImages
+        ? eventForm.galleryImages.split(/[,\n]/).map((u) => u.trim()).filter(Boolean)
+        : [];
+      setEventForm({
+        ...eventForm,
+        galleryImages: [...existing, ...urls].join('\n'),
+      });
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload gallery images to Cloudinary');
+    } finally {
+      setUploadingGallery(false);
+    }
   };
 
   return (
@@ -369,67 +411,72 @@ export const EventModal: React.FC<EventModalProps> = ({
               </p>
             </div>
 
-            {/* Main Image URL */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Main Banner Image URL *
-              </label>
-              <input
-                type="url"
-                placeholder="https://images.unsplash.com/... or /event.jpg"
+            {/* Main Banner Image (Cloudinary) */}
+            <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200">
+              <ImageUploadInput
+                label="Main Banner Image"
                 value={eventForm.mainImage}
-                onChange={(e) =>
-                  setEventForm({ ...eventForm, mainImage: e.target.value })
-                }
+                onChange={(url) => setEventForm({ ...eventForm, mainImage: url })}
+                folder="events"
+                placeholder="https://... or upload image"
                 required
-                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
+                helperText="Upload event flyer or poster to Cloudinary, or paste an external image URL"
               />
-              {eventForm.mainImage && (
-                <div className="mt-2 h-24 w-full max-w-xs rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
-                  <img
-                    src={eventForm.mainImage}
-                    alt="Main preview"
-                    className="h-full w-full object-cover"
-                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                  />
-                </div>
-              )}
             </div>
 
             {/* Multiple Gallery Images */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Gallery Images (Multiple Image URLs, comma or newline separated)
-                </label>
-                {eventForm.galleryImages && (
-                  <span className="text-[11px] font-semibold text-[#3d73bd] bg-blue-50 px-2 py-0.5 rounded-full">
-                    {eventForm.galleryImages.split(/[,\n]/).map((u) => u.trim()).filter(Boolean).length} image(s)
+            <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Gallery Images
+                  </label>
+                  <span className="text-[11px] text-slate-500">
+                    Upload multiple event highlights to Cloudinary or paste URLs (comma/newline separated)
                   </span>
-                )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1d3c68] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer">
+                    <FaUpload className="text-[10px]" />
+                    <span>{uploadingGallery ? 'Uploading...' : 'Upload Photos'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={uploadingGallery}
+                      className="hidden"
+                      onChange={handleGalleryUpload}
+                    />
+                  </label>
+                  {eventForm.galleryImages && (
+                    <span className="text-[11px] font-semibold text-[#3d73bd] bg-white border border-blue-200 px-2 py-0.5 rounded-full">
+                      {eventForm.galleryImages.split(/[,\n]/).map((u) => u.trim()).filter(Boolean).length} image(s)
+                    </span>
+                  )}
+                </div>
               </div>
               <textarea
-                placeholder="https://images.unsplash.com/photo-1..., https://images.unsplash.com/photo-2..."
+                placeholder="https://res.cloudinary.com/..., https://res.cloudinary.com/..."
                 rows={3}
                 value={eventForm.galleryImages}
                 onChange={(e) =>
                   setEventForm({ ...eventForm, galleryImages: e.target.value })
                 }
-                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
+                className="w-full px-3.5 py-2.5 text-xs font-mono text-slate-800 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
               />
               {eventForm.galleryImages && (
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2.5 flex flex-wrap gap-2">
                   {eventForm.galleryImages
                     .split(/[,\n]/)
                     .map((url) => url.trim())
                     .filter(Boolean)
-                    .slice(0, 6)
+                    .slice(0, 8)
                     .map((url, idx) => (
-                      <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                      <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 bg-white p-0.5 shadow-2xs">
                         <img
                           src={url}
                           alt={`Gallery ${idx + 1}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover rounded-md"
                           onError={(e) => ((e.target as HTMLElement).style.display = "none")}
                         />
                       </div>
@@ -653,10 +700,15 @@ export const EventModal: React.FC<EventModalProps> = ({
                                       </label>
                                       <label className="text-[10px] font-semibold text-[#3d73bd] hover:underline cursor-pointer inline-flex items-center gap-1">
                                         <FaUpload className="text-[9px]" />
-                                        <span>Upload File</span>
+                                        <span>
+                                          {uploadingSponsorKey === `${tIdx}_${spIdx}`
+                                            ? "Uploading..."
+                                            : "Upload File"}
+                                        </span>
                                         <input
                                           type="file"
                                           accept="image/*"
+                                          disabled={uploadingSponsorKey === `${tIdx}_${spIdx}`}
                                           className="hidden"
                                           onChange={(e) => handleFileUpload(tIdx, spIdx, e)}
                                         />
