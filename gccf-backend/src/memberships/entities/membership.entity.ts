@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('memberships')
@@ -17,6 +18,7 @@ export class Membership {
   @Column()
   lastName: string;
 
+  @Index()
   @Column()
   email: string;
 
@@ -47,6 +49,7 @@ export class Membership {
   @Column({ type: 'text', nullable: true })
   paymentAttachment: string;
 
+  @Index()
   @Column({ default: 'pending' })
   status: 'pending' | 'approved' | 'declined';
 

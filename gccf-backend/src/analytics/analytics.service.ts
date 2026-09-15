@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThanOrEqual, Between } from 'typeorm';
+import { Repository, MoreThanOrEqual, LessThan, Between } from 'typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
 import { News } from '../news/entities/news.entity';
 import { Event } from '../events/entities/event.entity';
@@ -99,8 +99,11 @@ export class AnalyticsService {
       }
     });
 
+    const membersBefore = await this.membershipRepository.count({
+      where: { createdAt: LessThan(startDate) },
+    });
     const total = await this.membershipRepository.count();
-    let cumulative = 0;
+    let cumulative = membersBefore;
 
     return Object.entries(dailyData)
       .sort(([a], [b]) => a.localeCompare(b))

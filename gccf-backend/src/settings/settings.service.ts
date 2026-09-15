@@ -154,14 +154,15 @@ export class SettingsService {
   }
 
   async changePassword(
+    username: string = 'admin',
     currentPassword: string,
     newPassword: string,
   ): Promise<{ success: boolean; message: string }> {
     const admin = await this.adminRepository.findOne({
-      where: { username: 'admin' },
+      where: { username },
     });
     if (!admin) {
-      throw new NotFoundException('Admin user not found');
+      throw new NotFoundException(`Admin user '${username}' not found`);
     }
     const isMatch = await bcrypt.compare(currentPassword, admin.password);
     if (!isMatch) {

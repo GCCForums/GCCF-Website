@@ -73,7 +73,7 @@ import { HomepageModule } from './homepage/homepage.module';
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize:
-              configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+              configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
             ssl: sslConfig,
             extra: extraPoolConfig,
           };
@@ -88,7 +88,7 @@ import { HomepageModule } from './homepage/homepage.module';
           database: configService.get<string>('DB_DATABASE', 'gccf_db'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize:
-            configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+            configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
           ssl: sslConfig,
           extra: extraPoolConfig,
         };

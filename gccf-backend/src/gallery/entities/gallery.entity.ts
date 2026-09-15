@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('gallery')
@@ -20,6 +21,7 @@ export class Gallery {
   @Column()
   imageUrl: string;
 
+  @Index()
   @Column({ nullable: true })
   category: string;
 
@@ -29,9 +31,11 @@ export class Gallery {
   @Column('simple-array', { nullable: true })
   tags: string[];
 
+  @Index()
   @Column({ default: true })
   isVisible: boolean;
 
+  @Index()
   @Column({ type: 'int', default: 0 })
   order: number;
 

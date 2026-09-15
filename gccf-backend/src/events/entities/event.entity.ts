@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('events')
@@ -20,6 +21,7 @@ export class Event {
   @Column('text')
   shortDescription: string;
 
+  @Index()
   @Column({ type: 'date' })
   eventDate: Date;
 
@@ -29,6 +31,7 @@ export class Event {
   @Column({ unique: true })
   slug: string;
 
+  @Index()
   @Column({ default: 'completed' })
   status: 'completed' | 'upcoming';
 

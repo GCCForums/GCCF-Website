@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('news')
@@ -20,12 +21,14 @@ export class News {
   @Column('text')
   excerpt: string;
 
+  @Index()
   @Column({ type: 'date' })
   publishedDate: Date;
 
   @Column({ nullable: true })
   author: string;
 
+  @Index()
   @Column({ nullable: true })
   category: string;
 

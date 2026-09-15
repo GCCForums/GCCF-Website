@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Put, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SettingsService } from './settings.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('settings')
 export class SettingsController {
   constructor(private settingsService: SettingsService) {}
@@ -90,9 +92,12 @@ export class SettingsController {
 
   @Post('change-password')
   async changePassword(
+    @Req() req: any,
     @Body() data: { currentPassword: string; newPassword: string },
   ) {
+    const username = req?.user?.username || 'admin';
     return this.settingsService.changePassword(
+      username,
       data.currentPassword,
       data.newPassword,
     );

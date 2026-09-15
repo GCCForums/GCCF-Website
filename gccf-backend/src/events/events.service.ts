@@ -24,7 +24,8 @@ export class EventsService {
     const savedEvent = await this.eventsRepository.save(event);
 
     if (savedEvent.status === 'upcoming') {
-      await this.sendNewsletterToApprovedMembers(savedEvent);
+      // Fire-and-forget: don't block the response waiting for emails
+      void this.sendNewsletterToApprovedMembers(savedEvent);
     }
 
     return savedEvent;
@@ -68,14 +69,15 @@ export class EventsService {
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.findOne(id);
-    await this.eventsRepository.update(id, updateEventDto);
-    const updatedEvent = await this.findOne(id);
+    Object.assign(existingEvent, updateEventDto);
+    const updatedEvent = await this.eventsRepository.save(existingEvent);
 
     if (
       updateEventDto.status === 'upcoming' &&
       existingEvent.status !== 'upcoming'
     ) {
-      await this.sendNewsletterToApprovedMembers(updatedEvent);
+      // Fire-and-forget: don't block the response waiting for emails
+      void this.sendNewsletterToApprovedMembers(updatedEvent);
     }
 
     return updatedEvent;

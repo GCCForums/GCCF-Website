@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HomepageContent } from './entities/homepage.entity';
@@ -71,6 +71,8 @@ export const DEFAULT_HOMEPAGE_CONTENT = {
 
 @Injectable()
 export class HomepageService implements OnModuleInit {
+  private readonly logger = new Logger(HomepageService.name);
+
   constructor(
     @InjectRepository(HomepageContent)
     private readonly homepageRepository: Repository<HomepageContent>,
@@ -85,7 +87,7 @@ export class HomepageService implements OnModuleInit {
     if (count === 0) {
       const initial = this.homepageRepository.create(DEFAULT_HOMEPAGE_CONTENT);
       await this.homepageRepository.save(initial);
-      console.log('Homepage default content initialized in database');
+      this.logger.log('Homepage default content initialized in database');
     }
   }
 

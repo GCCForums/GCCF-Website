@@ -61,10 +61,13 @@ export class GalleryService {
   }
 
   async reorder(ids: string[]): Promise<Gallery[]> {
-    const updates = ids.map((id, index) =>
-      this.galleryRepository.update(id, { order: index }),
-    );
-    await Promise.all(updates);
+    if (!ids || ids.length === 0) return this.findAll();
+
+    await this.galleryRepository.manager.transaction(async (manager) => {
+      await Promise.all(
+        ids.map((id, index) => manager.update(Gallery, id, { order: index })),
+      );
+    });
     return this.findAll();
   }
 }

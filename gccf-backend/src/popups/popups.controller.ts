@@ -7,8 +7,10 @@ import {
   Param,
   Delete,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PopupsService } from './popups.service';
 import { CreatePopupDto } from './dto/create-popup.dto';
 import { UpdatePopupDto } from './dto/update-popup.dto';
@@ -17,6 +19,7 @@ import { UpdatePopupDto } from './dto/update-popup.dto';
 export class PopupsController {
   constructor(private readonly popupsService: PopupsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createPopupDto: CreatePopupDto) {
     return this.popupsService.create(createPopupDto);
@@ -41,11 +44,13 @@ export class PopupsController {
     return this.popupsService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePopupDto: UpdatePopupDto) {
     return this.popupsService.update(id, updatePopupDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/toggle')
   toggleEnabled(
     @Param('id') id: string,
@@ -54,6 +59,7 @@ export class PopupsController {
     return this.popupsService.toggleEnabled(id, enabled);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.popupsService.remove(id);

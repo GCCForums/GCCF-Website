@@ -51,10 +51,13 @@ export class TeamService {
   }
 
   async reorder(ids: string[]): Promise<TeamMember[]> {
-    const updatePromises = ids.map((id, index) =>
-      this.teamRepository.update(id, { order: index }),
-    );
-    await Promise.all(updatePromises);
+    if (!ids || ids.length === 0) return this.findAll();
+
+    await this.teamRepository.manager.transaction(async (manager) => {
+      await Promise.all(
+        ids.map((id, index) => manager.update(TeamMember, id, { order: index })),
+      );
+    });
     return this.findAll();
   }
 }
