@@ -9,6 +9,7 @@ import {
   FaEdit,
   FaTrash,
   FaMapMarkerAlt,
+  FaAward,
 } from "react-icons/fa";
 import { Event } from "@/types/events";
 import { DeleteTarget } from "./types";
@@ -144,6 +145,15 @@ export default function EventsManager({
                     )}
                     {event.status}
                   </span>
+
+                  {event.sponsors && event.sponsors.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      <FaAward className="text-amber-500 text-xs" />
+                      <span>
+                        {event.sponsors.length} {event.sponsors.length === 1 ? "Tier" : "Tiers"}
+                      </span>
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#3d73bd] transition-colors mb-4 line-clamp-2">
@@ -177,6 +187,15 @@ export default function EventsManager({
                       <span className="truncate">{event.location || "Online"}</span>
                     </div>
                   </div>
+
+                  {event.sponsors && event.sponsors.length > 0 && (
+                    <div className="flex items-center gap-2 text-xs font-medium text-amber-900 bg-amber-50/80 px-3 py-2 rounded-xl border border-amber-200/60">
+                      <FaAward className="text-amber-600 text-sm shrink-0" />
+                      <span className="truncate">
+                        Sponsors: {event.sponsors.map((t) => t.tier).join(", ")}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

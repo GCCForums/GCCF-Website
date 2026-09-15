@@ -328,17 +328,19 @@ export default function NewsDetailPage() {
             </button>
           )}
 
-          {/* Main lightbox image */}
+          {/* Main lightbox image container adapting to picture size */}
           <div
-            className="relative max-w-4xl max-h-[85vh] w-full flex items-center justify-center"
+            className="relative flex flex-col items-center justify-center max-h-[85vh] max-w-[90vw] w-fit pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={galleryImages[selectedImageIndex]}
-              alt={`Gallery image ${selectedImageIndex + 1}`}
-              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
-            />
-            <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 text-white/80 text-xs font-semibold bg-black/60 px-4 py-1.5 rounded-full">
+            <div className="relative inline-flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-white/15 bg-black/20">
+              <img
+                src={galleryImages[selectedImageIndex]}
+                alt={`Gallery image ${selectedImageIndex + 1}`}
+                className="max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain block rounded-2xl select-none"
+              />
+            </div>
+            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full select-none shadow-lg">
               {selectedImageIndex + 1} of {galleryImages.length}
             </div>
           </div>

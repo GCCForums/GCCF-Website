@@ -18,6 +18,7 @@ import {
   FaChevronRight,
   FaShareAlt,
   FaCheck,
+  FaAward,
 } from "react-icons/fa";
 
 export default function EventDetailPage() {
@@ -61,6 +62,9 @@ export default function EventDetailPage() {
 
   const eventDate = new Date(event.eventDate);
   const galleryImages = event.galleryImages || [];
+  const sponsorTiers = (event.sponsors || []).filter(
+    (t) => t.sponsors && t.sponsors.length > 0
+  );
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -326,6 +330,86 @@ export default function EventDetailPage() {
           </div>
         )}
 
+        {/* Event Sponsors & Partners Showcase */}
+   {sponsorTiers.length > 0 && (
+  <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs mb-8">
+    {/* Header */}
+    <div className="border-b border-slate-100 pb-5 mb-8 flex flex-col items-center text-center gap-3">
+      <div>
+        <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+          Event Sponsors &amp; Partners
+        </h3>
+        <p className="text-xs text-slate-500">
+          Distinguished sponsors supporting this event and our community mission
+        </p>
+      </div>
+    </div>
+
+    {/* Tiers */}
+    <div className="space-y-8">
+      {sponsorTiers.map((tierItem, idx) => (
+        <div key={tierItem.id || idx} className="space-y-4">
+          {/* Tier label — centered */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-px bg-slate-100 flex-1" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">
+              {tierItem.tier}
+            </span>
+            <div className="h-px bg-slate-100 flex-1" />
+          </div>
+
+          {/* Sponsors — centered */}
+          <div className="flex flex-wrap justify-center gap-4">
+            {tierItem.sponsors.map((sp, spIdx) => {
+              const Wrapper = sp.websiteUrl ? "a" : "div";
+              const linkProps = sp.websiteUrl
+                ? {
+                    href: sp.websiteUrl,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    title: `Visit ${sp.name || "sponsor"} website`,
+                  }
+                : {};
+
+              return (
+                <Wrapper
+                  key={sp.id || spIdx}
+                  {...linkProps}
+                  className={`group bg-slate-50/70 hover:bg-white rounded-2xl p-4 border border-slate-200/70 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col items-center justify-between text-center min-h-[130px] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(20%-0.8rem)] ${
+                    sp.websiteUrl ? "cursor-pointer" : ""
+                  }`}
+                >
+                  <div className="w-full flex-1 flex items-center justify-center py-2">
+                    {sp.logo ? (
+                      <img
+                        src={sp.logo}
+                        alt={sp.name || "Sponsor Logo"}
+                        className="max-h-14 max-w-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-sm">
+                        {sp.name ? sp.name.charAt(0) : "S"}
+                      </div>
+                    )}
+                  </div>
+
+                  {sp.name && (
+                    <p className="w-full text-xs font-semibold text-slate-700 truncate mt-2">
+                      {sp.name}
+                    </p>
+                  )}
+                </Wrapper>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
         {/* Back Navigation Bar */}
         <div className="flex items-center justify-between pt-6 border-t border-slate-200/60">
           <Link
@@ -372,17 +456,19 @@ export default function EventDetailPage() {
             </button>
           )}
 
-          {/* Main lightbox image */}
+          {/* Main lightbox image container adapting to picture size */}
           <div
-            className="relative max-w-4xl max-h-[85vh] w-full flex items-center justify-center"
+            className="relative flex flex-col items-center justify-center max-h-[85vh] max-w-[90vw] w-fit pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={galleryImages[selectedImageIndex]}
-              alt={`Gallery image ${selectedImageIndex + 1}`}
-              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
-            />
-            <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 text-white/80 text-xs font-semibold bg-black/60 px-4 py-1.5 rounded-full">
+            <div className="relative inline-flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-white/15 bg-black/20">
+              <img
+                src={galleryImages[selectedImageIndex]}
+                alt={`Gallery image ${selectedImageIndex + 1}`}
+                className="max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain block rounded-2xl select-none"
+              />
+            </div>
+            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full select-none shadow-lg">
               {selectedImageIndex + 1} of {galleryImages.length}
             </div>
           </div>

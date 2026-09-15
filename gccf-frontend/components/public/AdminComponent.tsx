@@ -513,6 +513,7 @@ export default function AdminComponent() {
       registrationUrl: event.registrationUrl || "",
       organizer: event.organizer || "",
       attendees: event.attendees?.toString() || "0",
+      sponsors: event.sponsors || [],
     });
     setShowEventModal(true);
   };
@@ -538,6 +539,7 @@ export default function AdminComponent() {
         attendees: eventForm.attendees
           ? parseInt(eventForm.attendees)
           : undefined,
+        sponsors: eventForm.sponsors || [],
       };
 
       if (editingEvent) {

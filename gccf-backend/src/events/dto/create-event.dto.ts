@@ -7,6 +7,7 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { EventSponsorTier } from '../entities/event.entity';
 
 export class CreateEventDto {
   @IsString()
@@ -49,4 +50,8 @@ export class CreateEventDto {
   @IsOptional()
   @IsNumber()
   attendees?: number;
+
+  @IsOptional()
+  @IsArray()
+  sponsors?: EventSponsorTier[];
 }

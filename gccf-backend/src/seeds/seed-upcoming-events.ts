@@ -31,6 +31,32 @@ This conference is perfect for security professionals, data scientists, and tech
     ],
     organizer: 'GCCF',
     attendees: 0,
+    sponsors: [
+      {
+        id: 'tier-gold-1',
+        tier: 'Gold Sponsor',
+        sponsors: [
+          {
+            id: 'sp-1',
+            name: 'CloudShield Security',
+            logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=240&auto=format&fit=crop&q=80',
+            websiteUrl: 'https://example.com',
+          },
+        ],
+      },
+      {
+        id: 'tier-silver-1',
+        tier: 'Silver Sponsor',
+        sponsors: [
+          {
+            id: 'sp-2',
+            name: 'CyberDefend AI',
+            logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=240&auto=format&fit=crop&q=80',
+            websiteUrl: 'https://example.com',
+          },
+        ],
+      },
+    ],
   },
   {
     title: 'Cloud Security Summit 2025',
@@ -67,6 +93,20 @@ Perfect for cloud architects, DevOps engineers, security engineers, and IT manag
     ],
     organizer: 'GCCF',
     attendees: 0,
+    sponsors: [
+      {
+        id: 'tier-gold-2',
+        tier: 'Gold Sponsor',
+        sponsors: [
+          {
+            id: 'sp-3',
+            name: 'Apex Fortress Labs',
+            logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=240&auto=format&fit=crop&q=80',
+            websiteUrl: 'https://example.com',
+          },
+        ],
+      },
+    ],
   },
 ];
 

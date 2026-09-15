@@ -47,9 +47,25 @@ export class Event {
   @Column({ type: 'int', nullable: true })
   attendees: number;
 
+  @Column({ type: 'jsonb', nullable: true, default: () => "'[]'" })
+  sponsors: EventSponsorTier[];
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+}
+
+export interface EventSponsorItem {
+  id?: string;
+  name: string;
+  logo: string;
+  websiteUrl?: string;
+}
+
+export interface EventSponsorTier {
+  id?: string;
+  tier: string;
+  sponsors: EventSponsorItem[];
 }

@@ -1,3 +1,16 @@
+export interface EventSponsorItem {
+  id?: string;
+  name: string;
+  logo: string;
+  websiteUrl?: string;
+}
+
+export interface EventSponsorTier {
+  id?: string;
+  tier: string;
+  sponsors: EventSponsorItem[];
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -12,6 +25,7 @@ export interface Event {
   registrationUrl?: string;
   organizer?: string;
   attendees?: number;
+  sponsors?: EventSponsorTier[];
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +43,7 @@ export interface CreateEventDto {
   registrationUrl?: string;
   organizer?: string;
   attendees?: number;
+  sponsors?: EventSponsorTier[];
 }
 
 export interface UpdateEventDto {
@@ -44,4 +59,5 @@ export interface UpdateEventDto {
   registrationUrl?: string;
   organizer?: string;
   attendees?: number;
+  sponsors?: EventSponsorTier[];
 }

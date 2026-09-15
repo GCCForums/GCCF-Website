@@ -45,6 +45,8 @@ export type NewsFormData = {
   sourceUrl: string;
 };
 
+import { EventSponsorTier } from "@/types/events";
+
 export type EventFormData = {
   title: string;
   shortDescription: string;
@@ -58,6 +60,7 @@ export type EventFormData = {
   registrationUrl: string;
   organizer: string;
   attendees: string;
+  sponsors: EventSponsorTier[];
 };
 
 export type GalleryFormData = {
@@ -111,6 +114,7 @@ export const initialEventForm: EventFormData = {
   registrationUrl: "",
   organizer: "",
   attendees: "0",
+  sponsors: [],
 };
 
 export const initialGalleryForm: GalleryFormData = {

@@ -90,14 +90,19 @@ export default function WebsitePopup() {
       <div
         style={{
           position: "relative",
-          maxWidth: "560px",
-          width: "100%",
-          borderRadius: "16px",
+          maxWidth: "min(92vw, 850px)",
+          maxHeight: "85vh",
+          width: "fit-content",
+          height: "fit-content",
+          borderRadius: "20px",
           overflow: "hidden",
           boxShadow:
-            "0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+            "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15)",
           animation: "scaleIn 0.25s ease-out",
-          background: "#000000",
+          backgroundColor: "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -107,36 +112,39 @@ export default function WebsitePopup() {
           aria-label="Close pop-up"
           style={{
             position: "absolute",
-            top: "14px",
-            right: "14px",
+            top: "12px",
+            right: "12px",
             width: "36px",
             height: "36px",
             borderRadius: "50%",
-            backgroundColor: "rgba(15, 23, 42, 0.75)",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            backgroundColor: "rgba(15, 23, 42, 0.8)",
+            backdropFilter: "blur(6px)",
+            border: "1px solid rgba(255, 255, 255, 0.25)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "#ffffff",
             cursor: "pointer",
-            zIndex: 20,
-            transition: "all 0.15s ease",
+            zIndex: 30,
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
           }}
         >
           <FaTimes style={{ fontSize: "0.9rem" }} />
         </button>
 
-        {/* Just the Image */}
+        {/* The Image - adapts dynamically to picture size */}
         <img
           src={config.imageUrl}
           alt={config.name || "Announcement"}
           style={{
-            width: "100%",
+            maxWidth: "min(92vw, 850px)",
+            maxHeight: "85vh",
+            width: "auto",
             height: "auto",
-            maxHeight: "80vh",
             display: "block",
             objectFit: "contain",
+            borderRadius: "20px",
           }}
           onError={(e) => {
             (e.target as HTMLImageElement).src =
