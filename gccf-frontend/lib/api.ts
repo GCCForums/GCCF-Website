@@ -16,6 +16,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   const token = getAdminToken();
   
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    credentials: 'include',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -518,6 +519,7 @@ export const uploadApi = {
 
     const response = await fetch(`${API_BASE_URL}/upload/image`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -532,6 +534,41 @@ export const uploadApi = {
     return response.json();
   },
 };
+
+export interface AuditLogItem {
+  id: string;
+  actorId: string;
+  actorUsername: string;
+  actorRole: string;
+  action: string;
+  targetEntity: string;
+  targetId: string | null;
+  changes: Record<string, any> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  timestamp: string;
+}
+
+export interface PaginatedAuditLogs {
+  items: AuditLogItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const auditLogsApi = {
+  getAll: (page: number = 1, limit: number = 25, entity?: string, actor?: string) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (entity) params.append('entity', entity);
+    if (actor) params.append('actor', actor);
+    return fetchApi<PaginatedAuditLogs>(`/admin/audit-logs?${params.toString()}`);
+  },
+};
+
 
 
 

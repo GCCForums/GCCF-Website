@@ -9,18 +9,23 @@ export interface UserInfo {
 }
 
 export interface LoginResponse {
-  access_token: string;
+  access_token?: string;
   user?: UserInfo;
   message?: string;
 }
 
+// In-memory user state (NOT persisted in localStorage)
+let inMemoryUser: UserInfo | null = null;
+let profileSyncPromise: Promise<UserInfo | null> | null = null;
+
 export async function loginAdmin(
   username: string,
   password: string,
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; message?: string; user?: UserInfo }> {
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
+      credentials: 'include', // Ensures HttpOnly cookie is set by browser
       headers: {
         'Content-Type': 'application/json',
       },
@@ -36,20 +41,25 @@ export async function loginAdmin(
       };
     }
 
-    localStorage.setItem('adminToken', data.access_token);
-    localStorage.setItem('isAdmin', 'true');
-    localStorage.setItem('adminName', data.user?.username || username || 'Admin User');
-    localStorage.setItem('adminRole', data.user?.role || 'admin');
-    localStorage.setItem(
-      'adminPermissions',
-      JSON.stringify(data.user?.permissions || []),
-    );
+    inMemoryUser = data.user || {
+      id: 'admin',
+      username,
+      role: 'admin',
+      permissions: [],
+    };
 
+    // Clean up any legacy localStorage entries from prior implementations
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminName');
+      localStorage.removeItem('adminRole');
+      localStorage.removeItem('adminPermissions');
+
       window.dispatchEvent(new Event('authChange'));
-      window.dispatchEvent(new Event('storage'));
     }
-    return { success: true };
+
+    return { success: true, user: inMemoryUser || undefined };
   } catch (error) {
     console.error('Login error:', error);
     return {
@@ -59,46 +69,36 @@ export async function loginAdmin(
   }
 }
 
+export function getCurrentUser(): UserInfo | null {
+  return inMemoryUser;
+}
+
 export function isAdminLoggedIn(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    localStorage.getItem('isAdmin') === 'true' &&
-    !!localStorage.getItem('adminToken')
-  );
+  return inMemoryUser !== null;
 }
 
 export function getAdminToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('adminToken');
+  // Return null because authentication token is encapsulated in HttpOnly cookie
+  return null;
 }
 
 export function getAdminName(): string {
-  if (typeof window === 'undefined') return 'Admin User';
-  return localStorage.getItem('adminName') || 'Admin User';
+  return inMemoryUser?.username || 'Admin User';
 }
 
 export function getAdminRole(): 'super_admin' | 'admin' {
-  if (typeof window === 'undefined') return 'admin';
-  return (localStorage.getItem('adminRole') as 'super_admin' | 'admin') || 'admin';
+  return inMemoryUser?.role || 'admin';
 }
 
 export function isSuperAdmin(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem('adminRole') === 'super_admin';
+  return inMemoryUser?.role === 'super_admin';
 }
 
 export function getAdminPermissions(): string[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem('adminPermissions');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  return inMemoryUser?.permissions || [];
 }
 
 export function hasPermission(permissionKey: string): boolean {
-  if (typeof window === 'undefined') return false;
   if (isSuperAdmin()) return true;
   const permissions = getAdminPermissions();
   if (permissions.includes('all')) return true;
@@ -106,41 +106,58 @@ export function hasPermission(permissionKey: string): boolean {
 }
 
 export async function syncCurrentUserProfile(): Promise<UserInfo | null> {
-  const token = getAdminToken();
-  if (!token) return null;
-  try {
-    const res = await fetch(`${API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      if (res.status === 401) {
-        logoutAdmin();
+  // Deduplicate concurrent requests
+  if (profileSyncPromise) {
+    return profileSyncPromise;
+  }
+
+  profileSyncPromise = (async () => {
+    try {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        inMemoryUser = null;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('authChange'));
+        }
+        return null;
       }
+      const user: UserInfo = await res.json();
+      inMemoryUser = user;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('authChange'));
+      }
+      return user;
+    } catch (err) {
+      console.error('Failed to sync profile', err);
       return null;
+    } finally {
+      profileSyncPromise = null;
     }
-    const user: UserInfo = await res.json();
-    localStorage.setItem('adminName', user.username);
-    localStorage.setItem('adminRole', user.role);
-    localStorage.setItem(
-      'adminPermissions',
-      JSON.stringify(user.permissions || []),
-    );
-    return user;
+  })();
+
+  return profileSyncPromise;
+}
+
+export async function logoutAdmin(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
   } catch (err) {
-    console.error('Failed to sync profile', err);
-    return null;
+    console.error('Failed to call backend logout endpoint', err);
+  } finally {
+    inMemoryUser = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminName');
+      localStorage.removeItem('adminRole');
+      localStorage.removeItem('adminPermissions');
+
+      window.dispatchEvent(new Event('authChange'));
+    }
   }
 }
-
-export function logoutAdmin(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('isAdmin');
-    localStorage.removeItem('adminName');
-    localStorage.removeItem('adminRole');
-    localStorage.removeItem('adminPermissions');
-    window.dispatchEvent(new Event('authChange'));
-    window.dispatchEvent(new Event('storage'));
-  }
-}
-

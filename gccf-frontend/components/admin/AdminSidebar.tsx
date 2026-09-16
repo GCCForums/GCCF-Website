@@ -19,6 +19,7 @@ import {
   FaQuoteRight,
   FaUserShield,
   FaLayerGroup,
+  FaClipboardList,
 } from "react-icons/fa";
 import { AdminTab } from "./types";
 import { hasPermission, isSuperAdmin } from "@/lib/auth";
@@ -39,9 +40,13 @@ export default function AdminSidebar({
   onLogout,
 }: AdminSidebarProps) {
   const [mounted, setMounted] = useState(false);
+  const [, setAuthVersion] = useState(0);
 
   useEffect(() => {
     setMounted(true);
+    const onAuth = () => setAuthVersion((v) => v + 1);
+    window.addEventListener("authChange", onAuth);
+    return () => window.removeEventListener("authChange", onAuth);
   }, []);
 
   const checkPerm = (perm: string) => {
@@ -180,22 +185,35 @@ export default function AdminSidebar({
         )}
 
         {superAdmin && (
-          <button
-            className={`nav-item ${activeTab === "admins" ? "active" : ""}`}
-            onClick={() => setActiveTab("admins")}
-            style={{
-              borderTop: "1px solid rgba(226, 232, 240, 0.8)",
-              marginTop: "0.5rem",
-              paddingTop: "0.75rem",
-            }}
-          >
-            <FaUserShield className="text-purple-600" />
-            {sidebarOpen && (
-              <span className="font-semibold text-purple-700">
-                Admins &amp; Roles
-              </span>
-            )}
-          </button>
+          <>
+            <button
+              className={`nav-item ${activeTab === "admins" ? "active" : ""}`}
+              onClick={() => setActiveTab("admins")}
+              style={{
+                borderTop: "1px solid rgba(226, 232, 240, 0.8)",
+                marginTop: "0.5rem",
+                paddingTop: "0.75rem",
+              }}
+            >
+              <FaUserShield className="text-purple-600" />
+              {sidebarOpen && (
+                <span className="font-semibold text-purple-700">
+                  Admins &amp; Roles
+                </span>
+              )}
+            </button>
+            <button
+              className={`nav-item ${activeTab === "audit" ? "active" : ""}`}
+              onClick={() => setActiveTab("audit")}
+            >
+              <FaClipboardList className="text-amber-600" />
+              {sidebarOpen && (
+                <span className="font-semibold text-amber-700">
+                  Audit Logs
+                </span>
+              )}
+            </button>
+          </>
         )}
       </nav>
 

@@ -9,7 +9,8 @@ export type AdminTab =
   | "popup"
   | "testimonials"
   | "settings"
-  | "admins";
+  | "admins"
+  | "audit";
 
 export interface FeaturePermission {
   id: string;

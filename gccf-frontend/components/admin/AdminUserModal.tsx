@@ -55,6 +55,17 @@ export default function AdminUserModal({
     }
   }, [editingAdmin, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const togglePermission = (id: string) => {
@@ -110,6 +121,9 @@ export default function AdminUserModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-user-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto"
       onClick={onClose}
     >
@@ -127,7 +141,7 @@ export default function AdminUserModal({
               <FaUserShield />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-slate-900 leading-tight">
+              <h2 id="admin-user-modal-title" className="font-bold text-lg text-slate-900 leading-tight">
                 {editingAdmin ? "Edit Admin Account" : "Add New Admin Account"}
               </h2>
               <p className="text-xs text-slate-500">

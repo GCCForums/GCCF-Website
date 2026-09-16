@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { FaTimes, FaSpinner, FaTrash, FaExclamationTriangle } from "react-icons/fa";
 import { DeleteTarget } from "./types";
 
@@ -17,10 +17,24 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onConfirm,
   loading,
 }) => {
+  useEffect(() => {
+    if (!target) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [target, onClose]);
+
   if (!target) return null;
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-confirm-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
       onClick={onClose}
     >
@@ -35,12 +49,13 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Close dialog"
           >
             <FaTimes />
           </button>
         </div>
 
-        <h3 className="font-bold text-base text-slate-900 mb-1.5">
+        <h3 id="delete-confirm-title" className="font-bold text-base text-slate-900 mb-1.5">
           Confirm Deletion
         </h3>
         <p className="text-sm text-slate-500 mb-6">

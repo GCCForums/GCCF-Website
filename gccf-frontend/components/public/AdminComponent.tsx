@@ -60,6 +60,7 @@ import TeamManager from "../admin/TeamManager";
 import PopupManager from "../admin/PopupManager";
 import TestimonialsManager from "../admin/TestimonialsManager";
 import AdminUsersManager from "../admin/AdminUsersManager";
+import AuditLogsManager from "../admin/AuditLogsManager";
 import HomepageContentManager from "../admin/HomepageContentManager";
 import { NewsModal } from "../admin/NewsModal";
 import { EventModal } from "../admin/EventModal";
@@ -208,6 +209,31 @@ export default function AdminComponent() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<DeleteTarget | null>(null);
 
+  // Close all open modal cards and reset temporary edit states
+  const closeAllModals = useCallback(() => {
+    setShowNewsModal(false);
+    setEditingNews(null);
+    setShowEventModal(false);
+    setEditingEvent(null);
+    setShowGalleryModal(false);
+    setEditingGallery(null);
+    setShowTeamModal(false);
+    setEditingTeam(null);
+    setShowTestimonialModal(false);
+    setEditingTestimonial(null);
+    setShowDeleteConfirm(null);
+  }, []);
+
+  // Automatically close any open modal card and reset form state when switching tabs
+  useEffect(() => {
+    closeAllModals();
+  }, [activeTab, closeAllModals]);
+
+  const handleTabChange = (newTab: AdminTab) => {
+    closeAllModals();
+    setActiveTab(newTab);
+  };
+
   // Load stored teams and backfill recent activities for custom team members
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -289,8 +315,13 @@ export default function AdminComponent() {
     const initAuthAndSettings = async () => {
       // Sync user profile from backend
       const user = await syncCurrentUserProfile();
-      const currentRole = user?.role || getAdminRole();
-      const currentName = user?.username || getAdminName();
+      if (!user) {
+        router.push("/admin/login");
+        return;
+      }
+
+      const currentRole = user.role || getAdminRole();
+      const currentName = user.username || getAdminName();
 
       setAdminProfile((prev) => ({
         ...prev,
@@ -300,6 +331,9 @@ export default function AdminComponent() {
 
       // If activeTab is not permitted, select the first permitted tab
       if (currentRole !== "super_admin") {
+        if (activeTab === "admins" || activeTab === "audit") {
+          setActiveTab("dashboard");
+        }
         const perms = user?.permissions || [];
         const isPermitted = (tab: AdminTab) => {
           if (perms.includes("all")) return true;
@@ -854,7 +888,7 @@ export default function AdminComponent() {
     <div className="admin-dashboard">
       <AdminSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         onLogout={handleLogout}
@@ -970,12 +1004,17 @@ export default function AdminComponent() {
           {activeTab === "admins" && (
             <AdminUsersManager currentUsername={adminProfile.name} />
           )}
+
+          {activeTab === "audit" && <AuditLogsManager />}
         </div>
       </main>
 
       <NewsModal
-        isOpen={showNewsModal}
-        onClose={() => setShowNewsModal(false)}
+        isOpen={showNewsModal && activeTab === "news"}
+        onClose={() => {
+          setShowNewsModal(false);
+          setEditingNews(null);
+        }}
         editingNews={editingNews}
         newsForm={newsForm}
         setNewsForm={setNewsForm}
@@ -984,8 +1023,11 @@ export default function AdminComponent() {
       />
 
       <EventModal
-        isOpen={showEventModal}
-        onClose={() => setShowEventModal(false)}
+        isOpen={showEventModal && activeTab === "events"}
+        onClose={() => {
+          setShowEventModal(false);
+          setEditingEvent(null);
+        }}
         editingEvent={editingEvent}
         eventForm={eventForm}
         setEventForm={setEventForm}
@@ -994,8 +1036,11 @@ export default function AdminComponent() {
       />
 
       <GalleryModal
-        isOpen={showGalleryModal}
-        onClose={() => setShowGalleryModal(false)}
+        isOpen={showGalleryModal && activeTab === "gallery"}
+        onClose={() => {
+          setShowGalleryModal(false);
+          setEditingGallery(null);
+        }}
         editingGallery={editingGallery}
         galleryForm={galleryForm}
         setGalleryForm={setGalleryForm}
@@ -1004,8 +1049,11 @@ export default function AdminComponent() {
       />
 
       <TeamModal
-        isOpen={showTeamModal}
-        onClose={() => setShowTeamModal(false)}
+        isOpen={showTeamModal && activeTab === "teams"}
+        onClose={() => {
+          setShowTeamModal(false);
+          setEditingTeam(null);
+        }}
         editingMember={editingTeam}
         teamForm={teamForm}
         setTeamForm={setTeamForm}
@@ -1014,8 +1062,11 @@ export default function AdminComponent() {
       />
 
       <TestimonialModal
-        isOpen={showTestimonialModal}
-        onClose={() => setShowTestimonialModal(false)}
+        isOpen={showTestimonialModal && activeTab === "testimonials"}
+        onClose={() => {
+          setShowTestimonialModal(false);
+          setEditingTestimonial(null);
+        }}
         editingTestimonial={editingTestimonial}
         testimonialForm={testimonialForm}
         setTestimonialForm={setTestimonialForm}
