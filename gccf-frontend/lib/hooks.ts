@@ -241,6 +241,7 @@ export function useHomepageContent() {
   return useQuery({
     queryKey: ["homepage", "content"],
     queryFn: homepageApi.get,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 10, // 10 seconds
+    refetchOnWindowFocus: true,
   });
 }

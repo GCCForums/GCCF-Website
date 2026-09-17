@@ -44,6 +44,30 @@ export interface FaqSectionContent {
   items: FaqItem[];
 }
 
+export interface ChairpersonMessageContent {
+  badge?: string;
+  title?: string;
+  chairpersonName?: string;
+  chairpersonTitle?: string;
+  quote?: string;
+  message?: string;
+  image?: string;
+  signatureText?: string;
+  isActive?: boolean;
+}
+
+export interface ServiceItem {
+  icon?: string;
+  title: string;
+  description: string;
+}
+
+export interface ServicesSectionContent {
+  badge?: string;
+  title?: string;
+  items: ServiceItem[];
+}
+
 @Entity('homepage_content')
 export class HomepageContent {
   @PrimaryGeneratedColumn()
@@ -56,10 +80,16 @@ export class HomepageContent {
   metrics: MetricsSectionContent;
 
   @Column({ type: 'jsonb', nullable: true })
+  chairpersonMessage?: ChairpersonMessageContent;
+
+  @Column({ type: 'jsonb', nullable: true })
   about: AboutSectionContent;
 
   @Column({ type: 'jsonb', nullable: true })
   faq: FaqSectionContent;
+
+  @Column({ type: 'jsonb', nullable: true })
+  services?: ServicesSectionContent;
 
   @Column({ type: 'jsonb', nullable: true, default: {} })
   extraSections: Record<string, any>;

@@ -8,59 +8,38 @@ interface FaqSectionProps {
   content?: FaqSectionContent;
 }
 
-const DEFAULT_FAQS = [
-  {
-    question: "What is GCCF?",
-    answer:
-      "GCCF (Global Cybersecurity Community Forum) is a worldwide community dedicated to bringing together cybersecurity professionals, enthusiasts, and learners to share knowledge, collaborate, and advance the field of cybersecurity.",
-  },
-  {
-    question: "How can I join the community?",
-    answer:
-      "You can join by clicking the 'Join Our Community' button and filling out a simple registration form. Membership is open to anyone interested in cybersecurity, regardless of experience level.",
-  },
-  {
-    question: "Are there membership fees?",
-    answer:
-      "Basic membership is completely free. We also offer premium memberships with additional benefits such as exclusive workshops, certification programs, and priority event access.",
-  },
-  {
-    question: "What types of events do you organize?",
-    answer:
-      "We organize a variety of events including workshops, conferences, hackathons, webinars, and networking meetups. Events cover topics from ethical hacking to cloud security, threat intelligence, and more.",
-  },
-  {
-    question: "Can beginners join GCCF?",
-    answer:
-      "Absolutely! We welcome members of all skill levels. We have dedicated programs and resources for beginners, including mentorship opportunities and foundational training sessions.",
-  },
-];
-
 export default function FaqSection({ content }: FaqSectionProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  if (!content || !content.items || content.items.length === 0) {
+    return null;
+  }
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const badge = content?.badge ?? "FAQ";
-  const title = content?.title ?? "Frequently Asked Questions";
-  const faqs =
-    content?.items && content.items.length > 0 ? content.items : DEFAULT_FAQS;
+  const badge = content.badge || "";
+  const title = content.title || "";
+  const faqs = content.items;
 
   return (
     <section className="py-24 px-6 bg-white">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          {badge && (
-            <span className="text-xs font-bold uppercase tracking-widest text-[#3d73bd] mb-3 block">
-              {badge}
-            </span>
-          )}
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            {title}
-          </h2>
-        </div>
+        {(badge || title) && (
+          <div className="text-center mb-16">
+            {badge && (
+              <span className="text-xs font-bold uppercase tracking-widest text-[#3d73bd] mb-3 block">
+                {badge}
+              </span>
+            )}
+            {title && (
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                {title}
+              </h2>
+            )}
+          </div>
+        )}
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openFaq === index;

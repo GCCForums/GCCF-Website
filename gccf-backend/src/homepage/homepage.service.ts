@@ -25,6 +25,20 @@ export const DEFAULT_HOMEPAGE_CONTENT = {
       { number: '35+', label: 'Countries' },
     ],
   },
+  chairpersonMessage: {
+    badge: 'LEADERSHIP MESSAGE',
+    title: 'Message from the CEO',
+    chairpersonName: 'Dr. Sarah Mitchell',
+    chairpersonTitle: 'CEO & Executive Director, GCCF',
+    quote:
+      'Cybersecurity is no longer just a technical defense; it is the cornerstone of societal trust, global resilience, and collective progress.',
+    message:
+      'At GCCF, our conviction is that no individual, organization, or nation can face the rapidly mutating landscape of cyber threats in isolation. By cultivating a collaborative ecosystem of researchers, industry practitioners, and policymakers, we transform vulnerability into proactive collective defense. We welcome you to unite with our mission, share your expertise, and build an open, secure digital future for everyone.',
+    image:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+    signatureText: 'Dr. Sarah Mitchell, CEO',
+    isActive: true,
+  },
   about: {
     badge: 'About GCCF',
     title: 'Building a Safer Digital Future',
@@ -66,6 +80,44 @@ export const DEFAULT_HOMEPAGE_CONTENT = {
       },
     ],
   },
+  services: {
+    badge: 'What We Offer',
+    title: 'Services & Activities',
+    items: [
+      {
+        icon: 'FaShieldAlt',
+        title: 'Security Training',
+        description:
+          'Comprehensive training programs for individuals and organizations',
+      },
+      {
+        icon: 'FaUsers',
+        title: 'Community Events',
+        description: 'Regular meetups, workshops, and networking opportunities',
+      },
+      {
+        icon: 'FaBook',
+        title: 'Knowledge Sharing',
+        description: 'Access to resources, articles, and industry insights',
+      },
+      {
+        icon: 'FaBullseye',
+        title: 'Career Development',
+        description: 'Job opportunities and mentorship programs',
+      },
+      {
+        icon: 'FaMicroscope',
+        title: 'Research & Innovation',
+        description:
+          'Collaborative research projects and security innovations',
+      },
+      {
+        icon: 'FaGlobe',
+        title: 'Global Network',
+        description: 'Connect with cybersecurity professionals worldwide',
+      },
+    ],
+  },
   extraSections: {},
 };
 
@@ -83,11 +135,37 @@ export class HomepageService implements OnModuleInit {
   }
 
   private async ensureInitialContent(): Promise<void> {
-    const count = await this.homepageRepository.count();
-    if (count === 0) {
+    const content = await this.homepageRepository.findOne({
+      where: {},
+      order: { id: 'ASC' },
+    });
+    if (!content) {
       const initial = this.homepageRepository.create(DEFAULT_HOMEPAGE_CONTENT);
       await this.homepageRepository.save(initial);
       this.logger.log('Homepage default content initialized in database');
+    } else {
+      let needsSave = false;
+      if (!content.chairpersonMessage) {
+        content.chairpersonMessage = DEFAULT_HOMEPAGE_CONTENT.chairpersonMessage;
+        needsSave = true;
+      } else if (
+        content.chairpersonMessage.title ===
+        'Guiding the Future of Global Cybersecurity'
+      ) {
+        content.chairpersonMessage.title = 'Message from the CEO';
+        content.chairpersonMessage.chairpersonTitle =
+          'CEO & Executive Director, GCCF';
+        content.chairpersonMessage.signatureText = 'Dr. Sarah Mitchell, CEO';
+        needsSave = true;
+      }
+      if (!content.services) {
+        content.services = DEFAULT_HOMEPAGE_CONTENT.services;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await this.homepageRepository.save(content);
+        this.logger.log('Synced chairpersonMessage and services in database');
+      }
     }
   }
 
@@ -100,6 +178,23 @@ export class HomepageService implements OnModuleInit {
     if (!content) {
       const initial = this.homepageRepository.create(DEFAULT_HOMEPAGE_CONTENT);
       content = await this.homepageRepository.save(initial);
+    } else if (!content.chairpersonMessage) {
+      content.chairpersonMessage = DEFAULT_HOMEPAGE_CONTENT.chairpersonMessage;
+      await this.homepageRepository.save(content);
+    } else if (
+      content.chairpersonMessage.title ===
+      'Guiding the Future of Global Cybersecurity'
+    ) {
+      content.chairpersonMessage.title = 'Message from the CEO';
+      content.chairpersonMessage.chairpersonTitle =
+        'CEO & Executive Director, GCCF';
+      content.chairpersonMessage.signatureText = 'Dr. Sarah Mitchell, CEO';
+      await this.homepageRepository.save(content);
+    }
+
+    if (!content.services) {
+      content.services = DEFAULT_HOMEPAGE_CONTENT.services;
+      await this.homepageRepository.save(content);
     }
 
     return content;
@@ -121,11 +216,24 @@ export class HomepageService implements OnModuleInit {
     if (dto.metrics !== undefined) {
       content.metrics = { ...content.metrics, ...dto.metrics };
     }
+    if (dto.chairpersonMessage !== undefined) {
+      content.chairpersonMessage = {
+        ...(content.chairpersonMessage || DEFAULT_HOMEPAGE_CONTENT.chairpersonMessage),
+        ...dto.chairpersonMessage,
+      };
+    }
     if (dto.about !== undefined) {
       content.about = { ...content.about, ...dto.about };
     }
     if (dto.faq !== undefined) {
       content.faq = { ...content.faq, ...dto.faq };
+    }
+    if (dto.services !== undefined) {
+      content.services = { ...(content.services || DEFAULT_HOMEPAGE_CONTENT.services), ...dto.services };
+      content.extraSections = {
+        ...(content.extraSections || {}),
+        services: content.services,
+      };
     }
     if (dto.extraSections !== undefined) {
       content.extraSections = { ...content.extraSections, ...dto.extraSections };
@@ -145,8 +253,10 @@ export class HomepageService implements OnModuleInit {
     } else {
       content.hero = DEFAULT_HOMEPAGE_CONTENT.hero;
       content.metrics = DEFAULT_HOMEPAGE_CONTENT.metrics;
+      content.chairpersonMessage = DEFAULT_HOMEPAGE_CONTENT.chairpersonMessage;
       content.about = DEFAULT_HOMEPAGE_CONTENT.about;
       content.faq = DEFAULT_HOMEPAGE_CONTENT.faq;
+      content.services = DEFAULT_HOMEPAGE_CONTENT.services;
       content.extraSections = DEFAULT_HOMEPAGE_CONTENT.extraSections;
     }
 

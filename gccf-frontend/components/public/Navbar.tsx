@@ -9,8 +9,9 @@ import {
   FaShieldAlt,
   FaThLarge,
   FaSignOutAlt,
+  FaUser,
 } from "react-icons/fa";
-import { isAdminLoggedIn, getAdminName, logoutAdmin } from "@/lib/auth";
+import { isAdminLoggedIn, getAdminName, logoutAdmin, syncCurrentUserProfile } from "@/lib/auth";
 
 export default function Navbar() {
   const [navScrolled, setNavScrolled] = useState(false);
@@ -23,21 +24,44 @@ export default function Navbar() {
 
   // Sync auth state on mount and on storage/auth changes
   useEffect(() => {
-    const checkAuth = () => {
+    let isMounted = true;
+    const checkAuth = async () => {
+      const loggedIn = isAdminLoggedIn();
+      if (isMounted) {
+        setIsAdmin(loggedIn);
+        if (loggedIn) {
+          setAdminName(getAdminName());
+        }
+      }
+      try {
+        const user = await syncCurrentUserProfile();
+        if (isMounted) {
+          if (user) {
+            setIsAdmin(true);
+            setAdminName(user.username || getAdminName());
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      } catch {
+        // keep fallback
+      }
+    };
+
+    checkAuth();
+
+    const handleAuthChange = () => {
       const loggedIn = isAdminLoggedIn();
       setIsAdmin(loggedIn);
       if (loggedIn) {
         setAdminName(getAdminName());
       }
     };
-
-    checkAuth();
-
-    const handleAuthChange = () => checkAuth();
     window.addEventListener("authChange", handleAuthChange);
     window.addEventListener("storage", handleAuthChange);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("authChange", handleAuthChange);
       window.removeEventListener("storage", handleAuthChange);
     };
@@ -247,9 +271,11 @@ export default function Navbar() {
           ) : (
             <Link
               href="/admin/login"
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold text-[#1d3c68] bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-xs group"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:text-white bg-slate-50 hover:bg-[#3d73bd] border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-md group cursor-pointer"
+              title="Login"
+              aria-label="Login"
             >
-              <span>Login</span>
+              <FaUser className="text-base transition-transform duration-200 group-hover:scale-110" />
             </Link>
           )}
         </div>
@@ -382,8 +408,8 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 px-4 flex items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl bg-[#3d73bd] hover:bg-[#3462a1] text-white shadow-md shadow-blue-500/20 transition-colors"
               >
-                <FaShieldAlt className="text-xs" />
-                <span>Admin Login</span>
+                <FaUser className="text-sm" />
+                <span>Login</span>
               </Link>
             )}
           </div>

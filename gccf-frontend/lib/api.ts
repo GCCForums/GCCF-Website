@@ -29,12 +29,23 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
-  const contentLength = response.headers.get('content-length');
-  if (contentLength === '0' || !contentLength) {
+  // Handle empty responses (204 No Content, or explicit content-length: 0)
+  if (response.status === 204) {
     return undefined as T;
   }
 
-  return response.json();
+  const contentLength = response.headers.get('content-length');
+  if (contentLength === '0') {
+    return undefined as T;
+  }
+
+  // Try to parse JSON; if body is empty, return undefined
+  const text = await response.text();
+  if (!text || text.trim().length === 0) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text);
 }
 
 export const newsApi = {
@@ -481,12 +492,38 @@ export interface FaqSectionContent {
   items: FaqItem[];
 }
 
+export interface ChairpersonMessageContent {
+  badge?: string;
+  title?: string;
+  chairpersonName?: string;
+  chairpersonTitle?: string;
+  quote?: string;
+  message?: string;
+  image?: string;
+  signatureText?: string;
+  isActive?: boolean;
+}
+
+export interface ServiceItem {
+  icon?: string;
+  title: string;
+  description: string;
+}
+
+export interface ServicesSectionContent {
+  badge?: string;
+  title?: string;
+  items: ServiceItem[];
+}
+
 export interface HomepageContent {
   id: number;
   hero: HeroSectionContent;
   metrics: MetricsSectionContent;
+  chairpersonMessage?: ChairpersonMessageContent;
   about: AboutSectionContent;
   faq: FaqSectionContent;
+  services?: ServicesSectionContent;
   extraSections?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;

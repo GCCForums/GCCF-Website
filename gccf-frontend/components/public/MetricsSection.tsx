@@ -6,24 +6,20 @@ interface MetricsSectionProps {
   content?: MetricsSectionContent;
 }
 
-const DEFAULT_METRICS = [
-  { number: "15+", label: "Years of Impact" },
-  { number: "50K+", label: "Lives Touched" },
-  { number: "120+", label: "Active Projects" },
-  { number: "35+", label: "Countries" },
-];
-
 export default function MetricsSection({ content }: MetricsSectionProps) {
-  const metrics =
-    content?.items && content.items.length > 0 ? content.items : DEFAULT_METRICS;
-  const bgImage = content?.backgroundImage || "/statsbg2.png";
+  if (!content || !content.items || content.items.length === 0) {
+    return null;
+  }
+
+  const metrics = content.items;
+  const bgImage = content.backgroundImage;
 
   return (
     <section
       className="relative bg-cover bg-center bg-fixed py-24 px-6"
-      style={{ backgroundImage: `url('${bgImage}')` }}
+      style={bgImage ? { backgroundImage: `url('${bgImage}')` } : undefined}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-[#1d3c68]/92 via-[#3d73bd]/85 to-[#122746]/92" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#1d3c68]/95 via-[#3d73bd]/90 to-[#122746]/95" />
       <div className="relative z-10 max-w-6xl mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
           {metrics.map((metric, index) => (

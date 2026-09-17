@@ -14,9 +14,19 @@ export interface LoginResponse {
   message?: string;
 }
 
-// In-memory user state (NOT persisted in localStorage)
+// In-memory user state with localStorage fallback
 let inMemoryUser: UserInfo | null = null;
 let profileSyncPromise: Promise<UserInfo | null> | null = null;
+
+function getStoredUser(): UserInfo | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('gccf_admin_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function loginAdmin(
   username: string,
@@ -48,8 +58,8 @@ export async function loginAdmin(
       permissions: [],
     };
 
-    // Clean up any legacy localStorage entries from prior implementations
     if (typeof window !== 'undefined') {
+      localStorage.setItem('gccf_admin_user', JSON.stringify(inMemoryUser));
       localStorage.removeItem('adminToken');
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminName');
@@ -70,11 +80,11 @@ export async function loginAdmin(
 }
 
 export function getCurrentUser(): UserInfo | null {
-  return inMemoryUser;
+  return inMemoryUser || getStoredUser();
 }
 
 export function isAdminLoggedIn(): boolean {
-  return inMemoryUser !== null;
+  return inMemoryUser !== null || getStoredUser() !== null;
 }
 
 export function getAdminToken(): string | null {
@@ -83,19 +93,19 @@ export function getAdminToken(): string | null {
 }
 
 export function getAdminName(): string {
-  return inMemoryUser?.username || 'Admin User';
+  return inMemoryUser?.username || getStoredUser()?.username || 'Admin User';
 }
 
 export function getAdminRole(): 'super_admin' | 'admin' {
-  return inMemoryUser?.role || 'admin';
+  return inMemoryUser?.role || getStoredUser()?.role || 'admin';
 }
 
 export function isSuperAdmin(): boolean {
-  return inMemoryUser?.role === 'super_admin';
+  return getAdminRole() === 'super_admin';
 }
 
 export function getAdminPermissions(): string[] {
-  return inMemoryUser?.permissions || [];
+  return inMemoryUser?.permissions || getStoredUser()?.permissions || [];
 }
 
 export function hasPermission(permissionKey: string): boolean {
@@ -119,6 +129,7 @@ export async function syncCurrentUserProfile(): Promise<UserInfo | null> {
       if (!res.ok) {
         inMemoryUser = null;
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('gccf_admin_user');
           window.dispatchEvent(new Event('authChange'));
         }
         return null;
@@ -126,12 +137,13 @@ export async function syncCurrentUserProfile(): Promise<UserInfo | null> {
       const user: UserInfo = await res.json();
       inMemoryUser = user;
       if (typeof window !== 'undefined') {
+        localStorage.setItem('gccf_admin_user', JSON.stringify(user));
         window.dispatchEvent(new Event('authChange'));
       }
       return user;
     } catch (err) {
       console.error('Failed to sync profile', err);
-      return null;
+      return inMemoryUser || getStoredUser();
     } finally {
       profileSyncPromise = null;
     }
@@ -151,6 +163,7 @@ export async function logoutAdmin(): Promise<void> {
   } finally {
     inMemoryUser = null;
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('gccf_admin_user');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminName');

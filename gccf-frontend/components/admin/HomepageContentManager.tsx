@@ -13,21 +13,29 @@ import {
   FaChartBar,
   FaQuestionCircle,
   FaSlidersH,
+  FaUserTie,
+  FaToggleOn,
+  FaToggleOff,
+  FaThList,
 } from "react-icons/fa";
 import {
   homepageApi,
   HomepageContent,
   HeroSectionContent,
   MetricsSectionContent,
+  ChairpersonMessageContent,
   AboutSectionContent,
   FaqSectionContent,
+  ServicesSectionContent,
+  ServiceItem,
   MetricItem,
   FaqItem,
 } from "@/lib/api";
+import { ImageUploadInput } from "./ImageUploadInput";
 
 export default function HomepageContentManager() {
   const [activeSection, setActiveSection] = useState<
-    "hero" | "metrics" | "about" | "faq"
+    "hero" | "metrics" | "chairperson" | "about" | "services" | "faq"
   >("hero");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,6 +67,22 @@ export default function HomepageContentManager() {
     ],
   });
 
+  const [chairpersonMessage, setChairpersonMessage] =
+    useState<ChairpersonMessageContent>({
+      badge: "LEADERSHIP MESSAGE",
+      title: "Message from the Chairperson",
+      chairpersonName: "Dr. Sarah Mitchell",
+      chairpersonTitle: "Chairperson & Executive Director, GCCF",
+      quote:
+        "Cybersecurity is no longer just a technical defense; it is the cornerstone of societal trust, global resilience, and collective progress.",
+      message:
+        "At GCCF, our conviction is that no individual, organization, or nation can face the rapidly mutating landscape of cyber threats in isolation. By cultivating a collaborative ecosystem of researchers, industry practitioners, and policymakers, we transform vulnerability into proactive collective defense. We welcome you to unite with our mission, share your expertise, and build an open, secure digital future for everyone.",
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
+      signatureText: "Dr. Sarah Mitchell, Chairperson",
+      isActive: true,
+    });
+
   const [about, setAbout] = useState<AboutSectionContent>({
     badge: "About GCCF",
     title: "Building a Safer Digital Future",
@@ -67,6 +91,49 @@ export default function HomepageContentManager() {
       "Founded by industry leaders and passionate professionals, we bring together experts, learners, and organizations to address the ever-evolving challenges in digital security.",
       "Our mission is to create a trusted ecosystem where members can grow their skills, share insights, and contribute to a safer digital future.",
       "Through events, training programs, and collaborative initiatives, we're building the next generation of cybersecurity excellence.",
+    ],
+  });
+
+  const [services, setServices] = useState<ServicesSectionContent>({
+    badge: "What We Offer",
+    title: "Services & Activities",
+    items: [
+      {
+        icon: "FaShieldAlt",
+        title: "Security Training",
+        description:
+          "Comprehensive workshops and training sessions on modern cybersecurity practices.",
+      },
+      {
+        icon: "FaUsers",
+        title: "Community Events",
+        description:
+          "Networking meetups, conferences, and collaborative security events.",
+      },
+      {
+        icon: "FaBook",
+        title: "Resource Hub",
+        description:
+          "Curated guides, tools, and threat intelligence reports for practitioners.",
+      },
+      {
+        icon: "FaBullseye",
+        title: "Live Defense Labs",
+        description:
+          "Hands-on cyber ranges and capture-the-flag competitions to sharpen practical skills.",
+      },
+      {
+        icon: "FaMicroscope",
+        title: "Research & Analysis",
+        description:
+          "In-depth vulnerability studies, policy briefs, and threat landscape reports.",
+      },
+      {
+        icon: "FaGlobe",
+        title: "Global Network",
+        description:
+          "Connect with cybersecurity professionals and peer defenders across 35+ countries.",
+      },
     ],
   });
 
@@ -111,7 +178,9 @@ export default function HomepageContentManager() {
         if (data) {
           if (data.hero) setHero(data.hero);
           if (data.metrics) setMetrics(data.metrics);
+          if (data.chairpersonMessage) setChairpersonMessage(data.chairpersonMessage);
           if (data.about) setAbout(data.about);
+          if (data.services) setServices(data.services);
           if (data.faq) setFaq(data.faq);
         }
       } catch (err: any) {
@@ -134,8 +203,10 @@ export default function HomepageContentManager() {
       await homepageApi.update({
         hero,
         metrics,
+        chairpersonMessage,
         about,
         faq,
+        services,
       });
       setSuccessMessage("Homepage content saved successfully! Public pages updated.");
       setTimeout(() => setSuccessMessage(null), 4000);
@@ -154,7 +225,10 @@ export default function HomepageContentManager() {
       if (resetData) {
         if (resetData.hero) setHero(resetData.hero);
         if (resetData.metrics) setMetrics(resetData.metrics);
+        if (resetData.chairpersonMessage)
+          setChairpersonMessage(resetData.chairpersonMessage);
         if (resetData.about) setAbout(resetData.about);
+        if (resetData.services) setServices(resetData.services);
         if (resetData.faq) setFaq(resetData.faq);
       }
       setShowResetConfirm(false);
@@ -165,6 +239,35 @@ export default function HomepageContentManager() {
     } finally {
       setResetting(false);
     }
+  };
+
+  const handleAddService = () => {
+    setServices((prev) => ({
+      ...prev,
+      items: [
+        ...(prev.items || []),
+        { icon: "FaShieldAlt", title: "New Service", description: "Service description..." },
+      ],
+    }));
+  };
+
+  const handleUpdateService = (
+    index: number,
+    field: keyof ServiceItem,
+    value: string
+  ) => {
+    setServices((prev) => {
+      const updated = [...(prev.items || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, items: updated };
+    });
+  };
+
+  const handleDeleteService = (index: number) => {
+    setServices((prev) => ({
+      ...prev,
+      items: (prev.items || []).filter((_, i) => i !== index),
+    }));
   };
 
   // Metric helpers
@@ -350,6 +453,18 @@ export default function HomepageContentManager() {
         </button>
 
         <button
+          onClick={() => setActiveSection("chairperson")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeSection === "chairperson"
+              ? "bg-[#1d3c68] text-white shadow-sm"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+          }`}
+        >
+          <FaUserTie />
+          <span>CEO Message</span>
+        </button>
+
+        <button
           onClick={() => setActiveSection("about")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeSection === "about"
@@ -359,6 +474,18 @@ export default function HomepageContentManager() {
         >
           <FaInfoCircle />
           <span>About GCCF</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSection("services")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeSection === "services"
+              ? "bg-[#1d3c68] text-white shadow-sm"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+          }`}
+        >
+          <FaThList />
+          <span>Services</span>
         </button>
 
         <button
@@ -636,6 +763,138 @@ export default function HomepageContentManager() {
         </div>
       )}
 
+      {/* SECTION: SERVICES */}
+      {activeSection === "services" && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Services &amp; Activities
+              </h2>
+              <p className="text-xs text-slate-500">
+                Manage the service offerings and community pillars displayed on the homepage.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-[#3d73bd] hover:bg-[#32609e] transition-colors cursor-pointer shrink-0"
+            >
+              <FaPlus className="text-[10px]" />
+              <span>Add Service</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                Section Badge
+              </label>
+              <input
+                type="text"
+                value={services.badge || ""}
+                onChange={(e) => setServices({ ...services, badge: e.target.value })}
+                placeholder="e.g. What We Offer"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                Section Title
+              </label>
+              <input
+                type="text"
+                value={services.title || ""}
+                onChange={(e) => setServices({ ...services, title: e.target.value })}
+                placeholder="e.g. Services & Activities"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Service Items ({(services.items || []).length})
+            </h3>
+
+            {(services.items || []).map((item, idx) => (
+              <div
+                key={idx}
+                className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3 relative group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500">
+                    Service #{idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteService(idx)}
+                    className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
+                    title="Delete service"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Icon
+                    </label>
+                    <select
+                      value={item.icon || "FaShieldAlt"}
+                      onChange={(e) =>
+                        handleUpdateService(idx, "icon", e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium"
+                    >
+                      <option value="FaShieldAlt">FaShieldAlt (Security)</option>
+                      <option value="FaUsers">FaUsers (Community)</option>
+                      <option value="FaBook">FaBook (Resources)</option>
+                      <option value="FaBullseye">FaBullseye (Target/Labs)</option>
+                      <option value="FaMicroscope">FaMicroscope (Research)</option>
+                      <option value="FaGlobe">FaGlobe (Global)</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Service Title
+                    </label>
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) =>
+                        handleUpdateService(idx, "title", e.target.value)
+                      }
+                      placeholder="e.g. Security Training"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Service Description
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={item.description}
+                    onChange={(e) =>
+                      handleUpdateService(idx, "description", e.target.value)
+                    }
+                    placeholder="Short description of this service..."
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 leading-relaxed"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* SECTION 4: FAQ */}
       {activeSection === "faq" && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
@@ -739,6 +998,203 @@ export default function HomepageContentManager() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 2.5: CHAIRPERSON MESSAGE SECTION */}
+      {activeSection === "chairperson" && (
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6 max-w-4xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Message from the CEO / Chairperson
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Configure the leadership statement, executive portrait, pull-quote, and bio displayed right after metrics.
+              </p>
+            </div>
+
+            {/* Visibility Toggle */}
+            <div className="flex items-center gap-2.5 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
+              <span className="text-xs font-semibold text-slate-700">
+                Section Visible on Homepage
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setChairpersonMessage((prev) => ({
+                    ...prev,
+                    isActive: prev.isActive !== false ? false : true,
+                  }))
+                }
+                className={`text-2xl transition-colors cursor-pointer ${
+                  chairpersonMessage.isActive !== false
+                    ? "text-[#3d73bd]"
+                    : "text-slate-300"
+                }`}
+                title="Toggle visibility"
+              >
+                {chairpersonMessage.isActive !== false ? (
+                  <FaToggleOn />
+                ) : (
+                  <FaToggleOff />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Badge & Title */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Section Badge Text
+              </label>
+              <input
+                type="text"
+                value={chairpersonMessage.badge || ""}
+                onChange={(e) =>
+                  setChairpersonMessage((prev) => ({
+                    ...prev,
+                    badge: e.target.value,
+                  }))
+                }
+                placeholder="e.g. LEADERSHIP MESSAGE"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Section Main Title *
+              </label>
+              <input
+                type="text"
+                value={chairpersonMessage.title || ""}
+                onChange={(e) =>
+                  setChairpersonMessage((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                placeholder="e.g. Message from the CEO"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+              />
+            </div>
+          </div>
+
+          {/* Chairperson Name & Title */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Chairperson Full Name *
+              </label>
+              <input
+                type="text"
+                value={chairpersonMessage.chairpersonName || ""}
+                onChange={(e) =>
+                  setChairpersonMessage((prev) => ({
+                    ...prev,
+                    chairpersonName: e.target.value,
+                  }))
+                }
+                placeholder="e.g. Dr. Sarah Mitchell"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Official Designation / Title *
+              </label>
+              <input
+                type="text"
+                value={chairpersonMessage.chairpersonTitle || ""}
+                onChange={(e) =>
+                  setChairpersonMessage((prev) => ({
+                    ...prev,
+                    chairpersonTitle: e.target.value,
+                  }))
+                }
+                placeholder="e.g. Chairperson & Executive Director, GCCF"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+              />
+            </div>
+          </div>
+
+          {/* Featured Pull Quote */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Key Featured Quote (Callout Box)
+            </label>
+            <textarea
+              rows={3}
+              value={chairpersonMessage.quote || ""}
+              onChange={(e) =>
+                setChairpersonMessage((prev) => ({
+                  ...prev,
+                  quote: e.target.value,
+                }))
+              }
+              placeholder="Enter a powerful opening quote that summarizes the leadership message..."
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] resize-none"
+            />
+          </div>
+
+          {/* Full Message Body */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Full Leadership Message Description *
+            </label>
+            <textarea
+              rows={6}
+              value={chairpersonMessage.message || ""}
+              onChange={(e) =>
+                setChairpersonMessage((prev) => ({
+                  ...prev,
+                  message: e.target.value,
+                }))
+              }
+              placeholder="Write the full message to members and global cybersecurity visitors (separate paragraphs with blank lines)..."
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Tip: Separate paragraphs by leaving an empty line between them.
+            </p>
+          </div>
+
+          {/* Image Upload Card */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+            <ImageUploadInput
+              label="Chairperson Portrait Photo"
+              value={chairpersonMessage.image || ""}
+              onChange={(url) =>
+                setChairpersonMessage((prev) => ({ ...prev, image: url }))
+              }
+              folder="homepage"
+              placeholder="https://... or upload photo"
+              required
+              helperText="Upload a professional executive portrait (recommended aspect ratio: 4:5 or portrait 800x1000)"
+            />
+          </div>
+
+          {/* Signature / Sign-off */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Sign-off / Signature Text
+            </label>
+            <input
+              type="text"
+              value={chairpersonMessage.signatureText || ""}
+              onChange={(e) =>
+                setChairpersonMessage((prev) => ({
+                  ...prev,
+                  signatureText: e.target.value,
+                }))
+              }
+              placeholder="e.g. Dr. Sarah Mitchell, Chairperson"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+            />
           </div>
         </div>
       )}

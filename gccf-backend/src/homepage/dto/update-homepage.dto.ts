@@ -11,11 +11,19 @@ export class UpdateHomepageDto {
 
   @IsOptional()
   @IsObject()
+  chairpersonMessage?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
   about?: Record<string, any>;
 
   @IsOptional()
   @IsObject()
   faq?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
+  services?: Record<string, any>;
 
   @IsOptional()
   @IsObject()

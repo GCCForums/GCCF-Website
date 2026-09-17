@@ -1,19 +1,21 @@
 "use client";
 
-import CyberThreatGlobe from "./CyberThreatGlobe";
+import Link from "next/link";
 import { HeroSectionContent } from "@/lib/api";
+import CyberThreatGlobe from "./CyberThreatGlobe";
 
 interface HeroSectionProps {
   content?: HeroSectionContent;
 }
 
 export default function HeroSection({ content }: HeroSectionProps) {
-  const badge = content?.badge ?? "GLOBAL CYBERSECURITY COMMUNITY FORUM";
-  const title = content?.title ?? "Protecting the Digital World";
-  const titleHighlight = content?.titleHighlight ?? "Together";
-  const subtitle =
-    content?.subtitle ??
-    "Join thousands of cybersecurity practitioners, researchers, and enterprise defenders. Share threat intelligence, collaborate on live defense, and elevate the security posture of global systems.";
+  // All text strictly from dashboard — render nothing if no content
+  if (!content) return null;
+
+  const badge = content.badge || "";
+  const title = content.title || "";
+  const titleHighlight = content.titleHighlight || "";
+  const subtitle = content.subtitle || "";
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-white overflow-hidden pt-32 sm:pt-36 pb-16">
@@ -41,7 +43,7 @@ export default function HeroSection({ content }: HeroSectionProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
           {/* Left Column: Hero Text & Circular CTAs */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-start text-left">
-            {/* Badge: Simple text without pulse effect */}
+            {/* Badge */}
             {badge && (
               <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 mb-6 shadow-xs">
                 {badge}
@@ -49,19 +51,45 @@ export default function HeroSection({ content }: HeroSectionProps) {
             )}
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
-              {title}{" "}
-              {titleHighlight && (
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9]">
-                  {titleHighlight}
-                </span>
-              )}
-            </h1>
+            {(title || titleHighlight) && (
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
+                {title}{" "}
+                {titleHighlight && (
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9]">
+                    {titleHighlight}
+                  </span>
+                )}
+              </h1>
+            )}
 
             {/* Subtext */}
-            <p className="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed">
-              {subtitle}
-            </p>
+            {subtitle && (
+              <p className="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed">
+                {subtitle}
+              </p>
+            )}
+
+            {/* Action Buttons from Dashboard */}
+            {(content.primaryButtonText || content.secondaryButtonText) && (
+              <div className="flex flex-wrap items-center gap-4 mt-8">
+                {content.primaryButtonText && (
+                  <Link
+                    href={content.primaryButtonUrl || "/membership"}
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#2d5fa5] shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    {content.primaryButtonText}
+                  </Link>
+                )}
+                {content.secondaryButtonText && (
+                  <Link
+                    href={content.secondaryButtonUrl || "/events"}
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#3d73bd] hover:text-[#3d73bd] shadow-2xs hover:shadow-xs transition-all duration-200"
+                  >
+                    {content.secondaryButtonText}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Transparent 3D Cyber Threat Globe */}
