@@ -8,6 +8,7 @@ export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(
     defaultInitialTestimonials
   );
+  const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isPaused, setIsPaused] = useState(false);
@@ -18,6 +19,11 @@ export default function TestimonialsSection() {
 
     const loadTestimonials = () => {
       try {
+        const enabledStored = localStorage.getItem("gccf_testimonials_enabled");
+        if (enabledStored !== null) {
+          setIsVisible(enabledStored === "true");
+        }
+
         const stored = localStorage.getItem("gccf_testimonials");
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -35,9 +41,24 @@ export default function TestimonialsSection() {
       }
     };
 
+    const handleVisibility = (e: any) => {
+      if (typeof e?.detail === "boolean") {
+        setIsVisible(e.detail);
+      } else {
+        const enabledStored = localStorage.getItem("gccf_testimonials_enabled");
+        if (enabledStored !== null) {
+          setIsVisible(enabledStored === "true");
+        }
+      }
+    };
+
     loadTestimonials();
     window.addEventListener("storage", loadTestimonials);
-    return () => window.removeEventListener("storage", loadTestimonials);
+    window.addEventListener("testimonialsVisibilityChange", handleVisibility as EventListener);
+    return () => {
+      window.removeEventListener("storage", loadTestimonials);
+      window.removeEventListener("testimonialsVisibilityChange", handleVisibility as EventListener);
+    };
   }, []);
 
   // Update visible cards count based on viewport width
@@ -79,6 +100,10 @@ export default function TestimonialsSection() {
 
     return () => clearInterval(timer);
   }, [isPaused, nextSlide, testimonials.length, visibleCount]);
+
+  if (!isVisible || testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-24 px-6 bg-slate-50" id="testimonials">

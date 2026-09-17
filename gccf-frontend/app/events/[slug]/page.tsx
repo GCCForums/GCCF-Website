@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEventBySlug } from "@/lib/hooks";
@@ -27,6 +27,12 @@ export default function EventDetailPage() {
   const { data: event, isLoading, error } = useEventBySlug(params.slug as string);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (event?.title) {
+      document.title = `${event.title} | Global Cybersecurity Community Forums`;
+    }
+  }, [event?.title]);
 
   if (isLoading) {
     return (

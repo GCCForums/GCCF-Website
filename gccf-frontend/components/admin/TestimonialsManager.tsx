@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaPlus,
   FaSearch,
@@ -8,6 +8,8 @@ import {
   FaTrash,
   FaQuoteLeft,
   FaStar,
+  FaToggleOn,
+  FaToggleOff,
 } from "react-icons/fa";
 import { Testimonial, DeleteTarget } from "./types";
 
@@ -25,6 +27,25 @@ export default function TestimonialsManager({
   onSetDeleteTarget,
 }: TestimonialsManagerProps) {
   const [searchFilter, setSearchFilter] = useState("");
+  const [showOnHomepage, setShowOnHomepage] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("gccf_testimonials_enabled");
+    if (stored !== null) {
+      setShowOnHomepage(stored === "true");
+    }
+  }, []);
+
+  const handleToggleHomepage = () => {
+    const nextVal = !showOnHomepage;
+    setShowOnHomepage(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gccf_testimonials_enabled", String(nextVal));
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new CustomEvent("testimonialsVisibilityChange", { detail: nextVal }));
+    }
+  };
 
   const filteredTestimonials = testimonialsList.filter((t) => {
     const search = searchFilter.toLowerCase();
@@ -47,13 +68,33 @@ export default function TestimonialsManager({
             Manage endorsements, reviews, and community feedback featured on the landing page carousel
           </p>
         </div>
-        <button
-          onClick={onOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#315ea0] shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
-        >
-          <FaPlus className="text-xs" />
-          <span>Add Testimonial</span>
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Homepage Visibility Toggle */}
+          <div className="flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
+            <span className="text-xs font-semibold text-slate-700">
+              Show on Homepage
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleHomepage}
+              className={`text-2xl transition-colors cursor-pointer ${
+                showOnHomepage ? "text-[#3d73bd]" : "text-slate-300"
+              }`}
+              title={showOnHomepage ? "Testimonials currently visible on homepage" : "Testimonials hidden from homepage"}
+            >
+              {showOnHomepage ? <FaToggleOn /> : <FaToggleOff />}
+            </button>
+          </div>
+
+          <button
+            onClick={onOpenAddModal}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#315ea0] shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+          >
+            <FaPlus className="text-xs" />
+            <span>Add Testimonial</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
