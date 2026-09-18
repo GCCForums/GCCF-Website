@@ -18,16 +18,8 @@ export class CreateGalleryDto {
   imageUrl: string;
 
   @IsOptional()
-  @IsString()
-  category?: string;
-
-  @IsOptional()
-  @IsString()
-  event?: string;
-
-  @IsOptional()
   @IsArray()
-  tags?: string[];
+  images?: string[];
 
   @IsOptional()
   @IsBoolean()

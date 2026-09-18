@@ -5,6 +5,7 @@ import { useEvents } from "@/lib/hooks";
 import Link from "next/link";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaArrowRight } from "react-icons/fa";
 import PageHero from "@/components/public/PageHero";
+import { stripHtml } from "@/lib/html-utils";
 
 export default function EventsPage() {
   const { data: eventsList = [], isLoading, error } = useEvents();
@@ -130,7 +131,7 @@ export default function EventsPage() {
                       {event.title}
                     </h2>
                     <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-5 font-normal">
-                      {event.shortDescription}
+                      {stripHtml(event.shortDescription)}
                     </p>
 
                     <div className="space-y-2 mb-6">

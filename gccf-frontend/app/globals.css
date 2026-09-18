@@ -427,3 +427,82 @@ body {
     padding: 16px;
   }
 }
+
+/* ===== Rich Text Editor & Content Styles ===== */
+.rich-text-content,
+.tiptap {
+  word-break: break-word;
+}
+
+.rich-text-content p,
+.tiptap p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.rich-text-content p:last-child,
+.tiptap p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content strong,
+.rich-text-content b,
+.tiptap strong,
+.tiptap b {
+  font-weight: 700;
+}
+
+.rich-text-content em,
+.rich-text-content i,
+.tiptap em,
+.tiptap i {
+  font-style: italic;
+}
+
+.rich-text-content ul,
+.tiptap ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.rich-text-content ol,
+.tiptap ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.rich-text-content li,
+.tiptap li {
+  margin: 0.25rem 0 !important;
+  display: list-item !important;
+}
+
+.rich-text-content a,
+.tiptap a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  word-break: break-all;
+}
+
+.rich-text-content a:hover,
+.tiptap a:hover {
+  color: #1d4ed8 !important;
+}
+
+.tiptap {
+  outline: none;
+  min-height: inherit;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}

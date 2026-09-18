@@ -18,6 +18,7 @@ import { Event, EventSponsorTier, EventSponsorItem } from "@/types/events";
 import { EventFormData, generateSlug } from "./types";
 import { ImageUploadInput } from "./ImageUploadInput";
 import { uploadApi } from "@/lib/api";
+import { RichTextEditor } from "./RichTextEditor";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -252,41 +253,31 @@ export const EventModal: React.FC<EventModalProps> = ({
             </div>
 
             {/* Short Description */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Short Description *
-              </label>
-              <textarea
-                placeholder="Brief summary for event cards..."
-                rows={2}
-                value={eventForm.shortDescription}
-                onChange={(e) =>
-                  setEventForm({
-                    ...eventForm,
-                    shortDescription: e.target.value,
-                  })
-                }
-                required
-                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors resize-none"
-              />
-            </div>
+            <RichTextEditor
+              label="Short Description"
+              value={eventForm.shortDescription}
+              onChange={(val) =>
+                setEventForm({
+                  ...eventForm,
+                  shortDescription: val,
+                })
+              }
+              placeholder="Brief summary for event cards..."
+              minHeight="100px"
+              required
+            />
 
             {/* Full Description */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Full Description *
-              </label>
-              <textarea
-                placeholder="Complete event agenda, keynote topics, and attendance notes..."
-                rows={5}
-                value={eventForm.description}
-                onChange={(e) =>
-                  setEventForm({ ...eventForm, description: e.target.value })
-                }
-                required
-                className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd] transition-colors"
-              />
-            </div>
+            <RichTextEditor
+              label="Full Description"
+              value={eventForm.description}
+              onChange={(val) =>
+                setEventForm({ ...eventForm, description: val })
+              }
+              placeholder="Complete event agenda, keynote topics, and attendance notes..."
+              minHeight="200px"
+              required
+            />
 
             {/* Row: Date & Status */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

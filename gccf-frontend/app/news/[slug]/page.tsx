@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useNewsBySlug } from "@/lib/hooks";
 import LogoLoader from "@/components/public/LogoLoader";
+import { RichTextContent } from "@/components/common/RichTextContent";
 import {
   FaCalendarAlt,
   FaUser,
@@ -65,7 +66,14 @@ export default function NewsDetailPage() {
   }
 
   const publishedDate = new Date(news.publishedDate);
-  const galleryImages = news.galleryImages || [];
+  const rawGallery = news.galleryImages;
+  const galleryImages: string[] = Array.isArray(rawGallery)
+    ? rawGallery.flatMap((img) =>
+        typeof img === "string" ? img.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) : []
+      )
+    : typeof rawGallery === "string"
+    ? (rawGallery as string).split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
+    : [];
 
   // Estimate reading time
   const wordCount = (news.content || "").split(/\s+/).length;
@@ -95,16 +103,18 @@ export default function NewsDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/70 pb-28">
-      {/* Editorial Hero Banner */}
-      <section className="relative w-full min-h-[440px] md:min-h-[500px] bg-slate-950 overflow-hidden flex items-end">
-        {/* Background Cover Image */}
+      {/* Editorial Hero Banner in GCCF Logo Colors */}
+      <section className="relative w-full min-h-[440px] md:min-h-[500px] bg-gradient-to-br from-[#1d3c68] via-[#244b82] to-[#3d73bd] overflow-hidden flex items-end">
+        {/* Background Cover Image with Brand Overlay */}
         <div className="absolute inset-0 z-0">
-          <img
-            src={news.featuredImage}
-            alt={news.title}
-            className="w-full h-full object-cover object-center opacity-35 blur-xs scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+          {news.featuredImage && (
+            <img
+              src={news.featuredImage}
+              alt={news.title}
+              className="w-full h-full object-cover object-center opacity-25 blur-xs scale-105"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1d3c68] via-[#1d3c68]/85 to-[#244b82]/60" />
         </div>
 
         {/* Hero Content */}
@@ -174,10 +184,11 @@ export default function NewsDetailPage() {
         <article className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200/80 shadow-xs mb-8">
           {/* Lead Excerpt */}
           {news.excerpt && (
-            <div className="border-l-4 border-[#3d73bd] pl-5 py-1 mb-8 bg-blue-50/40 rounded-r-2xl">
-              <p className="text-lg sm:text-xl font-medium text-slate-800 leading-relaxed italic">
-                &ldquo;{news.excerpt}&rdquo;
-              </p>
+            <div className="border-l-4 border-[#3d73bd] pl-5 py-2 mb-8 bg-blue-50/40 rounded-r-2xl">
+              <RichTextContent
+                content={news.excerpt}
+                className="text-lg sm:text-xl font-medium text-slate-800 leading-relaxed italic"
+              />
             </div>
           )}
 
@@ -193,17 +204,10 @@ export default function NewsDetailPage() {
           )}
 
           {/* Content Paragraphs */}
-          <div className="prose prose-slate max-w-none text-slate-700 text-base sm:text-lg leading-relaxed space-y-6">
-            {(news.content || "").split("\n").map((paragraph, index) => {
-              const trimmed = paragraph.trim();
-              if (!trimmed) return null;
-              return (
-                <p key={index} className="text-slate-700 leading-relaxed">
-                  {trimmed}
-                </p>
-              );
-            })}
-          </div>
+          <RichTextContent
+            content={news.content}
+            className="text-slate-700 text-base sm:text-lg leading-relaxed space-y-4"
+          />
 
           {/* Tags */}
           {news.tags && news.tags.length > 0 && (
@@ -241,43 +245,21 @@ export default function NewsDetailPage() {
           )}
         </article>
 
-        {/* Multiple Article Gallery Images */}
+        {/* Multiple Article Gallery Images - Pictures only, no text */}
         {galleryImages.length > 0 && (
-          <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-base">
-                  <FaImages />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-                    Article Image Gallery
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Additional photos, diagrams, and media related to this report
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                {galleryImages.length} {galleryImages.length === 1 ? "Photo" : "Photos"}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {galleryImages.map((image, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => setSelectedImageIndex(index)}
-                  className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#3d73bd] cursor-pointer"
+                  className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#3d73bd] cursor-pointer shadow-xs hover:shadow-md transition-all"
                 >
                   <img
                     src={image}
-                    alt={`${news.title} image ${index + 1}`}
+                    alt={`${news.title} photo ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
                   />
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
                     <span>Enlarge</span>

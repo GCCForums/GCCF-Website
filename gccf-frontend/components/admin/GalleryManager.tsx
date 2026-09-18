@@ -102,6 +102,21 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
                     )}
                   </span>
                 </div>
+
+                {/* Photo Count Badge */}
+                <div className="absolute top-2.5 right-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md bg-slate-900/80 text-white border border-white/20 shadow-xs">
+                    <FaImages className="text-[10px] text-blue-400" />
+                    <span>
+                      {item.images && item.images.length > 0
+                        ? item.images.length
+                        : item.imageUrl
+                        ? 1
+                        : 0}{" "}
+                      {(item.images?.length || 1) === 1 ? "Photo" : "Photos"}
+                    </span>
+                  </span>
+                </div>
               </div>
 
               {/* Media Info */}
@@ -109,9 +124,9 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
                 <h4 className="font-bold text-slate-900 text-sm mb-1 truncate group-hover:text-[#3d73bd] transition-colors">
                   {item.title}
                 </h4>
-                <span className="inline-block text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                  {item.category || "General"}
-                </span>
+                <p className="text-xs text-slate-500 line-clamp-1">
+                  {item.description ? item.description.replace(/<[^>]*>/g, "") : "Event photography collection"}
+                </p>
               </div>
             </div>
 

@@ -1,61 +1,92 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useGallery } from "@/lib/hooks";
-import { X, ZoomIn, Camera } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Images, ZoomIn, Camera } from "lucide-react";
 import PageHero from "@/components/public/PageHero";
 import type { Gallery } from "@/types/gallery";
 
+const getAlbumPhotos = (item: Gallery | null): string[] => {
+  if (!item) return [];
+  const list: string[] = [];
+  if (item.imageUrl) {
+    list.push(...item.imageUrl.split(/[,\n]/).map((s) => s.trim()).filter(Boolean));
+  }
+  if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+    list.push(
+      ...item.images.flatMap((u) =>
+        typeof u === "string"
+          ? u.split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
+          : []
+      )
+    );
+  }
+  return Array.from(new Set(list));
+};
+
 export default function GalleryPage() {
   const { data: galleryList = [], isLoading, error } = useGallery();
-  const [selectedImage, setSelectedImage] = useState<Gallery | null>(null);
-  const [filter, setFilter] = useState("All");
+  const [selectedAlbum, setSelectedAlbum] = useState<Gallery | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
-  const categories = [
-    "All",
-    ...new Set(
-      galleryList
-        .map((item) => item.category)
-        .filter((c): c is string => Boolean(c)),
-    ),
-  ];
+  const visibleList = galleryList.filter((item) => item.isVisible);
+  const albumPhotos = getAlbumPhotos(selectedAlbum);
 
-  const filteredImages =
-    filter === "All"
-      ? galleryList.filter((item) => item.isVisible)
-      : galleryList.filter(
-          (item) => item.isVisible && item.category === filter,
-        );
+  const handleOpenAlbum = (album: Gallery) => {
+    setSelectedAlbum(album);
+    setActivePhotoIndex(0);
+  };
 
-  // Close the lightbox on Escape
+  const handleCloseAlbum = () => {
+    setSelectedAlbum(null);
+    setActivePhotoIndex(0);
+  };
+
+  const handlePrev = useCallback(() => {
+    if (albumPhotos.length <= 1) return;
+    setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : albumPhotos.length - 1));
+  }, [albumPhotos.length]);
+
+  const handleNext = useCallback(() => {
+    if (albumPhotos.length <= 1) return;
+    setActivePhotoIndex((prev) => (prev < albumPhotos.length - 1 ? prev + 1 : 0));
+  }, [albumPhotos.length]);
+
+  // Keyboard navigation for carousel slider
   useEffect(() => {
-    if (!selectedImage) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedImage(null);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedAlbum) return;
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") handleCloseAlbum();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedImage]);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedAlbum, handlePrev, handleNext]);
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#1d3c68]" />
-        <p className="mt-6 text-slate-500 font-medium">Loading gallery...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50/60">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#3d73bd] border-t-transparent" />
+          <p className="text-sm font-medium text-slate-500">Loading gallery...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <p className="mb-4 text-red-600">
-            Failed to load gallery. Please try again later.
+      <div className="flex min-h-screen items-center justify-center bg-slate-50/60 px-4">
+        <div className="rounded-2xl bg-white p-8 text-center shadow-lg border border-slate-200/80 max-w-md">
+          <p className="text-rose-600 font-semibold mb-2">Failed to load gallery</p>
+          <p className="text-xs text-slate-500 mb-5">
+            Unable to fetch media at this moment. Please try again later.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white transition-all shadow-md hover:shadow-lg"
+            className="rounded-xl bg-[#1d3c68] px-5 py-2 text-xs font-semibold text-white hover:bg-[#3d73bd] transition-colors cursor-pointer"
           >
             Retry
           </button>
@@ -74,113 +105,188 @@ export default function GalleryPage() {
         subtitle="Capturing moments of impact, celebration, and community connection across our programs and initiatives."
       />
 
-      {/* Filters */}
-      <section className="mx-auto max-w-6xl px-6 pb-8 pt-8 sm:px-10">
-        <div className="flex flex-wrap justify-center gap-2.5">
-          {categories.map((category) => {
-            const active = filter === category;
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setFilter(category)}
-                aria-pressed={active}
-                className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
-                  active
-                    ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
-                }`}
-              >
-                {category}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Grid */}
-      <section className="mx-auto max-w-7xl px-6 pb-20 sm:px-10">
-        {filteredImages.length === 0 ? (
-          <p className="py-16 text-center text-neutral-500">
-            No gallery items found.
-          </p>
+      {/* Event Gallery Grid */}
+      <section className="mx-auto max-w-7xl px-6 pt-10 pb-24 sm:px-10">
+        {visibleList.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-2xl mx-auto mb-4 border border-blue-100 shadow-xs">
+              <Camera className="w-8 h-8" />
+            </div>
+            <p className="text-base font-bold text-slate-800 mb-1">No Gallery Events Found</p>
+            <p className="text-xs text-slate-500">Check back soon for new event photos and summit captures.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6 [grid-auto-flow:dense] sm:gap-7">
-            {filteredImages.map((image, index) => {
-              const featured = index % 3 === 0;
+          <div
+            className={`grid gap-8 ${
+              visibleList.length === 1
+                ? "max-w-2xl mx-auto"
+                : visibleList.length === 2
+                ? "grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto"
+                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            }`}
+          >
+            {visibleList.map((image, index) => {
+              const photos = getAlbumPhotos(image);
+              const coverUrl = image.imageUrl || photos[0] || "";
+
               return (
-                <button
+                <div
                   key={image.id}
-                  type="button"
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => handleOpenAlbum(image)}
                   style={{ animationDelay: `${index * 60}ms` }}
-                  className={`group relative animate-[fadeInScale_0.5s_ease-out_backwards] overflow-hidden rounded-2xl bg-white text-left shadow-[0_4px_20px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(30,58,138,0.15)] ${
-                    featured ? "row-span-2" : ""
-                  }`}
+                  className="group relative overflow-hidden rounded-3xl bg-white border border-slate-200/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(29,60,104,0.18)] transition-all duration-500 hover:-translate-y-2 cursor-pointer flex flex-col"
                 >
-                  <div
-                    className={`relative w-full overflow-hidden ${
-                      featured ? "min-h-[420px]" : "min-h-[260px]"
-                    }`}
-                  >
+                  {/* Photo Container */}
+                  <div className="relative w-full aspect-[16/10] sm:aspect-[4/3] overflow-hidden bg-slate-900">
                     <img
-                      src={image.imageUrl}
+                      src={coverUrl}
                       alt={image.title}
                       loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                     />
 
-                    <div className="absolute right-4 top-4 flex h-11 w-11 scale-75 items-center justify-center rounded-full bg-white/95 text-[#1d3c68] opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 shadow-md">
-                      <ZoomIn size={20} />
-                    </div>
+                    {/* Top Floating Badge */}
+                    <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10">
+                      <span className="flex items-center gap-1.5 rounded-full bg-slate-950/70 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/20 shadow-xs">
+                        <Images className="w-3.5 h-3.5 text-blue-300" />
+                        <span>{photos.length} {photos.length === 1 ? "Photo" : "Photos"}</span>
+                      </span>
 
-                    <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[#1d3c68]/95 via-[#1d3c68]/40 to-transparent to-60% p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <div className="translate-y-4 transition-transform duration-300 group-hover:translate-y-0">
-                        {image.category && (
-                          <span className="mb-2 inline-block w-fit rounded-full bg-[#3d73bd]/90 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-xs">
-                            {image.category}
-                          </span>
-                        )}
-                        <h3 className="text-lg font-semibold text-white">
-                          {image.title}
-                        </h3>
+                      <div className="flex h-9 w-9 scale-75 items-center justify-center rounded-full bg-white/95 text-[#1d3c68] opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 shadow-md">
+                        <ZoomIn size={16} />
                       </div>
                     </div>
+
+                    {/* Subtle gradient vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
                   </div>
-                </button>
+
+                  {/* Card Body */}
+                  <div className="p-6 flex flex-col justify-between flex-1 bg-white">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-[#3d73bd] transition-colors line-clamp-2">
+                        {image.title}
+                      </h3>
+                      {image.description && (
+                        <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                          {image.description.replace(/<[^>]*>/g, "")}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-[#1d3c68] group-hover:text-[#3d73bd] transition-colors">
+                      <span>View Event Photos</span>
+                      <span className="group-hover:translate-x-1 transition-transform text-sm">&rarr;</span>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
       </section>
 
-      {/* Lightbox */}
-      {selectedImage && (
+      {/* Multi-Picture Event Carousel Slider Modal */}
+      {selectedAlbum && albumPhotos.length > 0 && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={selectedImage.title}
-          onClick={() => setSelectedImage(null)}
-          className="fixed inset-0 z-[9999] flex animate-[fadeIn_0.2s_ease] items-center justify-center bg-black/95 p-6 sm:p-10"
+          aria-label={selectedAlbum.title}
+          onClick={handleCloseAlbum}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-black/95 p-4 sm:p-6 animate-fadeIn"
         >
+          {/* Header Bar */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[90vh] max-w-[90vw] animate-[scaleIn_0.2s_ease]"
+            className="w-full max-w-6xl flex items-center justify-between py-2 text-white z-20 shrink-0"
           >
+            <div>
+              <h3 className="text-base sm:text-xl font-bold tracking-tight">
+                {selectedAlbum.title}
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Photo {activePhotoIndex + 1} of {albumPhotos.length}
+              </p>
+            </div>
+
             <button
               type="button"
-              onClick={() => setSelectedImage(null)}
-              aria-label="Close"
-              className="absolute -top-14 right-0 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 bg-white/10 text-white transition-all hover:rotate-90 hover:bg-white/20"
+              onClick={handleCloseAlbum}
+              aria-label="Close carousel"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:rotate-90 hover:bg-white/20 cursor-pointer"
             >
-              <X size={22} />
+              <X size={20} />
             </button>
-            <img
-              src={selectedImage.imageUrl}
-              alt={selectedImage.title}
-              className="max-h-[90vh] max-w-full rounded-lg object-contain"
-            />
           </div>
+
+          {/* Main Photo Slider View */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex-1 w-full max-w-6xl flex items-center justify-center my-2 overflow-hidden"
+          >
+            {/* Previous Button */}
+            {albumPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="Previous photo"
+                className="absolute left-2 sm:left-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white border border-white/20 backdrop-blur-md transition-all hover:bg-black/90 hover:scale-110 cursor-pointer"
+              >
+                <ChevronLeft size={26} />
+              </button>
+            )}
+
+            {/* Current Active Image */}
+            <div className="relative max-h-[70vh] sm:max-h-[75vh] max-w-full flex items-center justify-center animate-[scaleIn_0.2s_ease]">
+              <img
+                key={activePhotoIndex}
+                src={albumPhotos[activePhotoIndex]}
+                alt={`${selectedAlbum.title} - ${activePhotoIndex + 1}`}
+                className="max-h-[70vh] sm:max-h-[75vh] max-w-full rounded-xl object-contain shadow-2xl transition-opacity duration-300"
+              />
+            </div>
+
+            {/* Next Button */}
+            {albumPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="Next photo"
+                className="absolute right-2 sm:right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white border border-white/20 backdrop-blur-md transition-all hover:bg-black/90 hover:scale-110 cursor-pointer"
+              >
+                <ChevronRight size={26} />
+              </button>
+            )}
+          </div>
+
+          {/* Bottom Thumbnail Filmstrip */}
+          {albumPhotos.length > 1 && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-4xl py-2 shrink-0 z-20"
+            >
+              <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 px-2 scrollbar-thin">
+                {albumPhotos.map((photoUrl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(idx)}
+                    className={`relative h-14 w-14 sm:h-16 sm:w-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                      activePhotoIndex === idx
+                        ? "border-[#3d73bd] scale-105 shadow-lg shadow-[#3d73bd]/50 opacity-100"
+                        : "border-transparent opacity-50 hover:opacity-80"
+                    }`}
+                  >
+                    <img
+                      src={photoUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -498,7 +498,7 @@ export default function AdminComponent() {
         slug: newsForm.slug || generateSlug(newsForm.title),
         featuredImage: newsForm.featuredImage,
         galleryImages: newsForm.galleryImages
-          ? newsForm.galleryImages.split(",").map((i) => i.trim()).filter(Boolean)
+          ? newsForm.galleryImages.split(/[,\n]/).map((i) => i.trim()).filter(Boolean)
           : undefined,
         tags: newsForm.tags
           ? newsForm.tags.split(",").map((t) => t.trim()).filter(Boolean)
@@ -566,7 +566,7 @@ export default function AdminComponent() {
         status: eventForm.status,
         mainImage: eventForm.mainImage,
         galleryImages: eventForm.galleryImages
-          ? eventForm.galleryImages.split(",").map((i) => i.trim()).filter(Boolean)
+          ? eventForm.galleryImages.split(/[,\n]/).map((i) => i.trim()).filter(Boolean)
           : undefined,
         registrationUrl: eventForm.registrationUrl || undefined,
         organizer: eventForm.organizer || undefined,
@@ -603,13 +603,17 @@ export default function AdminComponent() {
 
   const openEditGallery = (item: Gallery) => {
     setEditingGallery(item);
+    const allPhotos = Array.from(
+      new Set([
+        ...(item.imageUrl ? [item.imageUrl] : []),
+        ...(item.images && Array.isArray(item.images) ? item.images : []),
+      ])
+    );
     setGalleryForm({
       title: item.title,
       description: item.description || "",
-      imageUrl: item.imageUrl,
-      category: item.category || "",
-      event: item.event || "",
-      tags: item.tags?.join(", ") || "",
+      imageUrl: item.imageUrl || allPhotos[0] || "",
+      images: allPhotos.join("\n"),
       isVisible: item.isVisible,
       order: item.order.toString(),
     });
@@ -620,15 +624,22 @@ export default function AdminComponent() {
     e.preventDefault();
     setLoading(true);
     try {
+      const parsedImages = galleryForm.images
+        ? galleryForm.images.split(/[,\n]/).map((u) => u.trim()).filter(Boolean)
+        : [];
+      const primaryImage = galleryForm.imageUrl || parsedImages[0] || "";
+      const unifiedImages = Array.from(
+        new Set([
+          ...(primaryImage ? [primaryImage] : []),
+          ...parsedImages,
+        ])
+      );
+
       const dto: CreateGalleryDto | UpdateGalleryDto = {
         title: galleryForm.title,
         description: galleryForm.description || undefined,
-        imageUrl: galleryForm.imageUrl,
-        category: galleryForm.category || undefined,
-        event: galleryForm.event || undefined,
-        tags: galleryForm.tags
-          ? galleryForm.tags.split(",").map((t) => t.trim())
-          : undefined,
+        imageUrl: primaryImage,
+        images: unifiedImages.length > 0 ? unifiedImages : (primaryImage ? [primaryImage] : undefined),
         isVisible: galleryForm.isVisible,
         order: galleryForm.order ? parseInt(galleryForm.order) : undefined,
       };

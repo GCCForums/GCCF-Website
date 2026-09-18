@@ -13,29 +13,45 @@ export class GalleryService {
     private galleryRepository: Repository<Gallery>,
   ) {}
 
+  private ensureImages(item: Gallery | null): Gallery {
+    if (!item) return item as any;
+    if (!item.images || !Array.isArray(item.images) || item.images.length === 0) {
+      item.images = item.imageUrl ? [item.imageUrl] : [];
+    }
+    return item;
+  }
+
   async create(createGalleryDto: CreateGalleryDto): Promise<Gallery> {
+    if (
+      (!createGalleryDto.images || createGalleryDto.images.length === 0) &&
+      createGalleryDto.imageUrl
+    ) {
+      createGalleryDto.images = [createGalleryDto.imageUrl];
+    } else if (
+      createGalleryDto.images &&
+      createGalleryDto.images.length > 0 &&
+      !createGalleryDto.imageUrl
+    ) {
+      createGalleryDto.imageUrl = createGalleryDto.images[0];
+    }
     const gallery = this.galleryRepository.create(createGalleryDto);
-    return await this.galleryRepository.save(gallery);
+    const saved = await this.galleryRepository.save(gallery);
+    return this.ensureImages(saved);
   }
 
   async findAll(): Promise<Gallery[]> {
-    return await this.galleryRepository.find({
+    const items = await this.galleryRepository.find({
       order: { order: 'ASC', createdAt: 'DESC' },
     });
+    return items.map((item) => this.ensureImages(item));
   }
 
   async findVisible(): Promise<Gallery[]> {
-    return await this.galleryRepository.find({
+    const items = await this.galleryRepository.find({
       where: { isVisible: true },
       order: { order: 'ASC', createdAt: 'DESC' },
     });
-  }
-
-  async findByCategory(category: string): Promise<Gallery[]> {
-    return await this.galleryRepository.find({
-      where: { category, isVisible: true },
-      order: { order: 'ASC', createdAt: 'DESC' },
-    });
+    return items.map((item) => this.ensureImages(item));
   }
 
   async findOne(id: string): Promise<Gallery> {
@@ -46,7 +62,7 @@ export class GalleryService {
     if (!gallery) {
       throw new NotFoundException(`Gallery item with ID ${id} not found`);
     }
-    return gallery;
+    return this.ensureImages(gallery);
   }
 
   async update(
@@ -54,6 +70,13 @@ export class GalleryService {
     updateGalleryDto: UpdateGalleryDto,
   ): Promise<Gallery> {
     await this.findOne(id);
+    if (
+      updateGalleryDto.images &&
+      updateGalleryDto.images.length > 0 &&
+      !updateGalleryDto.imageUrl
+    ) {
+      updateGalleryDto.imageUrl = updateGalleryDto.images[0];
+    }
     await this.galleryRepository.update(id, updateGalleryDto);
     return this.findOne(id);
   }

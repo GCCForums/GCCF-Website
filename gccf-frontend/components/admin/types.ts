@@ -68,9 +68,7 @@ export type GalleryFormData = {
   title: string;
   description: string;
   imageUrl: string;
-  category: string;
-  event: string;
-  tags: string;
+  images: string;
   isVisible: boolean;
   order: string;
 };
@@ -122,9 +120,7 @@ export const initialGalleryForm: GalleryFormData = {
   title: "",
   description: "",
   imageUrl: "",
-  category: "",
-  event: "",
-  tags: "",
+  images: "",
   isVisible: true,
   order: "0",
 };

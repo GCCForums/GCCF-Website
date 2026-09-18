@@ -4,6 +4,7 @@ import { useNews } from "@/lib/hooks";
 import Link from "next/link";
 import { FaCalendarAlt, FaArrowRight, FaNewspaper, FaUser } from "react-icons/fa";
 import PageHero from "@/components/public/PageHero";
+import { stripHtml } from "@/lib/html-utils";
 
 export default function NewsPage() {
   const { data: newsList = [], isLoading, error } = useNews();
@@ -67,11 +68,22 @@ export default function NewsPage() {
               >
                 {/* Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-                  <img
-                    src={news.featuredImage}
-                    alt={news.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  />
+                  {news.featuredImage || (news.galleryImages && news.galleryImages.length > 0) ? (
+                    <img
+                      src={
+                        news.featuredImage ||
+                        (Array.isArray(news.galleryImages)
+                          ? news.galleryImages[0]
+                          : String(news.galleryImages).split(/[,\n]/)[0])
+                      }
+                      alt={news.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] flex items-center justify-center text-white/40">
+                      <FaNewspaper className="text-4xl" />
+                    </div>
+                  )}
                   {news.category && (
                     <span className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold text-white bg-[#1d3c68]/85 backdrop-blur-md border border-white/20 shadow-xs">
                       {news.category}
@@ -86,7 +98,7 @@ export default function NewsPage() {
                       {news.title}
                     </h2>
                     <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-6 font-normal">
-                      {news.excerpt}
+                      {stripHtml(news.excerpt)}
                     </p>
                   </div>
 

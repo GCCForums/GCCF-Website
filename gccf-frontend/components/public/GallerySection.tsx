@@ -3,12 +3,41 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useVisibleGallery } from "@/lib/hooks";
-import { FaImages, FaArrowRight, FaTimes, FaExpandAlt } from "react-icons/fa";
+import { FaImages, FaArrowRight, FaTimes, FaExpandAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Gallery } from "@/types/gallery";
+import { stripHtml } from "@/lib/html-utils";
 
 export default function GallerySection() {
   const { data: galleryItems = [], isLoading, error } = useVisibleGallery();
   const [activeImage, setActiveImage] = useState<Gallery | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  const getPhotos = (item: Gallery | null): string[] => {
+    if (!item) return [];
+    const list: string[] = [];
+    if (item.imageUrl) {
+      list.push(...item.imageUrl.split(/[,\n]/).map((s) => s.trim()).filter(Boolean));
+    }
+    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+      list.push(
+        ...item.images.flatMap((u) =>
+          typeof u === "string"
+            ? u.split(/[,\n]/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : []
+        )
+      );
+    }
+    return Array.from(new Set(list));
+  };
+
+  const activePhotos = getPhotos(activeImage);
+
+  const openModal = (item: Gallery) => {
+    setActiveImage(item);
+    setPhotoIndex(0);
+  };
 
   return (
     <section id="gallery" className="py-24 px-6 bg-white relative overflow-hidden">
@@ -17,154 +46,156 @@ export default function GallerySection() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        {/* Header */}
-<div className="flex flex-col items-center justify-center mb-16 gap-6 text-center">
-  <div>
-    <span className="text-xs font-bold uppercase tracking-widest text-[#3d73bd] mb-3 block flex items-center gap-2 justify-center">
-      gallery
-    </span>
-    <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-      A Glimpse Into Our Community
-    </h2>
-  </div>
-
-  <Link
-    href="/gallery"
-    className="inline-flex items-center gap-2 text-sm font-semibold text-[#3d73bd] hover:text-[#1d3c68] transition-colors shrink-0 group"
-  >
-    <span>View full gallery</span>
-    <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
-  </Link>
-</div>
-
-        {/* Loading Skeletons */}
-        {isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <div
-                key={n}
-                className="aspect-square rounded-2xl bg-slate-100 animate-pulse border border-slate-200/60"
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Error State */}
-        {!isLoading && error && (
-          <div className="bg-slate-50 rounded-2xl p-12 text-center border border-red-100 max-w-lg mx-auto shadow-xs">
-            <p className="text-red-500 font-medium text-sm mb-2">Unable to load gallery photos.</p>
-            <p className="text-slate-500 text-xs">Please verify your connection to the backend CMS.</p>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && !error && galleryItems.length === 0 && (
-          <div className="bg-slate-50 rounded-3xl p-12 sm:p-16 text-center border border-slate-200/80 shadow-xs max-w-xl mx-auto">
-            <div className="w-14 h-14 rounded-full bg-white text-slate-400 flex items-center justify-center mx-auto mb-4 text-xl shadow-xs border border-slate-200">
-              <FaImages />
-            </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">No Gallery Photos Yet</h3>
-            <p className="text-slate-500 text-sm mb-6">
-              Photos added through the admin CMS dashboard will automatically appear here.
+        <div className="flex flex-col items-center justify-center mb-16 gap-6 text-center">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#3d73bd] mb-3 block flex items-center gap-2 justify-center">
+              gallery
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+              Moments from our Community
+            </h2>
+            <p className="mt-4 text-slate-600 max-w-xl mx-auto text-base">
+              Snapshots of collaboration, keynotes, and cybersecurity summits around the world.
             </p>
-            <Link
-              href="/gallery"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-[#3d73bd] hover:bg-[#1d3c68] transition-colors shadow-xs"
-            >
-              Open Gallery Page
-            </Link>
           </div>
-        )}
 
-        {/* Dynamic Gallery Grid from Backend CMS */}
-        {!isLoading && !error && galleryItems.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {galleryItems.map((item, index) => (
-              <div
-                key={item.id || index}
-                onClick={() => setActiveImage(item)}
-                className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 cursor-pointer"
-              >
-                <img
-                  src={item.imageUrl}
-                  alt={item.title || "Gallery image"}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80";
-                  }}
-                />
+          <Link
+            href="/gallery"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#3d73bd] hover:text-[#1d3c68] transition-colors group cursor-pointer"
+          >
+            <span>View Full Visual Archive</span>
+            <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
 
-                {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4" />
-
-                {/* Top Action Badge */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-slate-800 flex items-center justify-center text-xs shadow-md">
-                    <FaExpandAlt />
-                  </span>
-                </div>
-
-                {/* Bottom Title & Category */}
-                <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                  {item.category && (
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3d73bd] text-white mb-1 shadow-xs">
-                      {item.category}
-                    </span>
-                  )}
-                  {item.title && (
-                    <h4 className="text-white text-xs sm:text-sm font-semibold truncate drop-shadow-sm">
-                      {item.title}
-                    </h4>
-                  )}
-                </div>
-              </div>
+        {/* Gallery Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="aspect-4/3 rounded-2xl bg-slate-100 animate-pulse" />
             ))}
+          </div>
+        ) : galleryItems.length === 0 ? (
+          <div className="text-center py-16 text-slate-400">
+            <FaImages className="text-4xl mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-medium">No gallery items to display</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {galleryItems.slice(0, 6).map((item) => {
+              const photos = getPhotos(item);
+              const coverUrl = item.imageUrl || photos[0] || "";
+
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => openModal(item)}
+                  className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-xs hover:shadow-xl transition-all duration-300"
+                >
+                  <img
+                    src={coverUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+
+                  {/* Top photo count badge */}
+                  {photos.length > 1 && (
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className="flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white border border-white/15">
+                        <FaImages className="text-[10px]" />
+                        <span>{photos.length}</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
+                    <div className="flex items-center justify-between text-white">
+                      <div>
+                        <h3 className="font-bold text-base leading-snug line-clamp-1">
+                          {item.title}
+                        </h3>
+                      </div>
+                      <span className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center text-xs shrink-0 ml-3">
+                        <FaExpandAlt />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Lightbox Modal */}
-      {activeImage && (
+      {/* Lightbox Slider Modal */}
+      {activeImage && activePhotos.length > 0 && (
         <div
           className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
           onClick={() => setActiveImage(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+            className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setActiveImage(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-sm transition-colors"
+              className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
             >
               <FaTimes />
             </button>
 
-            <img
-              src={activeImage.imageUrl}
-              alt={activeImage.title || "Gallery Preview"}
-              className="max-h-[75vh] w-auto mx-auto object-contain"
-            />
+            {/* Slider view */}
+            <div className="relative flex-1 flex items-center justify-center min-h-[50vh] max-h-[72vh] p-2 bg-black/40">
+              {activePhotos.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setPhotoIndex((prev) => (prev > 0 ? prev - 1 : activePhotos.length - 1))}
+                  className="absolute left-3 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                  title="Previous Photo"
+                >
+                  <FaChevronLeft className="text-sm" />
+                </button>
+              )}
+
+              <img
+                src={activePhotos[photoIndex]}
+                alt={activeImage.title || "Gallery Preview"}
+                className="max-h-[70vh] w-auto mx-auto object-contain rounded-lg"
+              />
+
+              {activePhotos.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setPhotoIndex((prev) => (prev < activePhotos.length - 1 ? prev + 1 : 0))}
+                  className="absolute right-3 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
+                  title="Next Photo"
+                >
+                  <FaChevronRight className="text-sm" />
+                </button>
+              )}
+            </div>
 
             {/* Modal Info Bar */}
             <div className="p-4 bg-slate-950/80 border-t border-white/10 flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-white text-sm sm:text-base font-bold truncate">
-                  {activeImage.title || "Community Photo"}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-white text-sm sm:text-base font-bold truncate">
+                    {activeImage.title || "Community Photo"}
+                  </h3>
+                  {activePhotos.length > 1 && (
+                    <span className="text-[11px] text-blue-300 font-medium">
+                      ({photoIndex + 1}/{activePhotos.length})
+                    </span>
+                  )}
+                </div>
                 {activeImage.description && (
                   <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">
-                    {activeImage.description}
+                    {stripHtml(activeImage.description)}
                   </p>
                 )}
               </div>
-              {activeImage.category && (
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#3d73bd] text-white shrink-0">
-                  {activeImage.category}
-                </span>
-              )}
             </div>
           </div>
         </div>

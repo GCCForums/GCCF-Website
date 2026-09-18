@@ -5,13 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEventBySlug } from "@/lib/hooks";
 import LogoLoader from "@/components/public/LogoLoader";
+import { RichTextContent } from "@/components/common/RichTextContent";
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaUsers,
   FaUser,
   FaArrowLeft,
-  FaClock,
   FaExternalLinkAlt,
   FaImages,
   FaTimes,
@@ -67,7 +67,14 @@ export default function EventDetailPage() {
   }
 
   const eventDate = new Date(event.eventDate);
-  const galleryImages = event.galleryImages || [];
+  const rawGallery = event.galleryImages;
+  const galleryImages: string[] = Array.isArray(rawGallery)
+    ? rawGallery.flatMap((img) =>
+        typeof img === "string" ? img.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) : []
+      )
+    : typeof rawGallery === "string"
+    ? (rawGallery as string).split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
+    : [];
   const sponsorTiers = (event.sponsors || []).filter(
     (t) => t.sponsors && t.sponsors.length > 0
   );
@@ -96,16 +103,18 @@ export default function EventDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/70 pb-28">
-      {/* Hero Banner Section */}
-      <section className="relative w-full min-h-[460px] md:min-h-[520px] bg-slate-950 overflow-hidden flex items-end">
-        {/* Background Image with Overlay */}
+      {/* Hero Banner Section in GCCF Logo Colors */}
+      <section className="relative w-full min-h-[460px] md:min-h-[520px] bg-gradient-to-br from-[#1d3c68] via-[#244b82] to-[#3d73bd] overflow-hidden flex items-end">
+        {/* Background Image with Brand Overlay */}
         <div className="absolute inset-0 z-0">
-          <img
-            src={event.mainImage}
-            alt={event.title}
-            className="w-full h-full object-cover object-center opacity-40 blur-xs scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/40" />
+          {event.mainImage && (
+            <img
+              src={event.mainImage}
+              alt={event.title}
+              className="w-full h-full object-cover object-center opacity-25 blur-xs scale-105"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1d3c68] via-[#1d3c68]/85 to-[#244b82]/60" />
         </div>
 
         {/* Hero Content */}
@@ -136,9 +145,10 @@ export default function EventDetailPage() {
           </h1>
 
           {event.shortDescription && (
-            <p className="text-base sm:text-lg text-slate-200/90 max-w-3xl leading-relaxed mb-6 font-normal">
-              {event.shortDescription}
-            </p>
+            <RichTextContent
+              content={event.shortDescription}
+              className="text-base sm:text-lg text-slate-200/90 max-w-3xl leading-relaxed mb-6 font-normal [&_a]:text-blue-300 [&_a]:hover:text-white [&_strong]:text-white"
+            />
           )}
 
           {/* Quick Meta Row */}
@@ -151,16 +161,6 @@ export default function EventDetailPage() {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
-                })}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10">
-              <FaClock className="text-[#60a5fa] shrink-0" />
-              <span>
-                {eventDate.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
                 })}
               </span>
             </div>
@@ -184,8 +184,8 @@ export default function EventDetailPage() {
 
       {/* Main Container */}
       <main className="max-w-5xl mx-auto px-6 sm:px-8 -mt-6 relative z-20">
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Info Grid - 3 Columns (Date, Location, Audience) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
               <FaCalendarAlt />
@@ -194,18 +194,6 @@ export default function EventDetailPage() {
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Date</p>
               <p className="text-sm font-bold text-slate-800">
                 {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 border border-blue-100">
-              <FaClock />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Time</p>
-              <p className="text-sm font-bold text-slate-800">
-                {eventDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>
           </div>
@@ -276,17 +264,10 @@ export default function EventDetailPage() {
             </span>
           </div>
 
-          <div className="prose prose-slate max-w-none text-slate-700 text-base leading-relaxed space-y-4">
-            {event.description.split("\n").map((paragraph, index) => {
-              const trimmed = paragraph.trim();
-              if (!trimmed) return null;
-              return (
-                <p key={index} className="text-slate-700 leading-relaxed text-base">
-                  {trimmed}
-                </p>
-              );
-            })}
-          </div>
+          <RichTextContent
+            content={event.description}
+            className="text-slate-700 text-base leading-relaxed"
+          />
         </div>
 
         {/* Multiple Images Gallery */}

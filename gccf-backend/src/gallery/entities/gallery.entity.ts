@@ -21,15 +21,8 @@ export class Gallery {
   @Column()
   imageUrl: string;
 
-  @Index()
-  @Column({ nullable: true })
-  category: string;
-
-  @Column({ nullable: true })
-  event: string;
-
   @Column('simple-array', { nullable: true })
-  tags: string[];
+  images: string[];
 
   @Index()
   @Column({ default: true })

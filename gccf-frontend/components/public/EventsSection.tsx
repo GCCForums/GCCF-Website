@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCompletedEvents } from "@/lib/hooks";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaArrowRight, FaHistory } from "react-icons/fa";
+import { stripHtml } from "@/lib/html-utils";
 
 export default function EventsSection() {
   const { data: events = [], isLoading, error } = useCompletedEvents();
@@ -137,7 +138,7 @@ export default function EventsSection() {
                         {event.title}
                       </h3>
                       <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">
-                        {event.shortDescription || event.description}
+                        {stripHtml(event.shortDescription || event.description)}
                       </p>
                     </div>
 
