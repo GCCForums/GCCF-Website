@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -52,6 +53,9 @@ export class EventsService {
   }
 
   async findOne(id: string): Promise<Event> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
     const event = await this.eventsRepository.findOne({ where: { id } });
     if (!event) {
       throw new NotFoundException(`Event with ID ${id} not found`);
@@ -84,6 +88,9 @@ export class EventsService {
   }
 
   async remove(id: string): Promise<void> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
     const result = await this.eventsRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Event with ID ${id} not found`);

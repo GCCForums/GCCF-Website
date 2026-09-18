@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { Popup } from './entities/popup.entity';
 import { CreatePopupDto } from './dto/create-popup.dto';
 import { UpdatePopupDto } from './dto/update-popup.dto';
@@ -38,6 +39,9 @@ export class PopupsService {
   }
 
   async findOne(id: string): Promise<Popup> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Popup with ID ${id} not found`);
+    }
     const popup = await this.popupsRepository.findOne({ where: { id } });
     if (!popup) {
       throw new NotFoundException(`Popup with ID ${id} not found`);
@@ -65,7 +69,12 @@ export class PopupsService {
   }
 
   async remove(id: string): Promise<void> {
-    const popup = await this.findOne(id);
-    await this.popupsRepository.remove(popup);
+    if (!id || !isUUID(id)) {
+      return;
+    }
+    const popup = await this.popupsRepository.findOne({ where: { id } });
+    if (popup) {
+      await this.popupsRepository.remove(popup);
+    }
   }
 }

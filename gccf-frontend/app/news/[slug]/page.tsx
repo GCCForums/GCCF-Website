@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useNewsBySlug } from "@/lib/hooks";
+import LogoLoader from "@/components/public/LogoLoader";
 import {
   FaCalendarAlt,
   FaUser,
@@ -34,9 +35,8 @@ export default function NewsDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-[#1d3c68] animate-spin" />
-        <p className="mt-4 text-sm font-medium text-slate-500">Loading article...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 py-24">
+        <LogoLoader size="md" text="Loading News Article..." />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { TeamMember } from './entities/team-member.entity';
 import { CreateTeamMemberDto } from './dto/create-team-member.dto';
 import { UpdateTeamMemberDto } from './dto/update-team-member.dto';
@@ -29,6 +30,9 @@ export class TeamService {
   }
 
   async findOne(id: string): Promise<TeamMember> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Team member with ID ${id} not found`);
+    }
     const member = await this.teamRepository.findOne({ where: { id } });
     if (!member) {
       throw new NotFoundException(`Team member with ID ${id} not found`);
@@ -46,8 +50,13 @@ export class TeamService {
   }
 
   async remove(id: string): Promise<void> {
-    const member = await this.findOne(id);
-    await this.teamRepository.remove(member);
+    if (!id || !isUUID(id)) {
+      return;
+    }
+    const member = await this.teamRepository.findOne({ where: { id } });
+    if (member) {
+      await this.teamRepository.remove(member);
+    }
   }
 
   async reorder(ids: string[]): Promise<TeamMember[]> {

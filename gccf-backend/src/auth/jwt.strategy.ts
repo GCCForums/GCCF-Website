@@ -19,14 +19,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
-    if (!jwtSecret && process.env.NODE_ENV === 'production') {
-      throw new Error('FATAL: JWT_SECRET environment variable must be set in production!');
+    if (!jwtSecret) {
+      throw new Error('FATAL: JWT_SECRET environment variable must be set!');
     }
 
     super({
       jwtFromRequest: cookieOrHeaderExtractor,
       ignoreExpiration: false,
-      secretOrKey: jwtSecret || 'gccf-dev-fallback-secret-never-use-in-prod',
+      secretOrKey: jwtSecret,
     });
   }
 

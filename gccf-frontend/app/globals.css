@@ -44,6 +44,25 @@ body {
   animation: pulse-subtle 4s ease-in-out infinite;
 }
 
+@keyframes loading-bar {
+  0% {
+    left: -50%;
+    width: 30%;
+  }
+  50% {
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+.animate-loading-bar {
+  position: absolute;
+  animation: loading-bar 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 
 /* ===== Admin Dashboard Styles ===== */
 .admin-dashboard {

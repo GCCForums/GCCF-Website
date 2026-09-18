@@ -147,16 +147,21 @@ export default function PopupManager() {
     e.preventDefault();
     let updated: PopupItem[];
 
+    const isUUID = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+
     if (editingPopup) {
-      try {
-        await popupsApi.update(editingPopup.id, {
-          name: formName,
-          imageUrl: formImageUrl,
-          delaySeconds: formDelaySeconds,
-          enabled: formEnabled,
-        });
-      } catch (err) {
-        console.warn("Backend update popup failed, updating local state", err);
+      if (isUUID(editingPopup.id)) {
+        try {
+          await popupsApi.update(editingPopup.id, {
+            name: formName,
+            imageUrl: formImageUrl,
+            delaySeconds: formDelaySeconds,
+            enabled: formEnabled,
+          });
+        } catch (err) {
+          console.warn("Backend update popup failed, updating local state", err);
+        }
       }
       updated = popups.map((p) => {
         if (p.id === editingPopup.id) {
@@ -205,8 +210,11 @@ export default function PopupManager() {
   };
 
   const handleToggleActive = async (id: string) => {
+    const isUUID = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+
     const target = popups.find((p) => p.id === id);
-    if (target) {
+    if (target && isUUID(id)) {
       try {
         await popupsApi.toggle(id, !target.enabled);
       } catch (err) {
@@ -230,10 +238,15 @@ export default function PopupManager() {
 
   const handleDelete = async () => {
     if (!deleteTargetId) return;
-    try {
-      await popupsApi.delete(deleteTargetId);
-    } catch (err) {
-      console.warn("Backend delete popup failed, updating local state", err);
+    const isUUID = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+
+    if (isUUID(deleteTargetId)) {
+      try {
+        await popupsApi.delete(deleteTargetId);
+      } catch (err) {
+        console.warn("Backend delete popup failed, updating local state", err);
+      }
     }
     const updated = popups.filter((p) => p.id !== deleteTargetId);
     setPopups(updated);

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { Membership } from './entities/membership.entity';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
@@ -40,6 +41,9 @@ export class MembershipsService {
   }
 
   async findOne(id: string): Promise<Membership> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
     const membership = await this.membershipsRepository.findOne({
       where: { id },
     });
@@ -87,6 +91,9 @@ export class MembershipsService {
   }
 
   async remove(id: string): Promise<void> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
     const result = await this.membershipsRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Membership with ID ${id} not found`);

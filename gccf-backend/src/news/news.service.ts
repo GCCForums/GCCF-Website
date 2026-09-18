@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { News } from './entities/news.entity';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
@@ -38,6 +39,9 @@ export class NewsService {
   }
 
   async findOne(id: string): Promise<News> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`News with ID ${id} not found`);
+    }
     const news = await this.newsRepository.findOne({ where: { id } });
     if (!news) {
       throw new NotFoundException(`News with ID ${id} not found`);
@@ -54,11 +58,15 @@ export class NewsService {
   }
 
   async update(id: string, updateNewsDto: UpdateNewsDto): Promise<News> {
+    await this.findOne(id);
     await this.newsRepository.update(id, updateNewsDto);
     return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
+    if (!id || !isUUID(id)) {
+      throw new NotFoundException(`News with ID ${id} not found`);
+    }
     const result = await this.newsRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`News with ID ${id} not found`);

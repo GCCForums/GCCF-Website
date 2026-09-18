@@ -829,19 +829,22 @@ export default function AdminComponent() {
     if (!showDeleteConfirm) return;
     setLoading(true);
     try {
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(showDeleteConfirm.id);
       if (showDeleteConfirm.type === "news") {
-        await newsApi.delete(showDeleteConfirm.id);
+        if (isValidUUID) await newsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "events") {
-        await eventsApi.delete(showDeleteConfirm.id);
+        if (isValidUUID) await eventsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "gallery") {
-        await galleryApi.delete(showDeleteConfirm.id);
+        if (isValidUUID) await galleryApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "memberships") {
-        await membershipsApi.delete(showDeleteConfirm.id);
+        if (isValidUUID) await membershipsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === "teams") {
-        try {
-          await teamApi.delete(showDeleteConfirm.id);
-        } catch (e) {
-          console.warn("Backend team delete failed", e);
+        if (isValidUUID) {
+          try {
+            await teamApi.delete(showDeleteConfirm.id);
+          } catch (e) {
+            console.warn("Backend team delete failed", e);
+          }
         }
         const targetMember = teamList.find((m) => m.id === showDeleteConfirm.id);
         const updated = teamList.filter((m) => m.id !== showDeleteConfirm.id);

@@ -15,29 +15,26 @@ export class AdminSeeder implements OnModuleInit {
 
   private async seedAdmin() {
     const adminRepository = this.dataSource.getRepository(Admin);
-    const initialUsername = process.env.ADMIN_INITIAL_USERNAME || 'admin';
+    const initialUsername = process.env.ADMIN_INITIAL_USERNAME;
     const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
 
-    if (!initialPassword) {
-      if (process.env.NODE_ENV === 'production') {
-        this.logger.error(
-          'CRITICAL: ADMIN_INITIAL_PASSWORD not configured in production environment! Skipping automatic admin account seeding for safety.',
-        );
-        return;
-      }
-      this.logger.warn(
-        'SECURITY NOTICE: Using development default password for admin. Set ADMIN_INITIAL_PASSWORD in production environment.',
-      );
-    }
+    const adminCount = await adminRepository.count();
 
-    const passwordToUse = initialPassword || 'gccf123';
+    if (!initialUsername || !initialPassword) {
+      if (adminCount === 0) {
+        this.logger.warn(
+          'SECURITY NOTICE: No admin accounts exist in the database and ADMIN_INITIAL_USERNAME / ADMIN_INITIAL_PASSWORD are not configured in environment variables. Define them in your .env file to create the initial admin.',
+        );
+      }
+      return;
+    }
 
     const existingAdmin = await adminRepository.findOne({
       where: { username: initialUsername },
     });
 
     if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(passwordToUse, 10);
+      const hashedPassword = await bcrypt.hash(initialPassword, 10);
       const admin = adminRepository.create({
         username: initialUsername,
         password: hashedPassword,
