@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Delete,
   Query,
   UseGuards,
   ParseIntPipe,
@@ -25,5 +26,15 @@ export class AuditController {
     @Query('actor') actor?: string,
   ) {
     return this.auditService.findAll(page, limit, entity, actor);
+  }
+
+  @Delete('prune')
+  async pruneLogs() {
+    const deletedCount = await this.auditService.pruneOldLogs();
+    return {
+      success: true,
+      deletedCount,
+      message: `Pruned ${deletedCount} audit log entries older than 30 days`,
+    };
   }
 }

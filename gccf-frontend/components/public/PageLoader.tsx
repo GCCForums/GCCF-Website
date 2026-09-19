@@ -11,12 +11,12 @@ export default function PageLoader() {
     // Reveal content after brief initial load
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 600);
+    }, 200);
 
     // Unmount from DOM after smooth fade-out transition
     const removeTimer = setTimeout(() => {
       setShouldRender(false);
-    }, 1100);
+    }, 600);
 
     return () => {
       clearTimeout(timer);

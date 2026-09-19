@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useNewsBySlug } from "@/lib/hooks";
 import LogoLoader from "@/components/public/LogoLoader";
 import { RichTextContent } from "@/components/common/RichTextContent";
@@ -108,10 +109,13 @@ export default function NewsDetailPage() {
         {/* Background Cover Image with Brand Overlay */}
         <div className="absolute inset-0 z-0">
           {news.featuredImage && (
-            <img
+            <Image
               src={news.featuredImage}
               alt={news.title}
-              className="w-full h-full object-cover object-center opacity-25 blur-xs scale-105"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center opacity-25 blur-xs scale-105"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#1d3c68] via-[#1d3c68]/85 to-[#244b82]/60" />
@@ -194,11 +198,13 @@ export default function NewsDetailPage() {
 
           {/* Main Featured Image Display */}
           {news.featuredImage && (
-            <div className="mb-10 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-[480px]">
-              <img
+            <div className="relative mb-10 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 h-[480px]">
+              <Image
                 src={news.featuredImage}
                 alt={news.title}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 800px"
+                className="object-cover"
               />
             </div>
           )}
@@ -256,10 +262,12 @@ export default function NewsDetailPage() {
                   onClick={() => setSelectedImageIndex(index)}
                   className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#3d73bd] cursor-pointer shadow-xs hover:shadow-md transition-all"
                 >
-                  <img
+                  <Image
                     src={image}
                     alt={`${news.title} photo ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover group-hover:scale-108 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
                     <span>Enlarge</span>

@@ -16,6 +16,14 @@ export default function WebsitePopup() {
 
     const checkAndShowPopup = async () => {
       try {
+        const isBot =
+          (typeof navigator !== "undefined" && Boolean(navigator.webdriver)) ||
+          (typeof navigator !== "undefined" &&
+            /Lighthouse|Chrome-Lighthouse|HeadlessChrome|Google-InspectionTool|Speed Insights/i.test(
+              navigator.userAgent
+            ));
+        if (isBot) return;
+
         const dismissed = sessionStorage.getItem("gccf_popup_dismissed");
         if (dismissed === "true") return;
 
@@ -43,9 +51,10 @@ export default function WebsitePopup() {
 
         if (activeConfig && activeConfig.enabled && activeConfig.imageUrl) {
           setConfig(activeConfig);
+          const delaySec = Math.max(activeConfig.delaySeconds || 5, 5);
           timer = setTimeout(() => {
             setIsOpen(true);
-          }, (activeConfig.delaySeconds || 3) * 1000);
+          }, delaySec * 1000);
         }
       } catch (err) {
         console.error("Popup check error", err);

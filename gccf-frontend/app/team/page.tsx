@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Mail, Linkedin } from "lucide-react";
 import { TeamMember } from "@/components/admin/types";
 
@@ -93,10 +94,12 @@ export default function TeamPage() {
               {/* Photo Area */}
               <div className="relative h-64 w-full bg-slate-100 overflow-hidden">
                 {member.image ? (
-                  <img
+                  <Image
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = "none";
                     }}

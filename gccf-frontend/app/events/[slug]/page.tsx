@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useEventBySlug } from "@/lib/hooks";
 import LogoLoader from "@/components/public/LogoLoader";
 import { RichTextContent } from "@/components/common/RichTextContent";
@@ -108,9 +109,12 @@ export default function EventDetailPage() {
         {/* Background Image with Brand Overlay */}
         <div className="absolute inset-0 z-0">
           {event.mainImage && (
-            <img
+            <Image
               src={event.mainImage}
               alt={event.title}
+              fill
+              priority
+              sizes="100vw"
               className="w-full h-full object-cover object-center opacity-25 blur-xs scale-105"
             />
           )}
@@ -300,13 +304,12 @@ export default function EventDetailPage() {
                   onClick={() => setSelectedImageIndex(index)}
                   className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#3d73bd] cursor-pointer"
                 >
-                  <img
+                  <Image
                     src={image}
                     alt={`${event.title} photo ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover group-hover:scale-108 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
                     <span>View Image</span>
@@ -368,14 +371,15 @@ export default function EventDetailPage() {
                 >
                   <div className="w-full flex-1 flex items-center justify-center py-2">
                     {sp.logo ? (
-                      <img
-                        src={sp.logo}
-                        alt={sp.name || "Sponsor Logo"}
-                        className="max-h-14 max-w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
-                      />
+                      <div className="relative w-full h-14">
+                        <Image
+                          src={sp.logo}
+                          alt={sp.name || "Sponsor Logo"}
+                          fill
+                          sizes="150px"
+                          className="object-contain"
+                        />
+                      </div>
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-sm">
                         {sp.name ? sp.name.charAt(0) : "S"}

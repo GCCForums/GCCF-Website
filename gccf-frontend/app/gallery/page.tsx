@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useGallery } from "@/lib/hooks";
 import { X, ChevronLeft, ChevronRight, Images, ZoomIn, Camera } from "lucide-react";
 import PageHero from "@/components/public/PageHero";
@@ -138,11 +139,12 @@ export default function GalleryPage() {
                 >
                   {/* Photo Container */}
                   <div className="relative w-full aspect-[16/10] sm:aspect-[4/3] overflow-hidden bg-slate-900">
-                    <img
+                    <Image
                       src={coverUrl}
                       alt={image.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                     />
 
                     {/* Top Floating Badge */}

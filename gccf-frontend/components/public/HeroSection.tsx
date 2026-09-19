@@ -1,21 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { HeroSectionContent } from "@/lib/api";
-import CyberThreatGlobe from "./CyberThreatGlobe";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
+
+const CyberThreatGlobe = dynamic(() => import("./CyberThreatGlobe"), {
+  ssr: false,
+  loading: () => (
+    <div className="relative flex flex-col items-center select-none w-full max-w-[480px]">
+      <div className="relative w-full aspect-square flex items-center justify-center">
+        <div className="w-64 h-64 rounded-full bg-gradient-to-br from-[#1d3c68]/15 to-[#3d73bd]/10 animate-pulse" />
+      </div>
+      <div className="mt-2 h-[38px] w-full max-w-[340px] rounded-full bg-slate-900/10 animate-pulse" />
+    </div>
+  ),
+});
 
 interface HeroSectionProps {
   content?: HeroSectionContent;
 }
 
 export default function HeroSection({ content }: HeroSectionProps) {
-  // All text strictly from dashboard — render nothing if no content
-  if (!content) return null;
-
-  const badge = content.badge || "";
-  const title = content.title || "";
-  const titleHighlight = content.titleHighlight || "";
-  const subtitle = content.subtitle || "";
+  const activeContent = content || DEFAULT_HOMEPAGE_CONTENT.hero;
+  const badge = activeContent.badge || "";
+  const title = activeContent.title || "";
+  const titleHighlight = activeContent.titleHighlight || "";
+  const subtitle = activeContent.subtitle || "";
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-white overflow-hidden pt-32 sm:pt-36 pb-16">
@@ -70,22 +81,22 @@ export default function HeroSection({ content }: HeroSectionProps) {
             )}
 
             {/* Action Buttons from Dashboard */}
-            {(content.primaryButtonText || content.secondaryButtonText) && (
+            {(activeContent.primaryButtonText || activeContent.secondaryButtonText) && (
               <div className="flex flex-wrap items-center gap-4 mt-8">
-                {content.primaryButtonText && (
+                {activeContent.primaryButtonText && (
                   <Link
-                    href={content.primaryButtonUrl || "/membership"}
+                    href={activeContent.primaryButtonUrl || "/membership"}
                     className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#2d5fa5] shadow-md hover:shadow-lg transition-all duration-200"
                   >
-                    {content.primaryButtonText}
+                    {activeContent.primaryButtonText}
                   </Link>
                 )}
-                {content.secondaryButtonText && (
+                {activeContent.secondaryButtonText && (
                   <Link
-                    href={content.secondaryButtonUrl || "/events"}
+                    href={activeContent.secondaryButtonUrl || "/events"}
                     className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#3d73bd] hover:text-[#3d73bd] shadow-2xs hover:shadow-xs transition-all duration-200"
                   >
-                    {content.secondaryButtonText}
+                    {activeContent.secondaryButtonText}
                   </Link>
                 )}
               </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { FaqSectionContent } from "@/lib/api";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
 
 interface FaqSectionProps {
   content?: FaqSectionContent;
@@ -10,8 +11,9 @@ interface FaqSectionProps {
 
 export default function FaqSection({ content }: FaqSectionProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const activeContent = content || DEFAULT_HOMEPAGE_CONTENT.faq;
 
-  if (!content || !content.items || content.items.length === 0) {
+  if (!activeContent || !activeContent.items || activeContent.items.length === 0) {
     return null;
   }
 
@@ -19,9 +21,9 @@ export default function FaqSection({ content }: FaqSectionProps) {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const badge = content.badge || "";
-  const title = content.title || "";
-  const faqs = content.items;
+  const badge = activeContent.badge || "";
+  const title = activeContent.title || "";
+  const faqs = activeContent.items;
 
   return (
     <section className="py-24 px-6 bg-white">

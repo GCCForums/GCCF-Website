@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCompletedEvents } from "@/lib/hooks";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaArrowRight, FaHistory } from "react-icons/fa";
 import { stripHtml } from "@/lib/html-utils";
@@ -40,21 +41,11 @@ export default function EventsSection() {
 
         {/* Loading State Skeleton */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((n) => (
-              <div
-                key={n}
-                className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-xs animate-pulse"
-              >
-                <div className="h-48 bg-slate-200" />
-                <div className="p-6 space-y-4">
-                  <div className="h-4 bg-slate-200 rounded w-1/3" />
-                  <div className="h-6 bg-slate-200 rounded w-3/4" />
-                  <div className="h-4 bg-slate-200 rounded w-full" />
-                  <div className="h-4 bg-slate-200 rounded w-2/3" />
-                </div>
-              </div>
-            ))}
+          <div className="bg-white rounded-3xl p-12 sm:p-16 text-center border border-slate-200/80 shadow-xs max-w-xl mx-auto animate-pulse">
+            <div className="w-14 h-14 rounded-full bg-slate-200 mx-auto mb-4" />
+            <div className="h-6 bg-slate-200 rounded w-1/2 mx-auto mb-3" />
+            <div className="h-4 bg-slate-200 rounded w-3/4 mx-auto mb-6" />
+            <div className="h-9 bg-slate-200 rounded-full w-44 mx-auto" />
           </div>
         )}
 
@@ -104,10 +95,12 @@ export default function EventsSection() {
                   className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-slate-200/70 flex flex-col group"
                 >
                   <div className="h-52 overflow-hidden bg-slate-100 relative">
-                    <img
+                    <Image
                       src={event.mainImage || "/images/event1.jpg"}
                       alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         // Fallback image if remote url fails
                         (e.target as HTMLImageElement).src =

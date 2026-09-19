@@ -2,6 +2,7 @@
 
 import { useNews } from "@/lib/hooks";
 import Link from "next/link";
+import Image from "next/image";
 import { FaCalendarAlt, FaArrowRight, FaNewspaper, FaUser } from "react-icons/fa";
 import PageHero from "@/components/public/PageHero";
 import { stripHtml } from "@/lib/html-utils";
@@ -69,7 +70,7 @@ export default function NewsPage() {
                 {/* Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-slate-100">
                   {news.featuredImage || (news.galleryImages && news.galleryImages.length > 0) ? (
-                    <img
+                    <Image
                       src={
                         news.featuredImage ||
                         (Array.isArray(news.galleryImages)
@@ -77,7 +78,9 @@ export default function NewsPage() {
                           : String(news.galleryImages).split(/[,\n]/)[0])
                       }
                       alt={news.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] flex items-center justify-center text-white/40">

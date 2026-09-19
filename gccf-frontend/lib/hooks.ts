@@ -6,6 +6,7 @@ import { CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { CreateEventDto, UpdateEventDto } from "@/types/events";
 import { CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
 import { CreateMembershipDto, UpdateMembershipDto } from "@/types/membership";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
 
 export function useNews() {
   return useQuery({
@@ -241,7 +242,8 @@ export function useHomepageContent() {
   return useQuery({
     queryKey: ["homepage", "content"],
     queryFn: homepageApi.get,
-    staleTime: 1000 * 10, // 10 seconds
-    refetchOnWindowFocus: true,
+    initialData: DEFAULT_HOMEPAGE_CONTENT,
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnWindowFocus: false,
   });
 }

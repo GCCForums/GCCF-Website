@@ -30,8 +30,8 @@ describe('Security & Audit Governance (e2e)', () => {
   }, 30000);
 
   it('POST /auth/login returns HttpOnly admin_access_token cookie and allows access to audit logs', async () => {
-    const initialUsername = process.env.ADMIN_INITIAL_USERNAME || 'admin';
-    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || 'gccf123';
+    const initialUsername = process.env.ADMIN_INITIAL_USERNAME ;
+    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD ;
 
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')

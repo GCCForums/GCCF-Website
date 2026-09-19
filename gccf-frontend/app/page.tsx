@@ -18,6 +18,7 @@ import GallerySection from "@/components/public/GallerySection";
 import TestimonialsSection from "@/components/public/TestimonialsSection";
 import FaqSection from "@/components/public/FaqSection";
 import { useHomepageContent } from "@/lib/hooks";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
 
 // Icon name -> component mapping for dynamic rendering
 const ICON_MAP: Record<string, IconType> = {
@@ -30,7 +31,8 @@ const ICON_MAP: Record<string, IconType> = {
 };
 
 export default function HomePage() {
-  const { data: homepageContent } = useHomepageContent();
+  const { data } = useHomepageContent();
+  const homepageContent = data || DEFAULT_HOMEPAGE_CONTENT;
 
   // Services section from dashboard
   const servicesContent = homepageContent?.services;

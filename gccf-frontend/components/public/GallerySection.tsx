@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useVisibleGallery } from "@/lib/hooks";
 import { FaImages, FaArrowRight, FaTimes, FaExpandAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Gallery } from "@/types/gallery";
@@ -92,10 +93,12 @@ export default function GallerySection() {
                   onClick={() => openModal(item)}
                   className="group relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-xs hover:shadow-xl transition-all duration-300"
                 >
-                  <img
+                  <Image
                     src={coverUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
 
                   {/* Top photo count badge */}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 interface LogoLoaderProps {
   size?: "sm" | "md" | "lg";
@@ -17,6 +18,7 @@ export default function LogoLoader({
   const ringSize = isSm ? "w-16 h-16" : isLg ? "w-28 h-28" : "w-20 h-20";
   const badgeSize = isSm ? "w-12 h-12" : isLg ? "w-20 h-20" : "w-14 h-14";
   const iconSize = isSm ? "w-7 h-7" : isLg ? "w-12 h-12" : "w-9 h-9";
+  const imgSize = isSm ? 28 : isLg ? 48 : 36;
 
   return (
     <div className="flex flex-col items-center justify-center select-none" role="status" aria-label="Loading">
@@ -38,9 +40,11 @@ export default function LogoLoader({
         <div
           className={`relative rounded-full bg-white shadow-xl shadow-[#1d3c68]/15 border border-slate-100 flex items-center justify-center ${badgeSize}`}
         >
-          <img
+          <Image
             src="/FAVICON.png"
             alt="GCCF Logo"
+            width={imgSize}
+            height={imgSize}
             className={`${iconSize} object-contain transition-transform duration-700 animate-pulse`}
           />
         </div>

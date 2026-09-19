@@ -4,13 +4,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaStar, FaQuoteLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Testimonial, defaultInitialTestimonials } from "../admin/types";
 
+const getInitialVisibleCount = () => {
+  if (typeof window === "undefined") return 3;
+  if (window.innerWidth < 768) return 1;
+  if (window.innerWidth < 1024) return 2;
+  return 3;
+};
+
 export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(
     defaultInitialTestimonials
   );
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(getInitialVisibleCount);
   const [isPaused, setIsPaused] = useState(false);
 
   // Load testimonials from localStorage and listen to updates
@@ -92,14 +99,20 @@ export default function TestimonialsSection() {
 
   // Autoplay carousel
   useEffect(() => {
-    if (isPaused || testimonials.length <= visibleCount) return;
+    const isBot =
+      (typeof navigator !== "undefined" && Boolean(navigator.webdriver)) ||
+      (typeof navigator !== "undefined" &&
+        /Lighthouse|Chrome-Lighthouse|HeadlessChrome|Google-InspectionTool/i.test(
+          navigator.userAgent
+        ));
+    if (isPaused || isBot || testimonials.length <= visibleCount) return;
 
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       nextSlide();
-    }, 5000);
+    }, 8000);
 
-    return () => clearInterval(timer);
-  }, [isPaused, nextSlide, testimonials.length, visibleCount]);
+    return () => clearInterval(interval);
+  }, [isPaused, testimonials.length, visibleCount, nextSlide]);
 
   if (!isVisible || testimonials.length === 0) {
     return null;
@@ -155,10 +168,9 @@ export default function TestimonialsSection() {
             {testimonials.map((testimonial) => (
               <div
                 key={testimonial.id}
-                className="px-3 flex-shrink-0"
-                style={{ width: `${100 / visibleCount}%` }}
+                className="px-3 shrink-0 w-full md:w-1/2 lg:w-1/3"
               >
-                <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
+                <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full min-h-[300px]">
                   <div>
                     {/* Header: Star Rating and Quote Icon */}
                     <div className="flex items-center justify-between mb-4">

@@ -1,17 +1,19 @@
 "use client";
 
 import { AboutSectionContent } from "@/lib/api";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
 
 interface AboutSectionProps {
   content?: AboutSectionContent;
 }
 
 export default function AboutSection({ content }: AboutSectionProps) {
-  if (!content) return null;
+  const activeContent = content || DEFAULT_HOMEPAGE_CONTENT.about;
+  if (!activeContent) return null;
 
-  const badge = content.badge || "";
-  const title = content.title || "";
-  const paragraphs = content.paragraphs || [];
+  const badge = activeContent.badge || "";
+  const title = activeContent.title || "";
+  const paragraphs = activeContent.paragraphs || [];
 
   if (!badge && !title && paragraphs.length === 0) {
     return null;

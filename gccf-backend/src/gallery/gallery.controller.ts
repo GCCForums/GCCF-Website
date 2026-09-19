@@ -45,6 +45,8 @@ export class GalleryController {
     return result;
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30000)
   @Get()
   findAll() {
     return this.galleryService.findAll();

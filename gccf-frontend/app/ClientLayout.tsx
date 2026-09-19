@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import NavbarWrapper from "@/components/public/NavbarWrapper";
 import Footer from "@/components/public/Footer";
 import WebsitePopup from "@/components/public/WebsitePopup";
-import PageLoader from "@/components/public/PageLoader";
 
 const ROUTE_TITLES: Record<string, string> = {
   "/": "Global Cybersecurity Community Forums",
@@ -49,7 +48,6 @@ export default function ClientLayout({
 
   return (
     <>
-      <PageLoader />
       {!isAdminRoute && <NavbarWrapper />}
       <main>{children}</main>
       {!isAdminRoute && <Footer />}

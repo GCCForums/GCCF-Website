@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   FaBars,
   FaTimes,
@@ -123,10 +124,13 @@ export default function Navbar() {
         {/* Brand Logo with Image (Prominent & Larger) */}
         <div className="flex items-center shrink-0">
           <Link href="/" className="flex items-center group">
-            <img
+            <Image
               src="/gccf logo.png"
               alt="Global Cybersecurity Community Forum (GCCF)"
-              className="h-14 sm:h-16 md:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              width={200}
+              height={80}
+              priority
+              className="h-14 sm:h-16 md:h-20 w-auto aspect-[200/80] object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </Link>
         </div>

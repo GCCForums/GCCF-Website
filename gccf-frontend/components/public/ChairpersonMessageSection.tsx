@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { FaQuoteLeft } from "react-icons/fa";
 import type { ChairpersonMessageContent } from "@/lib/api";
 
@@ -11,8 +12,8 @@ interface ChairpersonMessageSectionProps {
 export default function ChairpersonMessageSection({
   content,
 }: ChairpersonMessageSectionProps) {
-  // If admin explicitly set isActive to false, do not render
-  if (content && content.isActive === false) {
+  // If not provided or admin explicitly set isActive to false, do not render
+  if (!content || content.isActive === false) {
     return null;
   }
 
@@ -207,10 +208,12 @@ export default function ChairpersonMessageSection({
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-[4px] border-r-[4px] border-[#3d73bd] rounded-br-lg pointer-events-none" />
 
                   <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden bg-slate-100">
-                    <img
+                    <Image
                       src={image}
                       alt={chairpersonName ? `Portrait of ${chairpersonName}` : "CEO Portrait"}
-                      className="w-full h-full object-cover object-top transition-transform duration-700 ease-out hover:scale-105"
+                      fill
+                      sizes="(max-width: 640px) 100vw, 336px"
+                      className="object-cover object-top transition-transform duration-700 ease-out hover:scale-105"
                     />
                   </div>
                 </div>

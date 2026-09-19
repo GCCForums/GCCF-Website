@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEvents } from "@/lib/hooks";
 import Link from "next/link";
+import Image from "next/image";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaArrowRight } from "react-icons/fa";
 import PageHero from "@/components/public/PageHero";
 import { stripHtml } from "@/lib/html-utils";
@@ -108,10 +109,12 @@ export default function EventsPage() {
               >
                 {/* Event Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-                  <img
+                  <Image
                     src={event.mainImage}
                     alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <span
                     className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold capitalize backdrop-blur-md shadow-xs border ${

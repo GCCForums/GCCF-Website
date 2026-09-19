@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   FaTwitter,
   FaLinkedinIn,
@@ -14,9 +15,11 @@ export default function Footer() {
           {/* Brand & Logo in White Rounded Rectangle */}
           <div className="md:col-span-6 space-y-4">
             <div className="inline-block p-3 sm:p-4 bg-white rounded-2xl shadow-xl border border-white/60">
-              <img
+              <Image
                 src="/gccf logo.png"
                 alt="Global Cybersecurity Community Forum"
+                width={160}
+                height={56}
                 className="h-12 sm:h-14 w-auto object-contain"
               />
             </div>
