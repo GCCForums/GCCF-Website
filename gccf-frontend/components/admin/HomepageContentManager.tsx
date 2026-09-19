@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   FaSave,
   FaUndo,
@@ -35,6 +36,7 @@ import {
 import { ImageUploadInput } from "./ImageUploadInput";
 
 export default function HomepageContentManager() {
+  const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<
     "hero" | "metrics" | "chairperson" | "about" | "services" | "testimonials" | "faq"
   >("hero");
@@ -230,6 +232,7 @@ export default function HomepageContentManager() {
         faq,
         services,
       });
+      await queryClient.invalidateQueries({ queryKey: ["homepage", "content"] });
       setSuccessMessage("Homepage content saved successfully! Public pages updated.");
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err: any) {
@@ -253,6 +256,7 @@ export default function HomepageContentManager() {
         if (resetData.services) setServices(resetData.services);
         if (resetData.faq) setFaq(resetData.faq);
       }
+      await queryClient.invalidateQueries({ queryKey: ["homepage", "content"] });
       setShowResetConfirm(false);
       setSuccessMessage("Homepage content reset to default GCCF template.");
       setTimeout(() => setSuccessMessage(null), 4000);

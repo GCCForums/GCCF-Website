@@ -44,12 +44,29 @@ export class AdminSeeder implements OnModuleInit {
       });
       await adminRepository.save(admin);
       this.logger.log(`Super Admin user '${initialUsername}' initialized successfully.`);
-    } else if (existingAdmin.role !== 'super_admin') {
-      existingAdmin.role = 'super_admin';
-      existingAdmin.permissions = ['all'];
-      existingAdmin.isActive = true;
-      await adminRepository.save(existingAdmin);
-      this.logger.log(`Existing admin '${initialUsername}' upgraded to super_admin.`);
+    } else {
+      let needsSave = false;
+      const isPasswordMatching = await bcrypt.compare(
+        initialPassword,
+        existingAdmin.password,
+      );
+      if (!isPasswordMatching) {
+        existingAdmin.password = await bcrypt.hash(initialPassword, 10);
+        needsSave = true;
+      }
+      if (existingAdmin.role !== 'super_admin') {
+        existingAdmin.role = 'super_admin';
+        existingAdmin.permissions = ['all'];
+        needsSave = true;
+      }
+      if (existingAdmin.isActive === false) {
+        existingAdmin.isActive = true;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await adminRepository.save(existingAdmin);
+        this.logger.log(`Super Admin user '${initialUsername}' credentials/roles synchronized.`);
+      }
     }
   }
 }

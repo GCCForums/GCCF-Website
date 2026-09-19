@@ -241,9 +241,9 @@ export function useDeleteMembership() {
 export function useHomepageContent() {
   return useQuery({
     queryKey: ["homepage", "content"],
-    queryFn: homepageApi.get,
-    initialData: DEFAULT_HOMEPAGE_CONTENT,
-    staleTime: 1000 * 60, // 1 minute
-    refetchOnWindowFocus: false,
+    queryFn: () => homepageApi.get(),
+    placeholderData: DEFAULT_HOMEPAGE_CONTENT,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }

@@ -530,7 +530,7 @@ export interface HomepageContent {
 }
 
 export const homepageApi = {
-  get: () => fetchApi<HomepageContent>('/homepage'),
+  get: () => fetchApi<HomepageContent>('/homepage', { cache: 'no-store' }),
   update: (data: Partial<HomepageContent>) =>
     fetchApi<HomepageContent>('/homepage', {
       method: 'PUT',

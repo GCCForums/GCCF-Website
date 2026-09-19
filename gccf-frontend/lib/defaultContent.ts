@@ -43,7 +43,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     title: "Message from the CEO",
     message:
       "At GCCF, our conviction is that no individual, organization, or nation can face the rapidly mutating landscape of cyber threats in isolation. By cultivating a collaborative ecosystem of researchers, industry practitioners, and policymakers, we transform vulnerability into proactive collective defense. We welcome you to unite with our mission, share your expertise, and build an open, secure digital future for everyone.",
-    isActive: false,
+    isActive: true,
     signatureText: "",
     chairpersonName: "Samyog KC",
     chairpersonTitle: "CEO & Executive Director, GCCF",
