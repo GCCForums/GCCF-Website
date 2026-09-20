@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gccf-website.onrender.com';
 
 export interface UserInfo {
   id: number | string;
@@ -60,7 +60,9 @@ export async function loginAdmin(
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('gccf_admin_user', JSON.stringify(inMemoryUser));
-      localStorage.removeItem('adminToken');
+      if (data.access_token) {
+        localStorage.setItem('adminToken', data.access_token);
+      }
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminName');
       localStorage.removeItem('adminRole');
@@ -88,8 +90,8 @@ export function isAdminLoggedIn(): boolean {
 }
 
 export function getAdminToken(): string | null {
-  // Return null because authentication token is encapsulated in HttpOnly cookie
-  return null;
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('adminToken');
 }
 
 export function getAdminName(): string {
@@ -123,8 +125,13 @@ export async function syncCurrentUserProfile(): Promise<UserInfo | null> {
 
   profileSyncPromise = (async () => {
     try {
+      const token = getAdminToken();
       const res = await fetch(`${API_URL}/auth/me`, {
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       if (!res.ok) {
         inMemoryUser = null;
@@ -154,9 +161,14 @@ export async function syncCurrentUserProfile(): Promise<UserInfo | null> {
 
 export async function logoutAdmin(): Promise<void> {
   try {
+    const token = getAdminToken();
     await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
       credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
   } catch (err) {
     console.error('Failed to call backend logout endpoint', err);

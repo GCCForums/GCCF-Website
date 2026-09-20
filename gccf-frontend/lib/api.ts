@@ -10,7 +10,7 @@ import {
 import { TeamMember, PopupItem } from '@/components/admin/types';
 import { getAdminToken } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gccf-website.onrender.com';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const token = getAdminToken();

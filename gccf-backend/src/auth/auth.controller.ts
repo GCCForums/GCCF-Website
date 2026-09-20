@@ -28,11 +28,16 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto.username, loginDto.password);
 
-    // Secure HttpOnly cookie for session persistence without client-side exposure
+    const isProduction =
+      process.env.NODE_ENV === 'production' ||
+      process.env.RENDER === 'true' ||
+      Boolean(process.env.RENDER_EXTERNAL_URL);
+
+    // Secure HttpOnly cookie for session persistence (supports cross-site Vercel <-> Render)
     res.cookie('admin_access_token', result.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
@@ -43,10 +48,15 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Res({ passthrough: true }) res: Response) {
+    const isProduction =
+      process.env.NODE_ENV === 'production' ||
+      process.env.RENDER === 'true' ||
+      Boolean(process.env.RENDER_EXTERNAL_URL);
+
     res.clearCookie('admin_access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
     });
     return { success: true, message: 'Logged out successfully' };
