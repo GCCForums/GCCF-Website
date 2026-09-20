@@ -12,31 +12,31 @@ export class AuditLog {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
+  @Column()
   actorId: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
+  @Column()
   actorUsername: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column()
   actorRole: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
+  @Column()
   action: string; // e.g. "POST /news", "PATCH /events/2"
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
+  @Column()
   targetEntity: string; // e.g. "news", "events", "admin"
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   targetId: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
   changes: Record<string, any> | null;
 
-  @Column({ type: 'varchar', length: 60, nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   ipAddress: string | null;
 
   @Column({ type: 'text', nullable: true })
