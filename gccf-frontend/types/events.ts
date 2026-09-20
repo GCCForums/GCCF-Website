@@ -1,6 +1,6 @@
 export interface EventSponsorItem {
   id?: string;
-  name: string;
+  name?: string;
   logo: string;
   websiteUrl?: string;
 }

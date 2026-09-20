@@ -268,6 +268,22 @@ export default function EventDetailPage() {
             </span>
           </div>
 
+          {/* Main Event Featured Banner / Poster Image */}
+          {event.mainImage && (
+            <div className="relative mb-8 rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-100 shadow-2xs group">
+              <div className="relative w-full h-[280px] sm:h-[400px] md:h-[480px]">
+                <Image
+                  src={event.mainImage}
+                  alt={event.title}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 950px"
+                  className="object-cover object-center group-hover:scale-[1.01] transition-transform duration-500"
+                />
+              </div>
+            </div>
+          )}
+
           <RichTextContent
             content={event.description}
             className="text-slate-700 text-base leading-relaxed"
@@ -365,19 +381,19 @@ export default function EventDetailPage() {
                 <Wrapper
                   key={sp.id || spIdx}
                   {...linkProps}
-                  className={`group bg-slate-50/70 hover:bg-white rounded-2xl p-4 border border-slate-200/70 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col items-center justify-between text-center min-h-[130px] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(20%-0.8rem)] ${
+                  className={`group bg-slate-50/70 hover:bg-white rounded-2xl p-4 border border-slate-200/70 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[96px] sm:min-h-[104px] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(20%-0.8rem)] ${
                     sp.websiteUrl ? "cursor-pointer" : ""
                   }`}
                 >
-                  <div className="w-full flex-1 flex items-center justify-center py-2">
+                  <div className="w-full flex items-center justify-center py-1">
                     {sp.logo ? (
-                      <div className="relative w-full h-14">
+                      <div className="relative w-full h-12 sm:h-14">
                         <Image
                           src={sp.logo}
                           alt={sp.name || "Sponsor Logo"}
                           fill
                           sizes="150px"
-                          className="object-contain"
+                          className="object-contain group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     ) : (

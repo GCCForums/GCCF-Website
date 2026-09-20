@@ -110,7 +110,7 @@ export default function EventsPage() {
                 {/* Event Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-slate-100">
                   <Image
-                    src={event.mainImage}
+                    src={event.mainImage || "/images/event1.jpg"}
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

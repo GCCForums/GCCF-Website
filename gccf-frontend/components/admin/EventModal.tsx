@@ -9,7 +9,6 @@ import {
   FaPlus,
   FaTrash,
   FaAward,
-  FaBuilding,
   FaGlobe,
   FaUpload,
   FaImage,
@@ -85,7 +84,6 @@ export const EventModal: React.FC<EventModalProps> = ({
       if (updated[tierIndex]) {
         const newSponsor: EventSponsorItem = {
           id: "sp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
-          name: "",
           logo: "",
           websiteUrl: "",
         };
@@ -663,26 +661,7 @@ export const EventModal: React.FC<EventModalProps> = ({
                                 </div>
 
                                 {/* Inputs Grid */}
-                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
-                                  {/* Sponsor Name */}
-                                  <div>
-                                    <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                      Sponsor / Company Name *
-                                    </label>
-                                    <div className="relative">
-                                      <FaBuilding className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]" />
-                                      <input
-                                        type="text"
-                                        placeholder="e.g. Cisco Systems"
-                                        value={sp.name}
-                                        onChange={(e) =>
-                                          handleUpdateSponsor(tIdx, spIdx, "name", e.target.value)
-                                        }
-                                        className="w-full pl-7 pr-2.5 py-1.5 text-xs text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
-                                      />
-                                    </div>
-                                  </div>
-
+                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                                   {/* Logo URL or Upload */}
                                   <div>
                                     <div className="flex items-center justify-between mb-0.5">
