@@ -5,13 +5,26 @@ import Image from "next/image";
 import { Mail, Linkedin } from "lucide-react";
 import { TeamMember } from "@/components/admin/types";
 
-const defaultTeamMembers: TeamMember[] = [
-  
-];
-
 import PageHero from "@/components/public/PageHero";
 import { FaShieldAlt } from "react-icons/fa";
 import { teamApi } from "@/lib/api";
+
+const isLegacyMockMember = (member: any): boolean => {
+  if (!member) return true;
+  const mockIds = ["1", "2", "3", "4", "5", "6"];
+  const mockNames = [
+    "sarah mitchell",
+    "david chen",
+    "maya patel",
+    "james wilson",
+    "aisha rahman",
+    "michael torres",
+  ];
+  return (
+    mockIds.includes(String(member.id)) ||
+    mockNames.includes((member.name || "").toLowerCase().trim())
+  );
+};
 
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -23,7 +36,7 @@ export default function TeamPage() {
     async function loadTeam() {
       try {
         const data = await teamApi.getAll(true);
-        if (isMounted && Array.isArray(data) && data.length > 0) {
+        if (isMounted && Array.isArray(data)) {
           setTeamMembers(data);
           setLoading(false);
           return;
@@ -32,13 +45,14 @@ export default function TeamPage() {
         console.warn("Backend teamApi unavailable, falling back to storage", err);
       }
 
-      // Fallback to localStorage if backend is loading or returned empty
+      // Fallback to localStorage only if backend is unavailable
       try {
         const stored = typeof window !== "undefined" ? localStorage.getItem("gccf_team_members") : null;
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
-            setTeamMembers(parsed);
+          if (Array.isArray(parsed) && isMounted) {
+            const realMembers = parsed.filter((m: TeamMember) => !isLegacyMockMember(m));
+            setTeamMembers(realMembers);
           }
         }
       } catch (e) {
@@ -123,11 +137,11 @@ export default function TeamPage() {
                 {/* Social Icons Overlay: Centered at the bottom of the image with blue gradient, visible only on hover */}
                 {(member.email || member.linkedin) && (
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10 pointer-events-none group-hover:pointer-events-auto">
-                    <div className="flex items-center gap-1.5 p-1.5 px-3 rounded-full bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9] text-white shadow-lg shadow-[#1d3c68]/30 border border-white/20 backdrop-blur-xs">
+                    <div className="flex items-center gap-1.5 p-1.5 px-3 rounded-xl bg-gradient-to-r from-[#1d3c68] via-[#3d73bd] to-[#5a8fd9] text-white shadow-lg shadow-[#1d3c68]/30 border border-white/20 backdrop-blur-xs">
                       {member.email && (
                         <a
                           href={`mailto:${member.email}`}
-                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                           title={member.email}
                         >
                           <Mail size={15} />
@@ -138,7 +152,7 @@ export default function TeamPage() {
                           href={member.linkedin}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                          className="p-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                           title="LinkedIn Profile"
                         >
                           <Linkedin size={15} />

@@ -50,10 +50,10 @@ export default function PageHero({
       {/* Hero Content Container */}
       <div className="relative z-10 max-w-4xl mx-auto space-y-4">
         {badge && (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 shadow-xs mb-2">
-            {badgeIcon && <span className="text-[#3d73bd] text-[12px]">{badgeIcon}</span>}
+          <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-[#3d73bd] mb-3 flex items-center justify-center gap-2">
+            {badgeIcon && <span className="text-[#3d73bd] text-[13px]">{badgeIcon}</span>}
             <span>{badge}</span>
-          </div>
+          </p>
         )}
 
         <HeadingTag className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">

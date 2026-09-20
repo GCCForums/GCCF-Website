@@ -127,14 +127,14 @@ export default function NewsDetailPage() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Link
               href="/news"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full transition-all"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-lg transition-all"
             >
               <FaArrowLeft className="text-[10px]" />
               <span>All News</span>
             </Link>
 
             {news.category && (
-              <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#3d73bd]/40 text-blue-200 border border-blue-400/30 backdrop-blur-md">
+              <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-[#3d73bd]/40 text-blue-200 border border-blue-400/30 backdrop-blur-md">
                 {news.category}
               </span>
             )}
@@ -224,7 +224,7 @@ export default function NewsDetailPage() {
               {news.tags.map((tag, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                  className="px-3 py-1 rounded-md text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
                 >
                   #{tag}
                 </span>
@@ -336,7 +336,7 @@ export default function NewsDetailPage() {
                 className="max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain block rounded-2xl select-none"
               />
             </div>
-            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full select-none shadow-lg">
+            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-md select-none shadow-lg">
               {selectedImageIndex + 1} of {galleryImages.length}
             </div>
           </div>

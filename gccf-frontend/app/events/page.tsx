@@ -28,7 +28,7 @@ export default function EventsPage() {
           <p className="mb-4 text-red-600 font-medium">Failed to load events. Please try again later.</p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
+            className="rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
             Retry
           </button>
@@ -58,7 +58,7 @@ export default function EventsPage() {
           <button
             type="button"
             onClick={() => setFilter("all")}
-            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+            className={`rounded-xl border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
               filter === "all"
                 ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
                 : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
@@ -69,7 +69,7 @@ export default function EventsPage() {
           <button
             type="button"
             onClick={() => setFilter("upcoming")}
-            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+            className={`rounded-xl border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
               filter === "upcoming"
                 ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
                 : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
@@ -80,7 +80,7 @@ export default function EventsPage() {
           <button
             type="button"
             onClick={() => setFilter("completed")}
-            className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+            className={`rounded-xl border px-5 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
               filter === "completed"
                 ? "border-[#1d3c68] bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] text-white shadow-md shadow-[#3d73bd]/20"
                 : "border-slate-200 bg-white text-slate-600 hover:border-[#3d73bd] hover:text-[#1d3c68] shadow-xs"
@@ -117,7 +117,7 @@ export default function EventsPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <span
-                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold capitalize backdrop-blur-md shadow-xs border ${
+                    className={`absolute top-4 right-4 px-3 py-1 rounded-md text-xs font-semibold capitalize backdrop-blur-md shadow-xs border ${
                       event.status === "upcoming"
                         ? "bg-emerald-500/90 text-white border-emerald-400/40"
                         : "bg-slate-700/80 text-white border-white/20"

@@ -224,10 +224,10 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setProfileDropdownOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-sm font-semibold text-slate-800 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-[#3d73bd]/60 transition-all duration-200 shadow-2xs cursor-pointer group"
+                className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-sm font-semibold text-slate-800 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-[#3d73bd]/60 transition-all duration-200 shadow-2xs cursor-pointer group"
                 aria-expanded={profileDropdownOpen}
               >
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1d3c68] to-[#3d73bd] text-white flex items-center justify-center text-xs font-bold shadow-xs">
                   {adminName.charAt(0).toUpperCase()}
                 </div>
                 <span className="max-w-[130px] truncate text-slate-800 font-semibold text-sm">
@@ -275,7 +275,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/admin/login"
-              className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:text-white bg-slate-50 hover:bg-[#3d73bd] border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-md group cursor-pointer"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-700 hover:text-white bg-slate-50 hover:bg-[#3d73bd] border border-slate-200 hover:border-[#3d73bd] transition-all duration-200 shadow-2xs hover:shadow-md group cursor-pointer"
               title="Login"
               aria-label="Login"
             >

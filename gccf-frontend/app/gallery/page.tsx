@@ -149,7 +149,7 @@ export default function GalleryPage() {
 
                     {/* Top Floating Badge */}
                     <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10">
-                      <span className="flex items-center gap-1.5 rounded-full bg-slate-950/70 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/20 shadow-xs">
+                      <span className="flex items-center gap-1.5 rounded-md bg-slate-950/70 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/20 shadow-xs">
                         <Images className="w-3.5 h-3.5 text-blue-300" />
                         <span>{photos.length} {photos.length === 1 ? "Photo" : "Photos"}</span>
                       </span>

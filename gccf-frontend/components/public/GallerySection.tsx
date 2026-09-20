@@ -104,7 +104,7 @@ export default function GallerySection() {
                   {/* Top photo count badge */}
                   {photos.length > 1 && (
                     <div className="absolute top-3 right-3 z-10">
-                      <span className="flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white border border-white/15">
+                      <span className="flex items-center gap-1.5 rounded-md bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white border border-white/15">
                         <FaImages className="text-[10px]" />
                         <span>{photos.length}</span>
                       </span>

@@ -219,9 +219,11 @@ export default function MembershipPage() {
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(255,255,255,0.7)_85%,#ffffff_100%)]" />
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 shadow-xs">
-            <span>{settings.badge || "Join the Movement"}</span>
-          </div>
+          {(settings.badge || "Join the Movement") && (
+            <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-[#3d73bd] mb-3">
+              {settings.badge || "Join the Movement"}
+            </p>
+          )}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
             {settings.title || "Become a Member"}
           </h1>
@@ -240,7 +242,7 @@ export default function MembershipPage() {
               <FaCheckCircle />
             </div>
             <div className="space-y-3 max-w-md mx-auto">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200">
                 <FaCheck className="text-xs" /> Submission Received
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -263,7 +265,7 @@ export default function MembershipPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#3d73bd] hover:to-[#5a8fd9] text-white font-semibold text-sm shadow-lg shadow-[#3d73bd]/25 hover:shadow-xl hover:shadow-[#3d73bd]/35 transition-all duration-200 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#3d73bd] hover:to-[#5a8fd9] text-white font-semibold text-sm shadow-lg shadow-[#3d73bd]/25 hover:shadow-xl hover:shadow-[#3d73bd]/35 transition-all duration-200 cursor-pointer"
               >
                 <span>Submit Another Application</span>
                 <FaArrowRight className="text-xs" />
@@ -292,7 +294,7 @@ export default function MembershipPage() {
                     <span className="text-rose-500">*</span>
                   </label>
                   {settings.pricingText && (
-                    <span className="text-xs font-semibold text-[#1d3c68] bg-blue-50/90 px-3 py-1 rounded-full border border-blue-100">
+                    <span className="text-xs font-semibold text-[#1d3c68] bg-blue-50/90 px-3 py-1 rounded-lg border border-blue-100">
                       {settings.pricingText}
                     </span>
                   )}
@@ -507,7 +509,7 @@ export default function MembershipPage() {
                         "Attach your bank transfer slip, receipt, or transaction screenshot (JPG, PNG, WebP, or PDF, max 500KB)."}
                     </p>
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#3d73bd] border border-blue-100 uppercase tracking-wider shrink-0">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-[#3d73bd] border border-blue-100 uppercase tracking-wider shrink-0">
                     Max 500KB
                   </span>
                 </div>
@@ -614,7 +616,7 @@ export default function MembershipPage() {
               <button
                 type="submit"
                 disabled={createMembership.isPending}
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#3d73bd] hover:to-[#5a8fd9] text-white font-semibold text-base shadow-lg shadow-[#3d73bd]/25 hover:shadow-xl hover:shadow-[#3d73bd]/35 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#3d73bd] hover:to-[#5a8fd9] text-white font-semibold text-base shadow-lg shadow-[#3d73bd]/25 hover:shadow-xl hover:shadow-[#3d73bd]/35 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {createMembership.isPending ? (
                   <>

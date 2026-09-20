@@ -63,64 +63,24 @@ import { GalleryModal } from "../admin/GalleryModal";
 import TeamModal from "../admin/TeamModal";
 import { DeleteConfirmModal } from "../admin/DeleteConfirmModal";
 
-const defaultInitialTeams: TeamMember[] = [
-  {
-    id: "1",
-    name: "Sarah Mitchell",
-    title: "Founder & CEO",
-    affiliatedPart: "Executive Leadership / Global Chapter",
-    image: "",
-    email: "sarah@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "2",
-    name: "David Chen",
-    title: "Director of Operations",
-    affiliatedPart: "Operations & Partnerships",
-    image: "",
-    email: "david@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "3",
-    name: "Maya Patel",
-    title: "Program Manager",
-    affiliatedPart: "Community Initiatives & Standards",
-    image: "",
-    email: "maya@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "4",
-    name: "James Wilson",
-    title: "Communications Lead",
-    affiliatedPart: "Global Outreach & Public Relations",
-    image: "",
-    email: "james@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "5",
-    name: "Aisha Rahman",
-    title: "Community Outreach",
-    affiliatedPart: "Regional Chapters & Engagement",
-    image: "",
-    email: "aisha@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    id: "6",
-    name: "Michael Torres",
-    title: "Finance Director",
-    affiliatedPart: "Finance & Resource Governance",
-    image: "",
-    email: "michael@gccf.org",
-    linkedin: "https://linkedin.com",
-  },
-];
-
 const ADMIN_ACTIVITIES_KEY = "gccf_admin_activities";
+
+const isLegacyMockMember = (member: any): boolean => {
+  if (!member) return true;
+  const mockIds = ["1", "2", "3", "4", "5", "6"];
+  const mockNames = [
+    "sarah mitchell",
+    "david chen",
+    "maya patel",
+    "james wilson",
+    "aisha rahman",
+    "michael torres",
+  ];
+  return (
+    mockIds.includes(String(member.id)) ||
+    mockNames.includes((member.name || "").toLowerCase().trim())
+  );
+};
 
 const getStoredActivities = (): ActivityItem[] => {
   if (typeof window === "undefined") return [];
@@ -156,7 +116,7 @@ export default function AdminComponent() {
   const [eventsList, setEventsList] = useState<Event[]>([]);
   const [galleryList, setGalleryList] = useState<Gallery[]>([]);
   const [membershipsList, setMembershipsList] = useState<Membership[]>([]);
-  const [teamList, setTeamList] = useState<TeamMember[]>(defaultInitialTeams);
+  const [teamList, setTeamList] = useState<TeamMember[]>([]);
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [memberGrowthData, setMemberGrowthData] = useState<MemberGrowthData[]>([]);
@@ -227,22 +187,22 @@ export default function AdminComponent() {
         const stored = localStorage.getItem("gccf_team_members");
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTeamList(parsed);
+          if (Array.isArray(parsed)) {
+            // Strip out any legacy mock team members
+            const realMembers = parsed.filter((m: TeamMember) => !isLegacyMockMember(m));
+            setTeamList(realMembers);
+            localStorage.setItem("gccf_team_members", JSON.stringify(realMembers));
 
             // Backfill any custom team members not yet in admin activities
             const currentActivities = getStoredActivities();
             const newActivities: ActivityItem[] = [];
-            parsed.forEach((member: TeamMember) => {
-              const isDefault = defaultInitialTeams.some(
-                (d) => d.name.toLowerCase() === member.name.toLowerCase()
-              );
+            realMembers.forEach((member: TeamMember) => {
               const alreadyLogged = currentActivities.some(
                 (a) =>
                   a.title.toLowerCase() === member.name.toLowerCase() &&
                   a.type === "team"
               );
-              if (!isDefault && !alreadyLogged) {
+              if (!alreadyLogged) {
                 const numId = Number(member.id);
                 const ts =
                   !isNaN(numId) && numId > 1000000000
@@ -265,11 +225,6 @@ export default function AdminComponent() {
               );
             }
           }
-        } else {
-          localStorage.setItem(
-            "gccf_team_members",
-            JSON.stringify(defaultInitialTeams)
-          );
         }
       } catch (err) {
         console.error("Failed to read team members", err);
@@ -383,8 +338,11 @@ export default function AdminComponent() {
       setEventsList(events);
       setGalleryList(gallery);
       setMembershipsList(memberships);
-      if (Array.isArray(team) && team.length > 0) {
+      if (Array.isArray(team)) {
         setTeamList(team);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("gccf_team_members", JSON.stringify(team));
+        }
       }
       setDashboardStats(stats);
       setMemberGrowthData(growth);

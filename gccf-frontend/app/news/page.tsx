@@ -28,7 +28,7 @@ export default function NewsPage() {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-full bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
+            className="rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] px-6 py-2.5 font-medium text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
             Retry
           </button>
@@ -88,7 +88,7 @@ export default function NewsPage() {
                     </div>
                   )}
                   {news.category && (
-                    <span className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold text-white bg-[#1d3c68]/85 backdrop-blur-md border border-white/20 shadow-xs">
+                    <span className="absolute top-4 left-4 px-3 py-1 rounded-md text-xs font-semibold text-white bg-[#1d3c68]/85 backdrop-blur-md border border-white/20 shadow-xs">
                       {news.category}
                     </span>
                   )}

@@ -127,14 +127,14 @@ export default function EventDetailPage() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Link
               href="/events"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full transition-all"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-lg transition-all"
             >
               <FaArrowLeft className="text-[10px]" />
               <span>All Events</span>
             </Link>
 
             <span
-              className={`inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md border ${
+              className={`inline-flex items-center px-3.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider backdrop-blur-md border ${
                 event.status === "upcoming"
                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
                   : "bg-slate-700/50 text-slate-300 border-white/10"
@@ -235,7 +235,7 @@ export default function EventDetailPage() {
         {event.registrationUrl && (
           <div className="mb-8 rounded-3xl overflow-hidden bg-gradient-to-r from-[#1d3c68] via-[#2a528a] to-[#3d73bd] p-8 text-white shadow-xl shadow-blue-900/15 border border-blue-400/20 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn">
             <div className="max-w-xl">
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 mb-3">
+              <span className="inline-block px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 mb-3">
                 Registration Open
               </span>
               <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-2">
@@ -307,7 +307,7 @@ export default function EventDetailPage() {
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-md">
                 {galleryImages.length} {galleryImages.length === 1 ? "Photo" : "Photos"}
               </span>
             </div>
@@ -475,7 +475,7 @@ export default function EventDetailPage() {
                 className="max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain block rounded-2xl select-none"
               />
             </div>
-            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full select-none shadow-lg">
+            <div className="mt-3 text-white/90 text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-md select-none shadow-lg">
               {selectedImageIndex + 1} of {galleryImages.length}
             </div>
           </div>

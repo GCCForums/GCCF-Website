@@ -86,7 +86,7 @@ export default function HeroSection({ content }: HeroSectionProps) {
                 {activeContent.primaryButtonText && (
                   <Link
                     href={activeContent.primaryButtonUrl || "/membership"}
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#2d5fa5] shadow-md hover:shadow-lg transition-all duration-200"
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162f52] hover:to-[#2d5fa5] shadow-md hover:shadow-lg transition-all duration-200"
                   >
                     {activeContent.primaryButtonText}
                   </Link>
@@ -94,7 +94,7 @@ export default function HeroSection({ content }: HeroSectionProps) {
                 {activeContent.secondaryButtonText && (
                   <Link
                     href={activeContent.secondaryButtonUrl || "/events"}
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#3d73bd] hover:text-[#3d73bd] shadow-2xs hover:shadow-xs transition-all duration-200"
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#3d73bd] hover:text-[#3d73bd] shadow-2xs hover:shadow-xs transition-all duration-200"
                   >
                     {activeContent.secondaryButtonText}
                   </Link>

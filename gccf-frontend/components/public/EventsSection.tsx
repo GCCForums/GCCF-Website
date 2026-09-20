@@ -111,7 +111,7 @@ export default function EventsSection() {
 
                     {/* Completed Badge */}
                     <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/90 text-white backdrop-blur-md shadow-xs">
+                      <span className="px-3 py-1 rounded-md text-xs font-semibold bg-emerald-500/90 text-white backdrop-blur-md shadow-xs">
                         Completed
                       </span>
                     </div>
