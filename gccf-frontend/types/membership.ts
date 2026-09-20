@@ -55,6 +55,7 @@ export interface MembershipSettings {
   formTitle: string;
   formDescription: string;
   membershipTypes: string[];
+  pricingText?: string;
   paymentInstructions: string;
   qrCodeUrl?: string;
 }

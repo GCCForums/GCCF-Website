@@ -286,10 +286,17 @@ export default function MembershipPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Membership Tier / Type Selection */}
               <div>
-                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2.5">
-                  <FaIdCard className="text-[#3d73bd]" /> Membership Tier{" "}
-                  <span className="text-rose-500">*</span>
-                </label>
+                <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700">
+                    <FaIdCard className="text-[#3d73bd]" /> Membership Tier{" "}
+                    <span className="text-rose-500">*</span>
+                  </label>
+                  {settings.pricingText && (
+                    <span className="text-xs font-semibold text-[#1d3c68] bg-blue-50/90 px-3 py-1 rounded-full border border-blue-100">
+                      {settings.pricingText}
+                    </span>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {settings.membershipTypes.map((type) => {
                     const isSelected = formData.membershipType === type;
@@ -504,6 +511,31 @@ export default function MembershipPage() {
                     Max 500KB
                   </span>
                 </div>
+
+                {/* Dynamic Payment Details & QR Code Card */}
+                {settings.paymentInstructions && (
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100/90 text-xs text-slate-700 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-[#1d3c68]">
+                      <FaReceipt className="text-[#3d73bd]" />
+                      <span>Official Payment Instructions & Bank Details</span>
+                    </div>
+                    <p className="whitespace-pre-wrap leading-relaxed text-slate-600">
+                      {settings.paymentInstructions}
+                    </p>
+                    {settings.qrCodeUrl && (
+                      <div className="pt-2 border-t border-blue-200/60 flex items-center gap-3">
+                        <img
+                          src={settings.qrCodeUrl}
+                          alt="Payment QR Code"
+                          className="w-24 h-24 object-contain rounded-lg border border-slate-200 bg-white p-1 shadow-2xs shrink-0"
+                        />
+                        <span className="text-[11px] text-slate-500">
+                          Scan QR code using mobile banking or digital wallet to complete membership payment.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {!formData.paymentAttachment ? (
                   <div>

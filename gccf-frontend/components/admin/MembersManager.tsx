@@ -30,7 +30,7 @@ import {
 } from "react-icons/fa";
 import { Membership, MembershipSettings } from "@/types/membership";
 import { DeleteTarget } from "./types";
-import { membershipSettingsApi } from "@/lib/api";
+import { membershipSettingsApi, membershipsApi } from "@/lib/api";
 import { hasPermission, isSuperAdmin } from "@/lib/auth";
 
 interface MembersManagerProps {
@@ -55,6 +55,7 @@ const DEFAULT_MEMBERSHIP_SETTINGS: MembershipSettings = {
     "Institutional Member",
     "Lifetime Member",
   ],
+  pricingText: "",
   paymentInstructions:
     "Please complete your membership payment and attach your payment receipt, slip, or screenshot below.",
 };
@@ -467,6 +468,24 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                         </>
                       )}
 
+                      {member.status === "approved" && (
+                        <button
+                          title="Resend Approval Email"
+                          onClick={async () => {
+                            try {
+                              await membershipsApi.resendApproval(member.id);
+                              alert(`Approval email resent successfully to ${member.email}!`);
+                            } catch (e: any) {
+                              alert(`Failed to resend approval email: ${e.message}`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[#1d3c68] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                        >
+                          <FaEnvelope className="text-[10px]" />
+                          <span>Resend Email</span>
+                        </button>
+                      )}
+
                       {member.status !== "pending" && (
                         <button
                           title="Reset to Pending"
@@ -775,14 +794,32 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => handleModalStatusChange("pending")}
-                    disabled={loading}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <FaRedo />
-                    <span>Reset to Pending</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {selectedMember.status === "approved" && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await membershipsApi.resendApproval(selectedMember.id);
+                            alert(`Approval email resent successfully to ${selectedMember.email}!`);
+                          } catch (e: any) {
+                            alert(`Failed to resend email: ${e.message}`);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#3d73bd] hover:bg-[#2b5894] shadow-xs transition-all cursor-pointer"
+                      >
+                        <FaEnvelope />
+                        <span>Resend Approval Email</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleModalStatusChange("pending")}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <FaRedo />
+                      <span>Reset to Pending</span>
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -1096,6 +1133,28 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                       <span>Add Tier</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Section 3.5: Pricing Summary / Badge Text */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Pricing Summary / Badge Text
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    Shown prominently beside the Membership Tier selection on the public application form.
+                  </p>
+                  <input
+                    type="text"
+                    value={formSettings.pricingText || ""}
+                    onChange={(e) =>
+                      setFormSettings({
+                        ...formSettings,
+                        pricingText: e.target.value,
+                      })
+                    }
+                    className="w-full px-3.5 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3d73bd]/20 focus:border-[#3d73bd]"
+                    placeholder="e.g. Individual: $50/yr • Student: $25/yr • Corporate: $250/yr"
+                  />
                 </div>
 
                 {/* Section 4: Payment Instructions */}

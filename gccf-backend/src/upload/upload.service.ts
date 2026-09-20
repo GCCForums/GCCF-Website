@@ -82,4 +82,34 @@ export class UploadService {
       public_id: `local_fallback_${Date.now()}`,
     };
   }
+
+  /**
+   * Uploads base64 data string to Cloudinary. If Cloudinary is not configured or fails, returns the original base64.
+   */
+  async uploadBase64(
+    base64Data: string,
+    folder: string = 'gccf_receipts',
+  ): Promise<string> {
+    if (!base64Data || typeof base64Data !== 'string') return '';
+    if (!base64Data.startsWith('data:')) {
+      // Already an external URL
+      return base64Data;
+    }
+
+    if (this.ensureConfigured()) {
+      try {
+        const result = await cloudinary.uploader.upload(base64Data, {
+          folder,
+          resource_type: 'auto',
+        });
+        this.logger.log(`Cloudinary base64 upload succeeded: ${result.secure_url || result.url}`);
+        return result.secure_url || result.url;
+      } catch (error: any) {
+        this.logger.error('Cloudinary base64 upload failed, falling back to base64 string:', error?.message);
+        return base64Data;
+      }
+    }
+
+    return base64Data;
+  }
 }

@@ -69,4 +69,10 @@ export class MembershipsController {
   remove(@Param('id') id: string) {
     return this.membershipsService.remove(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/resend-approval')
+  resendApproval(@Param('id') id: string) {
+    return this.membershipsService.resendApprovalEmail(id);
+  }
 }

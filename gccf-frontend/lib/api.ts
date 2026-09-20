@@ -170,6 +170,16 @@ export const membershipsApi = {
   
   delete: (id: string) => 
     fetchApi<void>(`/memberships/${id}`, { method: 'DELETE' }),
+
+  resendApproval: (id: string) => 
+    fetchApi<{ success: boolean; message: string }>(`/memberships/${id}/resend-approval`, {
+      method: 'POST',
+    }),
+
+  testSmtp: () =>
+    fetchApi<{ success: boolean; message: string; host?: string; port?: number }>(
+      '/memberships/test-smtp/verify'
+    ),
 };
 
 export const teamApi = {

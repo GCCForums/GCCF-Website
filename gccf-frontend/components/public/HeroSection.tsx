@@ -54,11 +54,11 @@ export default function HeroSection({ content }: HeroSectionProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
           {/* Left Column: Hero Text & Circular CTAs */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-start text-left">
-            {/* Badge */}
+            {/* Badge - Clean Text Only (No pill/capsule) */}
             {badge && (
-              <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-[#1d3c68] bg-[#3d73bd]/10 border border-[#3d73bd]/25 mb-6 shadow-xs">
+              <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-[#3d73bd] mb-4">
                 {badge}
-              </div>
+              </p>
             )}
 
             {/* Headline */}

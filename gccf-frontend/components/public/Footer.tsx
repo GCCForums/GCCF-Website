@@ -5,6 +5,7 @@ import {
   FaLinkedinIn,
   FaFacebookF,
   FaInstagram,
+  FaEnvelope,
 } from "react-icons/fa";
 
 export default function Footer() {
@@ -81,40 +82,69 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social Links */}
-          <div className="md:col-span-3 space-y-4">
+          {/* Contact Us & Social Links */}
+          <div className="md:col-span-3 space-y-5">
             <h4 className="text-sm font-bold uppercase tracking-wider text-white">
-              Connect With Us
+              Contact Us
             </h4>
-            <div className="flex items-center gap-3">
+
+            {/* Email link */}
+            <div className="space-y-2">
               <a
-                href="#"
-                aria-label="Twitter"
-                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm"
+                href="mailto:info@gccforums.org"
+                className="inline-flex items-center gap-2.5 text-sm text-blue-100 hover:text-white transition-colors group"
               >
-                <FaTwitter size={16} />
+                <span className="w-8 h-8 rounded-lg bg-white/15 group-hover:bg-white text-white group-hover:text-[#3d73bd] flex items-center justify-center transition-all duration-200 shadow-xs shrink-0">
+                  <FaEnvelope size={13} />
+                </span>
+                <span className="font-medium underline-offset-4 hover:underline">
+                  info@gccforums.org
+                </span>
               </a>
-              <a
-                href="#"
-                aria-label="LinkedIn"
-                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm"
-              >
-                <FaLinkedinIn size={16} />
-              </a>
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm"
-              >
-                <FaFacebookF size={16} />
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm"
-              >
-                <FaInstagram size={16} />
-              </a>
+            </div>
+
+            <div className="pt-1 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-200">
+                Follow Our Channels
+              </p>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://www.linkedin.com/company/global-cybersecurity-community-forum"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm cursor-pointer"
+                >
+                  <FaLinkedinIn size={16} />
+                </a>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm cursor-pointer"
+                >
+                  <FaFacebookF size={16} />
+                </a>
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Twitter"
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm cursor-pointer"
+                >
+                  <FaTwitter size={16} />
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white text-white hover:text-[#3d73bd] flex items-center justify-center transition-all duration-300 hover:-translate-y-1 shadow-sm cursor-pointer"
+                >
+                  <FaInstagram size={16} />
+                </a>
+              </div>
             </div>
           </div>
         </div>

@@ -126,6 +126,7 @@ export class SettingsService {
       ],
       paymentInstructions:
         'Please complete your membership fee payment and attach your payment receipt or screenshot below.',
+      pricingText: '',
       qrCodeUrl: '',
     };
     return {
@@ -141,6 +142,7 @@ export class SettingsService {
     formTitle?: string;
     formDescription?: string;
     membershipTypes?: string[];
+    pricingText?: string;
     paymentInstructions?: string;
     qrCodeUrl?: string;
   }): Promise<any> {
