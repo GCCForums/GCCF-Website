@@ -114,8 +114,18 @@ export class MailService {
     }
   }
 
+  private getResendApiKey(): string {
+    return this.cleanString(this.configService.get<string>('RESEND_API_KEY'));
+  }
+
+  private getBrevoApiKey(): string {
+    return this.cleanString(this.configService.get<string>('BREVO_API_KEY'));
+  }
+
   private getFromAddress(): string {
-    const rawFrom = this.configService.get<string>('SMTP_FROM');
+    const rawFrom =
+      this.configService.get<string>('RESEND_FROM') ||
+      this.configService.get<string>('SMTP_FROM');
     const customFrom = this.cleanString(rawFrom);
     if (customFrom) {
       return customFrom;
@@ -126,23 +136,163 @@ export class MailService {
     return `"GCCF" <${user}>`;
   }
 
+  private parseSenderEmail(fromStr: string): { name: string; email: string } {
+    const match = fromStr.match(/"?([^"<]+)"?\s*<([^>]+)>/);
+    if (match) {
+      return { name: match[1].trim(), email: match[2].trim() };
+    }
+    return { name: 'GCCF', email: fromStr.replace(/[<>]/g, '').trim() };
+  }
+
   /**
-   * Send mail with automatic fallback between port 465 and 587
+   * Send email using Resend HTTPS REST API (Port 443).
+   * Bypasses all cloud SMTP port restrictions (e.g. Render Free tier port 465/587 blocks).
+   */
+  private async sendViaResend(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<{ messageId: string }> {
+    const apiKey = this.getResendApiKey();
+    const from = this.getFromAddress();
+
+    this.logger.log(
+      `[MailService] Sending email to ${to} via Resend HTTPS API (from: ${from})...`,
+    );
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    const result: any = await response.json();
+
+    if (!response.ok) {
+      const errorMsg =
+        result?.message || result?.error || JSON.stringify(result);
+      this.logger.error(
+        `[MailService] Resend API error (${response.status}): ${errorMsg}`,
+      );
+      throw new Error(`Resend API failed: ${errorMsg}`);
+    }
+
+    this.logger.log(
+      `[MailService] Email delivered to ${to} via Resend (ID: ${result.id})`,
+    );
+    return { messageId: result.id };
+  }
+
+  /**
+   * Send email using Brevo HTTPS REST API (Port 443).
+   */
+  private async sendViaBrevo(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<{ messageId: string }> {
+    const apiKey = this.getBrevoApiKey();
+    const { name, email } = this.parseSenderEmail(this.getFromAddress());
+
+    this.logger.log(
+      `[MailService] Sending email to ${to} via Brevo HTTPS API (from: ${email})...`,
+    );
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name, email },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
+
+    const result: any = await response.json();
+
+    if (!response.ok) {
+      const errorMsg =
+        result?.message || result?.error || JSON.stringify(result);
+      this.logger.error(
+        `[MailService] Brevo API error (${response.status}): ${errorMsg}`,
+      );
+      throw new Error(`Brevo API failed: ${errorMsg}`);
+    }
+
+    this.logger.log(
+      `[MailService] Email delivered to ${to} via Brevo (MessageID: ${result.messageId})`,
+    );
+    return { messageId: result.messageId };
+  }
+
+  /**
+   * Primary dispatcher: Sends via HTTP API (Resend / Brevo) if keys configured,
+   * otherwise falls back to Nodemailer SMTP.
    */
   private async sendMailWithFallback(mailOptions: nodemailer.SendMailOptions): Promise<any> {
+    let targetEmail = '';
+    if (typeof mailOptions.to === 'string') {
+      targetEmail = mailOptions.to;
+    } else if (Array.isArray(mailOptions.to) && mailOptions.to.length > 0) {
+      const first = mailOptions.to[0];
+      targetEmail = typeof first === 'string' ? first : (first as any).address;
+    } else if (mailOptions.to && typeof mailOptions.to === 'object' && 'address' in mailOptions.to) {
+      targetEmail = (mailOptions.to as any).address;
+    }
+    const subject = mailOptions.subject || 'GCCF Notification';
+    const htmlContent = (mailOptions.html as string) || '';
+
+    // 1. Try Resend HTTP API if configured
+    if (this.getResendApiKey()) {
+      try {
+        return await this.sendViaResend(targetEmail, subject, htmlContent);
+      } catch (resendErr: any) {
+        this.logger.error(
+          `[MailService] Resend API delivery failed: ${resendErr.message}`,
+        );
+        throw resendErr;
+      }
+    }
+
+    // 2. Try Brevo HTTP API if configured
+    if (this.getBrevoApiKey()) {
+      try {
+        return await this.sendViaBrevo(targetEmail, subject, htmlContent);
+      } catch (brevoErr: any) {
+        this.logger.error(
+          `[MailService] Brevo API delivery failed: ${brevoErr.message}`,
+        );
+        throw brevoErr;
+      }
+    }
+
+    // 3. Fallback to Nodemailer SMTP
     this.initTransporters();
 
     if (!this.transporter) {
       this.logger.warn(
-        `[MailService] Cannot send email to ${mailOptions.to}: SMTP credentials are not configured in environment variables.`,
+        `[MailService] Cannot send email to ${mailOptions.to}: Neither HTTP Email API (RESEND_API_KEY/BREVO_API_KEY) nor SMTP credentials are configured.`,
       );
       return null;
     }
 
     try {
-      // Try primary transporter
       const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`[MailService] Email successfully delivered to ${mailOptions.to} (MessageID: ${info.messageId})`);
+      this.logger.log(
+        `[MailService] Email successfully delivered to ${mailOptions.to} via SMTP (MessageID: ${info.messageId})`,
+      );
       return info;
     } catch (primaryError: any) {
       this.logger.warn(
@@ -152,13 +302,14 @@ export class MailService {
       if (this.fallbackTransporter) {
         try {
           const info = await this.fallbackTransporter.sendMail(mailOptions);
-          this.logger.log(`[MailService] Fallback SMTP delivered email to ${mailOptions.to} (MessageID: ${info.messageId})`);
-          // Promote fallback to primary for subsequent emails
+          this.logger.log(
+            `[MailService] Fallback SMTP delivered email to ${mailOptions.to} (MessageID: ${info.messageId})`,
+          );
           this.transporter = this.fallbackTransporter;
           return info;
         } catch (fallbackError: any) {
           this.logger.error(
-            `[MailService] Both primary and fallback SMTP failed for ${mailOptions.to}. Fallback error: ${fallbackError.message}`,
+            `[MailService] Both primary and fallback SMTP failed for ${mailOptions.to}. Error: ${fallbackError.message}`,
             fallbackError.stack,
           );
           throw fallbackError;
@@ -170,18 +321,91 @@ export class MailService {
   }
 
   /**
-   * Diagnostic verification method for testing SMTP connectivity
+   * Diagnostic verification method for testing email connectivity
    */
-  async testSmtpConnection(): Promise<{ success: boolean; message: string; host?: string; port?: number }> {
+  async testSmtpConnection(): Promise<{
+    success: boolean;
+    provider?: string;
+    message: string;
+    host?: string;
+    port?: number;
+  }> {
+    // 1. If Resend is configured, test Resend HTTPS connection
+    const resendKey = this.getResendApiKey();
+    if (resendKey) {
+      try {
+        const res = await fetch('https://api.resend.com/api-keys', {
+          headers: { Authorization: `Bearer ${resendKey}` },
+        });
+        const data: any = await res.json();
+        if (res.ok) {
+          return {
+            success: true,
+            provider: 'Resend (HTTPS API Port 443)',
+            message:
+              'Connected to Resend HTTP API successfully! Emails will be delivered reliably via HTTPS.',
+          };
+        } else {
+          return {
+            success: false,
+            provider: 'Resend',
+            message: `Resend API validation failed: ${data.message || JSON.stringify(data)}`,
+          };
+        }
+      } catch (err: any) {
+        return {
+          success: false,
+          provider: 'Resend',
+          message: `Failed to connect to Resend API: ${err.message}`,
+        };
+      }
+    }
+
+    // 2. If Brevo is configured, test Brevo HTTPS connection
+    const brevoKey = this.getBrevoApiKey();
+    if (brevoKey) {
+      try {
+        const res = await fetch('https://api.brevo.com/v3/account', {
+          headers: { 'api-key': brevoKey },
+        });
+        const data: any = await res.json();
+        if (res.ok) {
+          return {
+            success: true,
+            provider: 'Brevo (HTTPS API Port 443)',
+            message:
+              'Connected to Brevo HTTP API successfully! Emails will be delivered reliably via HTTPS.',
+          };
+        } else {
+          return {
+            success: false,
+            provider: 'Brevo',
+            message: `Brevo API validation failed: ${data.message || JSON.stringify(data)}`,
+          };
+        }
+      } catch (err: any) {
+        return {
+          success: false,
+          provider: 'Brevo',
+          message: `Failed to connect to Brevo API: ${err.message}`,
+        };
+      }
+    }
+
+    // 3. Fallback to testing SMTP
     this.initTransporters();
 
-    const host = this.cleanString(this.configService.get<string>('SMTP_HOST', 'smtp.hostinger.com'));
+    const host = this.cleanString(
+      this.configService.get<string>('SMTP_HOST', 'smtp.hostinger.com'),
+    );
     const port = Number(this.configService.get<number>('SMTP_PORT', 465));
 
     if (!this.transporter) {
       return {
         success: false,
-        message: 'SMTP credentials missing. Please define SMTP_USER, SMTP_PASS, SMTP_HOST, and SMTP_FROM in your environment.',
+        provider: 'None',
+        message:
+          'No email service configured. Please set RESEND_API_KEY (recommended for Render) or define SMTP_USER, SMTP_PASS, SMTP_HOST in your environment.',
       };
     }
 
@@ -189,6 +413,7 @@ export class MailService {
       await this.transporter.verify();
       return {
         success: true,
+        provider: 'Nodemailer SMTP',
         message: `SMTP connection to ${host}:${port} verified successfully!`,
         host,
         port,
@@ -200,19 +425,27 @@ export class MailService {
           const fallbackPort = port === 465 ? 587 : 465;
           return {
             success: true,
-            message: `Primary port failed, but Fallback SMTP to ${host}:${fallbackPort} verified successfully!`,
+            provider: 'Nodemailer SMTP (Fallback)',
+            message: `Primary port failed, but fallback SMTP to ${host}:${fallbackPort} verified successfully!`,
             host,
             port: fallbackPort,
           };
         } catch (fallbackErr: any) {
+          const isTimeout =
+            err.message?.includes('timeout') ||
+            fallbackErr.message?.includes('timeout');
           return {
             success: false,
-            message: `SMTP verification failed on both ports. Primary: ${err.message}. Fallback: ${fallbackErr.message}`,
+            provider: 'Nodemailer SMTP',
+            message: isTimeout
+              ? `Connection timeout on ports 465 and 587. Render Free Tier blocks outbound SMTP traffic (ports 25, 465, 587). To fix this, add a free RESEND_API_KEY in your Render environment variables to send emails via HTTPS port 443.`
+              : `SMTP verification failed on both ports. Primary: ${err.message}. Fallback: ${fallbackErr.message}`,
           };
         }
       }
       return {
         success: false,
+        provider: 'Nodemailer SMTP',
         message: `SMTP verification failed: ${err.message}`,
       };
     }

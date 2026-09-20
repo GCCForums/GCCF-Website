@@ -89,6 +89,38 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
   );
   const [newTierInput, setNewTierInput] = useState("");
 
+  // Email Diagnostics State
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
+  const [emailStatusModal, setEmailStatusModal] = useState<{
+    open: boolean;
+    success?: boolean;
+    provider?: string;
+    message?: string;
+  } | null>(null);
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const res = await membershipsApi.testSmtp();
+      setEmailStatusModal({
+        open: true,
+        success: res.success,
+        provider: (res as any).provider || (res.success ? "Active" : "Unavailable"),
+        message: res.message,
+      });
+    } catch (err: any) {
+      setEmailStatusModal({
+        open: true,
+        success: false,
+        provider: "Error",
+        message: err.message || "Failed to contact email diagnostics endpoint.",
+      });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
     membershipSettingsApi
@@ -230,18 +262,34 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
           </p>
         </div>
 
-        {canCustomizeForm && (
+        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
           <button
-            onClick={() => {
-              setSettingsNotice(null);
-              setIsSettingsModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162e50] hover:to-[#2b5894] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer self-start sm:self-auto"
+            onClick={handleTestEmail}
+            disabled={testingEmail}
+            title="Check live email dispatch status"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
-            <FaSlidersH className="text-xs" />
-            <span>Customize Application Form</span>
+            {testingEmail ? (
+              <FaSpinner className="text-xs animate-spin text-[#3d73bd]" />
+            ) : (
+              <FaEnvelope className="text-xs text-[#3d73bd]" />
+            )}
+            <span>{testingEmail ? "Testing Email..." : "Test Email Server"}</span>
           </button>
-        )}
+
+          {canCustomizeForm && (
+            <button
+              onClick={() => {
+                setSettingsNotice(null);
+                setIsSettingsModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1d3c68] to-[#3d73bd] hover:from-[#162e50] hover:to-[#2b5894] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
+            >
+              <FaSlidersH className="text-xs" />
+              <span>Customize Application Form</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Modern Status Stat Cards */}
@@ -472,17 +520,25 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                         <button
                           title="Resend Approval Email"
                           onClick={async () => {
+                            setResendingEmailId(member.id);
                             try {
-                              await membershipsApi.resendApproval(member.id);
-                              alert(`Approval email resent successfully to ${member.email}!`);
+                              const res = await membershipsApi.resendApproval(member.id);
+                              alert(res?.message || `Approval email resent successfully to ${member.email}!`);
                             } catch (e: any) {
-                              alert(`Failed to resend approval email: ${e.message}`);
+                              alert(`Failed to resend approval email: ${e.message}\n\nTip: On Render Free Tier, SMTP ports 465/587 are blocked. Set RESEND_API_KEY in Render dashboard to send via HTTPS.`);
+                            } finally {
+                              setResendingEmailId(null);
                             }
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[#1d3c68] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                          disabled={resendingEmailId === member.id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[#1d3c68] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer disabled:opacity-50"
                         >
-                          <FaEnvelope className="text-[10px]" />
-                          <span>Resend Email</span>
+                          {resendingEmailId === member.id ? (
+                            <FaSpinner className="text-[10px] animate-spin text-[#3d73bd]" />
+                          ) : (
+                            <FaEnvelope className="text-[10px]" />
+                          )}
+                          <span>{resendingEmailId === member.id ? "Sending..." : "Resend Email"}</span>
                         </button>
                       )}
 
@@ -1209,6 +1265,85 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Email Server Diagnostics Modal */}
+      {emailStatusModal && emailStatusModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    emailStatusModal.success
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                      : "bg-rose-50 text-rose-600 border border-rose-200"
+                  }`}
+                >
+                  {emailStatusModal.success ? (
+                    <FaCheckCircle className="text-base" />
+                  ) : (
+                    <FaExclamationCircle className="text-base" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Email Server Diagnostics
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Provider: {emailStatusModal.provider || "Unknown"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEmailStatusModal(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <FaTimes className="text-xs" />
+              </button>
+            </div>
+
+            <div
+              className={`p-4 rounded-2xl text-xs leading-relaxed border ${
+                emailStatusModal.success
+                  ? "bg-emerald-50/70 border-emerald-200/80 text-emerald-900"
+                  : "bg-rose-50/70 border-rose-200/80 text-rose-900"
+              }`}
+            >
+              <div className="font-semibold mb-1">
+                {emailStatusModal.success
+                  ? "Email Service Operational"
+                  : "Email Delivery Blocked or Failed"}
+              </div>
+              <p className="text-xs opacity-90 break-words">
+                {emailStatusModal.message}
+              </p>
+            </div>
+
+            {!emailStatusModal.success && (
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70 text-xs text-slate-600 flex flex-col gap-1.5">
+                <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                  How to Fix on Render:
+                </div>
+                <p className="text-[11px] leading-normal text-slate-500">
+                  Render Free Tier blocks ports 25, 465, and 587. To send emails reliably without port blocks:
+                </p>
+                <ol className="list-decimal pl-4 space-y-1 text-[11px] text-slate-600">
+                  <li>Get a free API key from <strong>resend.com</strong> (3,000 free emails/mo).</li>
+                  <li>In Render Dashboard &rarr; Environment, add <code>RESEND_API_KEY</code>.</li>
+                  <li>Emails will dispatch instantly over HTTPS port 443!</li>
+                </ol>
+              </div>
+            )}
+
+            <button
+              onClick={() => setEmailStatusModal(null)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+            >
+              Close Diagnostics
+            </button>
           </div>
         </div>
       )}
