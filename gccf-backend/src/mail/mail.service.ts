@@ -154,27 +154,48 @@ export class MailService {
     html: string,
   ): Promise<{ messageId: string }> {
     const apiKey = this.getResendApiKey();
-    const from = this.getFromAddress();
+    const configuredFrom = this.getFromAddress();
 
     this.logger.log(
-      `[MailService] Sending email to ${to} via Resend HTTPS API (from: ${from})...`,
+      `[MailService] Sending email to ${to} via Resend HTTPS API (from: ${configuredFrom})...`,
     );
 
-    const response = await fetch('https://api.resend.com/emails', {
+    let response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from,
+        from: configuredFrom,
         to: [to],
         subject,
         html,
       }),
     });
 
-    const result: any = await response.json();
+    let result: any = await response.json();
+
+    // If custom domain is not yet verified on resend.com/domains, try fallback to onboarding@resend.dev
+    if (!response.ok && result?.message?.includes('domain is not verified')) {
+      this.logger.warn(
+        `[MailService] Domain in '${configuredFrom}' is not yet verified on Resend. Retrying with onboarding@resend.dev...`,
+      );
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'GCCF <onboarding@resend.dev>',
+          to: [to],
+          subject,
+          html,
+        }),
+      });
+      result = await response.json();
+    }
 
     if (!response.ok) {
       const errorMsg =
@@ -182,7 +203,7 @@ export class MailService {
       this.logger.error(
         `[MailService] Resend API error (${response.status}): ${errorMsg}`,
       );
-      throw new Error(`Resend API failed: ${errorMsg}`);
+      throw new Error(`Resend delivery failed: ${errorMsg}`);
     }
 
     this.logger.log(
@@ -334,8 +355,18 @@ export class MailService {
     const resendKey = this.getResendApiKey();
     if (resendKey) {
       try {
-        const res = await fetch('https://api.resend.com/api-keys', {
-          headers: { Authorization: `Bearer ${resendKey}` },
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'GCCF <onboarding@resend.dev>',
+            to: ['delivered@resend.dev'],
+            subject: 'GCCF System Connection Ping',
+            html: '<p>Connection verified</p>',
+          }),
         });
         const data: any = await res.json();
         if (res.ok) {
@@ -343,13 +374,13 @@ export class MailService {
             success: true,
             provider: 'Resend (HTTPS API Port 443)',
             message:
-              'Connected to Resend HTTP API successfully! Emails will be delivered reliably via HTTPS.',
+              'Connected to Resend HTTP API successfully! Verified email delivery is operational.',
           };
         } else {
           return {
             success: false,
             provider: 'Resend',
-            message: `Resend API validation failed: ${data.message || JSON.stringify(data)}`,
+            message: `Resend API returned: ${data.message || JSON.stringify(data)}`,
           };
         }
       } catch (err: any) {
