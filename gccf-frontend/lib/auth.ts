@@ -62,6 +62,8 @@ export async function loginAdmin(
       localStorage.setItem('gccf_admin_user', JSON.stringify(inMemoryUser));
       if (data.access_token) {
         localStorage.setItem('adminToken', data.access_token);
+        const isHttps = window.location.protocol === 'https:';
+        document.cookie = `admin_access_token=${data.access_token}; path=/; max-age=604800; SameSite=Lax${isHttps ? '; Secure' : ''}`;
       }
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminName');
@@ -175,6 +177,8 @@ export async function logoutAdmin(): Promise<void> {
   } finally {
     inMemoryUser = null;
     if (typeof window !== 'undefined') {
+      const isHttps = window.location.protocol === 'https:';
+      document.cookie = `admin_access_token=; path=/; max-age=0; SameSite=Lax${isHttps ? '; Secure' : ''}`;
       localStorage.removeItem('gccf_admin_user');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('isAdmin');

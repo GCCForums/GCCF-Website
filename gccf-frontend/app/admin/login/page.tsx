@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loginAdmin } from "@/lib/auth";
+import { loginAdmin, isAdminLoggedIn } from "@/lib/auth";
 import { FaEye, FaEyeSlash, FaShieldAlt, FaArrowLeft } from "react-icons/fa";
 
 export default function AdminLogin() {
@@ -14,6 +14,12 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAdminLoggedIn()) {
+      router.replace("/admin/dashboard");
+    }
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
