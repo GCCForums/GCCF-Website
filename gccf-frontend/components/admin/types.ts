@@ -7,7 +7,6 @@ export type AdminTab =
   | "members"
   | "teams"
   | "popup"
-  | "testimonials"
   | "settings"
   | "admins"
   | "audit";
@@ -27,7 +26,6 @@ export const AVAILABLE_PERMISSIONS: FeaturePermission[] = [
   { id: "members", name: "Members & Applications", description: "Manage member directory and membership applications" },
   { id: "teams", name: "Team Members", description: "Manage board, leadership, and team profiles" },
   { id: "popup", name: "Announcement Popups", description: "Configure website popups and banner announcements" },
-  { id: "testimonials", name: "Testimonials", description: "Manage community reviews and testimonials" },
   { id: "settings", name: "Settings", description: "Configure dashboard profile and account settings" },
 ];
 
@@ -74,7 +72,7 @@ export type GalleryFormData = {
 };
 
 export type DeleteTarget = {
-  type: "news" | "events" | "gallery" | "memberships" | "teams" | "testimonials";
+  type: "news" | "events" | "gallery" | "memberships" | "teams";
   id: string;
 };
 

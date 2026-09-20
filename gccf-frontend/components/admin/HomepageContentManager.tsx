@@ -38,7 +38,7 @@ import { ImageUploadInput } from "./ImageUploadInput";
 export default function HomepageContentManager() {
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<
-    "hero" | "metrics" | "chairperson" | "about" | "services" | "testimonials" | "faq"
+    "hero" | "metrics" | "chairperson" | "about" | "services" | "faq"
   >("hero");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,27 +46,13 @@ export default function HomepageContentManager() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [testimonialsEnabled, setTestimonialsEnabled] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("gccf_testimonials_enabled");
-    if (stored !== null) {
-      setTestimonialsEnabled(stored === "true");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("gccf_testimonials");
+      localStorage.removeItem("gccf_testimonials_enabled");
     }
   }, []);
-
-  const handleToggleTestimonials = () => {
-    const nextVal = !testimonialsEnabled;
-    setTestimonialsEnabled(nextVal);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("gccf_testimonials_enabled", String(nextVal));
-      window.dispatchEvent(new Event("storage"));
-      window.dispatchEvent(
-        new CustomEvent("testimonialsVisibilityChange", { detail: nextVal })
-      );
-    }
-  };
 
   // Section States
   const [hero, setHero] = useState<HeroSectionContent>({
@@ -515,18 +501,6 @@ export default function HomepageContentManager() {
         </button>
 
         <button
-          onClick={() => setActiveSection("testimonials")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeSection === "testimonials"
-              ? "bg-[#1d3c68] text-white shadow-sm"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80"
-          }`}
-        >
-          <FaQuoteLeft />
-          <span>Testimonials</span>
-        </button>
-
-        <button
           onClick={() => setActiveSection("faq")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeSection === "faq"
@@ -929,53 +903,6 @@ export default function HomepageContentManager() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* SECTION: TESTIMONIALS */}
-      {activeSection === "testimonials" && (
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6 max-w-4xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                Testimonials Section Settings
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Control whether community testimonials and endorsements are displayed on the public homepage.
-              </p>
-            </div>
-
-            {/* Visibility Toggle Switch */}
-            <div className="flex items-center gap-2.5 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
-              <span className="text-xs font-semibold text-slate-700">
-                Section Visible on Homepage
-              </span>
-              <button
-                type="button"
-                onClick={handleToggleTestimonials}
-                className={`text-2xl transition-colors cursor-pointer ${
-                  testimonialsEnabled ? "text-[#3d73bd]" : "text-slate-300"
-                }`}
-                title="Toggle testimonials visibility on homepage"
-              >
-                {testimonialsEnabled ? <FaToggleOn /> : <FaToggleOff />}
-              </button>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100/70 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#3d73bd]/10 text-[#3d73bd] flex items-center justify-center text-lg shrink-0 mt-0.5">
-              <FaQuoteLeft />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Manage Individual Testimonials
-              </h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Review cards, ratings, author names, and roles can be added, updated, or deleted from the dedicated <span className="font-semibold text-[#1d3c68]">Testimonials</span> tab in the sidebar menu.
-              </p>
-            </div>
           </div>
         </div>
       )}

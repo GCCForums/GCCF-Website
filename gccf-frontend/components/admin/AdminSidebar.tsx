@@ -157,16 +157,6 @@ export default function AdminSidebar({
           </button>
         )}
 
-        {checkPerm("testimonials") && (
-          <button
-            className={`nav-item ${activeTab === "testimonials" ? "active" : ""}`}
-            onClick={() => setActiveTab("testimonials")}
-          >
-            <FaQuoteRight />
-            {sidebarOpen && <span>Testimonials</span>}
-          </button>
-        )}
-
         {checkPerm("analytics") && (
           <Link href="/admin/analytics" className="nav-item">
             <FaChartLine />

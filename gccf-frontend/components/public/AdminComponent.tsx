@@ -42,10 +42,6 @@ import {
   TeamMember,
   TeamFormData,
   initialTeamForm,
-  Testimonial,
-  TestimonialFormData,
-  initialTestimonialForm,
-  defaultInitialTestimonials,
 } from "../admin/types";
 
 import AdminSidebar from "../admin/AdminSidebar";
@@ -58,7 +54,6 @@ import { MembersManager } from "../admin/MembersManager";
 import { SettingsManager } from "../admin/SettingsManager";
 import TeamManager from "../admin/TeamManager";
 import PopupManager from "../admin/PopupManager";
-import TestimonialsManager from "../admin/TestimonialsManager";
 import AdminUsersManager from "../admin/AdminUsersManager";
 import AuditLogsManager from "../admin/AuditLogsManager";
 import HomepageContentManager from "../admin/HomepageContentManager";
@@ -66,7 +61,6 @@ import { NewsModal } from "../admin/NewsModal";
 import { EventModal } from "../admin/EventModal";
 import { GalleryModal } from "../admin/GalleryModal";
 import TeamModal from "../admin/TeamModal";
-import TestimonialModal from "../admin/TestimonialModal";
 import { DeleteConfirmModal } from "../admin/DeleteConfirmModal";
 
 const defaultInitialTeams: TeamMember[] = [
@@ -201,12 +195,6 @@ export default function AdminComponent() {
   const [editingTeam, setEditingTeam] = useState<TeamMember | null>(null);
   const [teamForm, setTeamForm] = useState<TeamFormData>(initialTeamForm);
 
-  // Testimonials State
-  const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>(defaultInitialTestimonials);
-  const [showTestimonialModal, setShowTestimonialModal] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
-  const [testimonialForm, setTestimonialForm] = useState<TestimonialFormData>(initialTestimonialForm);
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<DeleteTarget | null>(null);
 
   // Close all open modal cards and reset temporary edit states
@@ -219,8 +207,6 @@ export default function AdminComponent() {
     setEditingGallery(null);
     setShowTeamModal(false);
     setEditingTeam(null);
-    setShowTestimonialModal(false);
-    setEditingTestimonial(null);
     setShowDeleteConfirm(null);
   }, []);
 
@@ -291,22 +277,11 @@ export default function AdminComponent() {
     }
   }, []);
 
-  // Load stored testimonials
+  // Purge any legacy testimonials from local storage
   useEffect(() => {
     if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("gccf_testimonials");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTestimonialsList(parsed);
-          }
-        } else {
-          localStorage.setItem("gccf_testimonials", JSON.stringify(defaultInitialTestimonials));
-        }
-      } catch (err) {
-        console.error("Failed to read testimonials", err);
-      }
+      localStorage.removeItem("gccf_testimonials");
+      localStorage.removeItem("gccf_testimonials_enabled");
     }
   }, []);
 
@@ -348,7 +323,6 @@ export default function AdminComponent() {
             "members",
             "teams",
             "popup",
-            "testimonials",
             "settings",
           ];
           const fallback = tabOrder.find((t) => isPermitted(t));
@@ -778,63 +752,6 @@ export default function AdminComponent() {
     }
   };
 
-  // Testimonials Handlers
-  const openAddTestimonial = () => {
-    setEditingTestimonial(null);
-    setTestimonialForm(initialTestimonialForm);
-    setShowTestimonialModal(true);
-  };
-
-  const openEditTestimonial = (item: Testimonial) => {
-    setEditingTestimonial(item);
-    setTestimonialForm({
-      name: item.name,
-      role: item.role || "",
-      feedback: item.feedback,
-      avatarUrl: item.avatarUrl || "",
-      rating: item.rating || 5,
-    });
-    setShowTestimonialModal(true);
-  };
-
-  const handleTestimonialSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      let updated: Testimonial[];
-      if (editingTestimonial) {
-        updated = testimonialsList.map((t) =>
-          t.id === editingTestimonial.id
-            ? {
-                ...t,
-                ...testimonialForm,
-              }
-            : t
-        );
-      } else {
-        const newItem: Testimonial = {
-          id: Date.now().toString(),
-          ...testimonialForm,
-        };
-        updated = [...testimonialsList, newItem];
-      }
-
-      setTestimonialsList(updated);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("gccf_testimonials", JSON.stringify(updated));
-        window.dispatchEvent(new Event("storage"));
-      }
-      setShowTestimonialModal(false);
-      setEditingTestimonial(null);
-      setTestimonialForm(initialTestimonialForm);
-    } catch (err) {
-      setError("Failed to save testimonial");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Delete Handler
   const handleDelete = async () => {
     if (!showDeleteConfirm) return;
@@ -870,13 +787,6 @@ export default function AdminComponent() {
             title: targetMember.name,
             timestamp: new Date().toISOString(),
           });
-        }
-      } else if (showDeleteConfirm.type === "testimonials") {
-        const updated = testimonialsList.filter((t) => t.id !== showDeleteConfirm.id);
-        setTestimonialsList(updated);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("gccf_testimonials", JSON.stringify(updated));
-          window.dispatchEvent(new Event("storage"));
         }
       }
       await fetchData();
@@ -991,15 +901,6 @@ export default function AdminComponent() {
             />
           )}
 
-          {activeTab === "testimonials" && (
-            <TestimonialsManager
-              testimonialsList={testimonialsList}
-              onOpenAddModal={openAddTestimonial}
-              onOpenEditModal={openEditTestimonial}
-              onSetDeleteTarget={setShowDeleteConfirm}
-            />
-          )}
-
           {activeTab === "popup" && <PopupManager />}
 
           {activeTab === "settings" && (
@@ -1072,19 +973,6 @@ export default function AdminComponent() {
         teamForm={teamForm}
         setTeamForm={setTeamForm}
         onSubmit={handleTeamSubmit}
-        loading={loading}
-      />
-
-      <TestimonialModal
-        isOpen={showTestimonialModal && activeTab === "testimonials"}
-        onClose={() => {
-          setShowTestimonialModal(false);
-          setEditingTestimonial(null);
-        }}
-        editingTestimonial={editingTestimonial}
-        testimonialForm={testimonialForm}
-        setTestimonialForm={setTestimonialForm}
-        onSubmit={handleTestimonialSubmit}
         loading={loading}
       />
 

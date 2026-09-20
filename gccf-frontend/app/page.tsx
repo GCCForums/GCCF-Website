@@ -15,7 +15,6 @@ import MetricsSection from "@/components/public/MetricsSection";
 import ChairpersonMessageSection from "@/components/public/ChairpersonMessageSection";
 import EventsSection from "@/components/public/EventsSection";
 import GallerySection from "@/components/public/GallerySection";
-import TestimonialsSection from "@/components/public/TestimonialsSection";
 import FaqSection from "@/components/public/FaqSection";
 import { useHomepageContent } from "@/lib/hooks";
 import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultContent";
@@ -94,8 +93,6 @@ export default function HomePage() {
       )}
 
       <GallerySection />
-
-      <TestimonialsSection />
 
       <FaqSection content={homepageContent?.faq} />
     </div>

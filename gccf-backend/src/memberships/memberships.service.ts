@@ -99,4 +99,8 @@ export class MembershipsService {
       throw new NotFoundException(`Membership with ID ${id} not found`);
     }
   }
+
+  async testSmtp(): Promise<any> {
+    return await this.mailService.testSmtpConnection();
+  }
 }

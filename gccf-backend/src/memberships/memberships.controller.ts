@@ -44,6 +44,12 @@ export class MembershipsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('test-smtp/verify')
+  testSmtp() {
+    return this.membershipsService.testSmtp();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.membershipsService.findOne(id);

@@ -1,47 +1,51 @@
-import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 
 export class CreateMembershipDto {
+  @IsNotEmpty()
   @IsString()
   firstName: string;
 
+  @IsNotEmpty()
   @IsString()
   lastName: string;
 
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
+  @IsNotEmpty()
   @IsString()
   phone: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  address?: string;
+  address: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  city?: string;
+  city: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  country?: string;
+  country: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  occupation?: string;
+  occupation: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  organization?: string;
+  organization: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  message?: string;
+  message: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  membershipType?: string;
+  membershipType: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  paymentAttachment?: string;
+  paymentAttachment: string;
 }

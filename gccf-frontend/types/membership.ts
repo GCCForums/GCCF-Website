@@ -22,14 +22,14 @@ export interface CreateMembershipDto {
   lastName: string;
   email: string;
   phone: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  occupation?: string;
-  organization?: string;
-  message?: string;
-  membershipType?: string;
-  paymentAttachment?: string;
+  address: string;
+  city: string;
+  country: string;
+  occupation: string;
+  organization: string;
+  message: string;
+  membershipType: string;
+  paymentAttachment: string;
 }
 
 export interface UpdateMembershipDto {
