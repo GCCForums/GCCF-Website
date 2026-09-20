@@ -6,8 +6,16 @@ import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
   private isConfigured = false;
+  private hasWarned = false;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService) {}
+
+  /**
+   * Lazily configure Cloudinary on first upload request instead of during app boot.
+   */
+  private ensureConfigured(): boolean {
+    if (this.isConfigured) return true;
+
     const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
     const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
     const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
@@ -21,11 +29,16 @@ export class UploadService {
       });
       this.isConfigured = true;
       this.logger.log('Cloudinary successfully configured.');
-    } else {
+      return true;
+    }
+
+    if (!this.hasWarned) {
+      this.hasWarned = true;
       this.logger.warn(
         'Cloudinary credentials (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) not fully set in .env. Uploads will use base64 fallback until credentials are provided.',
       );
     }
+    return false;
   }
 
   async uploadImage(
@@ -36,7 +49,7 @@ export class UploadService {
       throw new BadRequestException('No file provided for upload.');
     }
 
-    if (this.isConfigured) {
+    if (this.ensureConfigured()) {
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {

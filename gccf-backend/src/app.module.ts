@@ -12,12 +12,10 @@ import { EventsModule } from './events/events.module';
 import { NewsModule } from './news/news.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { MembershipsModule } from './memberships/memberships.module';
-import { MailModule } from './mail/mail.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SettingsModule } from './settings/settings.module';
-import { SupabaseModule } from './supabase/supabase.module';
 import { TeamModule } from './team/team.module';
 import { PopupsModule } from './popups/popups.module';
 import { HomepageModule } from './homepage/homepage.module';
@@ -60,8 +58,9 @@ import { UploadModule } from './upload/upload.module';
 
         const sslConfig = isSsl ? { rejectUnauthorized: false } : false;
 
+        const maxPool = Number(configService.get<number>('DB_POOL_MAX', 5));
         const extraPoolConfig = {
-          max: 10,
+          max: maxPool,
           connectionTimeoutMillis: 10000,
           idleTimeoutMillis: 30000,
           keepAlive: true,
@@ -97,8 +96,6 @@ import { UploadModule } from './upload/upload.module';
         };
       },
     }),
-    SupabaseModule,
-    MailModule,
     AdminModule,
     AuthModule,
     AnalyticsModule,

@@ -1,19 +1,28 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
 @Injectable()
-export class MailService implements OnModuleInit {
+export class MailService {
   private transporter: Transporter | null = null;
   private readonly logger = new Logger(MailService.name);
-  private isConfigured = false;
+  private isInitialized = false;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService) {}
+
+  /**
+   * Lazily initialize Nodemailer transporter on first send instead of blocking boot.
+   */
+  private getTransporter(): Transporter | null {
+    if (this.isInitialized) {
+      return this.transporter;
+    }
+    this.isInitialized = true;
+
     const smtpUser = this.configService.get<string>('SMTP_USER');
     const smtpPass = this.configService.get<string>('SMTP_PASS');
 
-    // Only configure transporter if credentials exist and are NOT placeholder values
     if (
       smtpUser &&
       smtpPass &&
@@ -23,7 +32,6 @@ export class MailService implements OnModuleInit {
       try {
         const port = Number(this.configService.get<number>('SMTP_PORT', 465));
         const secureEnv = this.configService.get<string>('SMTP_SECURE');
-        // Port 465 uses SSL (secure: true). Port 587 uses STARTTLS (secure: false).
         const isSecure =
           secureEnv !== undefined ? secureEnv === 'true' : port === 465;
 
@@ -39,31 +47,18 @@ export class MailService implements OnModuleInit {
             pass: smtpPass,
           },
         });
-        this.isConfigured = true;
+        this.logger.log('SMTP mail transporter lazily initialized.');
       } catch (err) {
         this.logger.error('Failed to initialize mail transporter:', err);
-        this.isConfigured = false;
+        this.transporter = null;
       }
     } else {
       this.logger.warn(
         'SMTP credentials not configured or using placeholder credentials. Email delivery is safely skipped.',
       );
+      this.transporter = null;
     }
-  }
-
-  async onModuleInit() {
-    if (this.isConfigured && this.transporter) {
-      try {
-        await this.transporter.verify();
-        this.logger.log(
-          'SMTP server connection verified successfully. Ready to send emails.',
-        );
-      } catch (error) {
-        this.logger.error(
-          `SMTP connection verification failed: ${(error as Error).message}. Please verify your Hostinger email and password in .env.`,
-        );
-      }
-    }
+    return this.transporter;
   }
 
   private getFromAddress(): string {
@@ -80,7 +75,8 @@ export class MailService implements OnModuleInit {
     firstName: string,
     lastName: string,
   ): Promise<void> {
-    if (!this.isConfigured || !this.transporter) {
+    const transporter = this.getTransporter();
+    if (!transporter) {
       this.logger.warn(
         `Skipping approval email to ${email}: SMTP not configured`,
       );
@@ -90,7 +86,7 @@ export class MailService implements OnModuleInit {
     const fullName = `${firstName} ${lastName}`;
 
     try {
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from: this.getFromAddress(),
         to: email,
         subject: 'Welcome to GCCF - Your Membership has been Approved!',
@@ -120,7 +116,8 @@ export class MailService implements OnModuleInit {
     firstName: string,
     lastName: string,
   ): Promise<void> {
-    if (!this.isConfigured || !this.transporter) {
+    const transporter = this.getTransporter();
+    if (!transporter) {
       this.logger.warn(
         `Skipping decline email to ${email}: SMTP not configured`,
       );
@@ -130,7 +127,7 @@ export class MailService implements OnModuleInit {
     const fullName = `${firstName} ${lastName}`;
 
     try {
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from: this.getFromAddress(),
         to: email,
         subject: 'GCCF Membership Application Update',
@@ -163,7 +160,8 @@ export class MailService implements OnModuleInit {
     eventLocation: string,
     eventDescription: string,
   ): Promise<void> {
-    if (!this.isConfigured || !this.transporter) {
+    const transporter = this.getTransporter();
+    if (!transporter) {
       this.logger.warn(
         `Skipping newsletter email to ${email}: SMTP not configured`,
       );
@@ -171,7 +169,7 @@ export class MailService implements OnModuleInit {
     }
 
     try {
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from: this.getFromAddress(),
         to: email,
         subject: `GCCF Upcoming Event: ${eventTitle}`,
