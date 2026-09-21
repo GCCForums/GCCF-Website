@@ -37,7 +37,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   chairpersonMessage: {
     badge: "LEADERSHIP MESSAGE",
     image:
-      "https://res.cloudinary.com/je6yfqp8/image/upload/v1789619994/gccf/homepage/gaehgmrhjrojmnnhyp3n.jpg",
+      "",
     quote:
       "Cybersecurity is no longer just a technical defense; it is the cornerstone of societal trust, global resilience, and collective progress.",
     title: "Message from the CEO",
@@ -45,7 +45,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       "At GCCF, our conviction is that no individual, organization, or nation can face the rapidly mutating landscape of cyber threats in isolation. By cultivating a collaborative ecosystem of researchers, industry practitioners, and policymakers, we transform vulnerability into proactive collective defense. We welcome you to unite with our mission, share your expertise, and build an open, secure digital future for everyone.",
     isActive: true,
     signatureText: "",
-    chairpersonName: "Samyog KC",
+    chairpersonName: "Samyog",
     chairpersonTitle: "CEO & Executive Director, GCCF",
   },
   about: {
